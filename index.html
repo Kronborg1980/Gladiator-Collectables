@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Gladiator Collectibles Amazing Pokemon Race</title>
+    <title>Gladiator Collectibles</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Bebas+Neue&display=swap" rel="stylesheet">
     <style>
         :root{
@@ -374,7 +374,7 @@
 <body>
     <div id="titleContainer">
         <img id="logo" src="https://60fb7b08eaf293096e8c.cdn6.editmysite.com/uploads/b/60fb7b08eaf293096e8cb3f63df9e65735b8a1ee75f6d23d21eaed2115dfa2e6/IMG_7388_1701827680.jpeg?width=2400&optimize=medium" alt="Gladiator Collectibles Logo">
-        <h1>GLADIATOR COLLECTIBLES AMAZING POKEMON RACE</h1>
+        <h1>GLADIATOR COLLECTIBLES</h1>
     </div>
     <div id="frontPage">
         <h2>Race Setup</h2>
@@ -1033,7 +1033,9 @@
             if (document.fullscreenElement) { try { document.exitFullscreen(); } catch(e){} }
             postRaceControls.style.display = 'none';
             statusDisplay.textContent = 'Systems nominal. Enter names to begin.';
-            initRacers(); updateCanvasSettings(); drawAll();
+            initRacers();
+            updateCanvasSettings();
+            drawAll();
         }
         function showWinnerAnimation(winnerName){
             document.getElementById('winnerName').textContent = winnerName + " WINS!";
