@@ -26,8 +26,7 @@
         }
         html,body{
             height:100%;
-            /* MODIFIED: Set margin to 0 to prevent browser default spacing */
-            margin:0; 
+            margin:0;
             padding:0;
             background: linear-gradient(135deg, #0d011a, var(--bg-dark), #010a14);
             color: var(--text-light);
@@ -40,8 +39,8 @@
             flex-direction:column;
             align-items:center;
             justify-content:center;
-            /* MODIFIED: Reduced top margin from 18px to 10px to minimize space below the logo/title */
-            margin: 10px 0 10px; 
+            /* MODIFIED: Decreased top margin from 18px to 6px to move logo up */
+            margin: 6px 0 6px; 
             gap:6px;
         }
         #logo{
@@ -64,7 +63,7 @@
         }
         #frontPage{
             max-width:950px;
-            /* MODIFIED: Reduced top margin from 20px to 10px to bring the box closer to the title */
+            /* MODIFIED: Decreased top margin from 20px to 10px to move box closer to logo */
             margin:10px auto; 
             padding:20px;
             background: linear-gradient(135deg, rgba(10,10,10,0.8), rgba(26,26,26,0.9));
@@ -963,100 +962,3 @@
                 const isWinner = rank === 1;
                 const rankDisplay = isWinner ? `<span class="trophy">🏆</span> 1.` : `${rank}.`;
                 return `<div class="leaderboard-entry ${isWinner ? 'winner-entry' : ''}">
-                          <span class="rank-number">${rankDisplay}</span>
-                          <strong class="racer-name-leaderboard">${r.name}</strong>
-                          <span class="time-result">${formatMMSS(r.resultTime)}</span>
-                        </div>`;
-            }).join('');
-        }
-        function submitNames(){
-            const customNames = document.getElementById('racerNames').value.split('\n').map(name => name.trim()).filter(Boolean);
-            const submittedNamesDiv = document.getElementById('submittedNames');
-            const submittedNamesList = document.getElementById('submittedNamesList');
-            if (customNames.length === 0) {
-                submittedNamesDiv.style.display = 'none';
-                return;
-            }
-            submittedNamesList.innerHTML = customNames.map((name,i)=>`<li>${i+1}. ${name}</li>`).join('');
-            submittedNamesDiv.style.display = 'block';
-            statusDisplay.textContent = `Submitted ${customNames.length} racer${customNames.length===1?'':'s'}. Ready!`;
-            initRacers();
-            updateCanvasSettings();
-            drawAll();
-        }
-        function handleStartButton(){
-            if (racers.length === 0) {
-                submitNames();
-            }
-            
-            if (racers.length === 0) { 
-                statusDisplay.textContent = 'Please enter at least one racer name before starting.'; 
-                return; 
-            }
-            
-            if (raceState === RACE_STATES.SETUP) prepareRace();
-            else if (raceState === RACE_STATES.PREPARING) startRace();
-        }
-        function prepareRace(){
-            raceState = RACE_STATES.PREPARING;
-            setupControls.style.display = 'none'; document.getElementById('submittedNames').style.display = 'none';
-            raceView.style.display = 'flex'; raceControls.style.display = 'flex';
-            raceView.classList.add('fullscreen');
-            initRacers(); updateCanvasSettings(); initScenery(); drawAll();
-            statusDisplay.textContent = 'PREPARE: Click START RACE (GO!).';
-        }
-        function startRace(){
-            raceState = RACE_STATES.READY; isRacing = true; raceFinished = false;
-           
-            lastBoostTime = performance.now();
-            activeShortBooster = null;
-            lastDebuffTime = performance.now();
-            activeShortDebuffer = null;
-           
-            racers.forEach(r => { 
-                r.isLeadingSince = 0; 
-                r.isLastSince = 0; 
-                r.isLeaderDebuffed = false;
-                r.debuffEndTime = 0;
-                r.isLastBoosted = false;
-                r.boostEndTime = 0;
-            });
-
-            raceStartTime = performance.now();
-            lastFrameTime = performance.now();
-            statusDisplay.textContent = 'GO! RACE HAS BEGUN!';
-            raceControls.style.display = 'none';
-            cancelAnimationFrame(animationFrameId); animationFrameId = requestAnimationFrame(animate);
-        }
-        function resetRace(){
-            raceState = RACE_STATES.SETUP; isRacing = false; raceFinished = false;
-            cancelAnimationFrame(animationFrameId);
-            winnerOverlay.style.display = 'none'; leaderboard.style.display = 'none';
-            leaderboard.classList.remove('fullscreen');
-            setupControls.style.display = 'block'; raceView.style.display = 'none';
-            raceView.classList.remove('fullscreen');
-            postRaceControls.style.display = 'none';
-            statusDisplay.textContent = 'Systems nominal. Enter names to begin.';
-            initRacers();
-            updateCanvasSettings();
-            drawAll();
-        }
-        function showWinnerAnimation(winnerName){
-            document.getElementById('winnerName').textContent = winnerName + " WINS!";
-            winnerOverlay.style.display = 'flex';
-        }
-        submitNamesButton.addEventListener('click', submitNames);
-        setupStartButton.addEventListener('click', handleStartButton);
-        raceScreenStartButton.addEventListener('click', handleStartButton);
-        shuffleButton.addEventListener('click', reassignPokemons);
-        window.addEventListener('resize', () => {
-            if (raceState !== RACE_STATES.SETUP) {
-                updateCanvasSettings(); initScenery(); drawAll();
-            }
-        });
-        initRacers();
-        updateCanvasSettings();
-        drawAll();
-    </script>
-</body>
-</html>
