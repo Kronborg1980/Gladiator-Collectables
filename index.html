@@ -47,7 +47,6 @@
             height:auto;
             border-radius:12px;
             box-shadow: 0 0 15px rgba(255,255,255,0.5), 0 0 25px var(--secondary-glow);
-            border:3px solid var(--secondary-glow);
         }
         h1{
             font-family:'Orbitron',sans-serif;
@@ -262,13 +261,13 @@
             align-items: center;
             padding: 20px;
             box-sizing: border-box;
-            overflow-y: auto; 
+            overflow-y: auto;
         }
         .leaderboard-content {
             width: 100%;
             max-width: 700px;
             text-align: center;
-            max-height: 95vh; 
+            max-height: 95vh;
             display: flex;
             flex-direction: column;
             justify-content: flex-start;
@@ -287,9 +286,9 @@
             box-shadow: 0 0 30px rgba(0, 234, 255, 0.8), inset 0 0 15px rgba(0, 234, 255, 0.4);
             background: rgba(10, 10, 10, 0.8);
             margin: 20px 0;
-            width: 100%; 
+            width: 100%;
             box-sizing: border-box;
-            overflow-y: visible; 
+            overflow-y: visible;
         }
         .leaderboard-entry {
             background: #000000;
@@ -441,8 +440,8 @@
         const statusDisplay = document.getElementById('status');
         let CANVAS_VIEWPORT_WIDTH, CANVAS_VIEWPORT_HEIGHT;
         // MODIFIED: Increased anchor to 40% for better visual centering
-        const FIXED_RACER_X_ANCHOR_PCT = 0.40; 
-       
+        const FIXED_RACER_X_ANCHOR_PCT = 0.40;
+      
         let cameraAnchorX;
         let trackOffset = 0;
         let lastFrameTime = 0;
@@ -452,21 +451,21 @@
         const GRASS_AREA_HEIGHT = 100;
         let laneHeight = 100;
         const START_LINE_X = 50;
-       
-        const BASE_SPEED_PER_SECOND = 80 * 1.25; 
+      
+        const BASE_SPEED_PER_SECOND = 80 * 1.25;
         const BASE_MOMENTUM_FACTOR = 0.95;
         const SURGE_MULTIPLIER = 1.6;
         const DEBUFF_MULTIPLIER = 0.6;
+      
+        const RUBBER_BAND_FACTOR = 0.00;
+        const SHORT_BOOST_MULTIPLIER = 1.7;
+        const SHORT_DEBUFF_MULTIPLIER = 0.4;
+        const SHORT_BOOST_INTERVAL = 800;
+        const SHORT_DEBUFF_INTERVAL = 800;
+        const LEAD_SLOWDOWN_CHANCE = 0.3;
        
-        const RUBBER_BAND_FACTOR = 0.00; 
-        const SHORT_BOOST_MULTIPLIER = 1.7; 
-        const SHORT_DEBUFF_MULTIPLIER = 0.4; 
-        const SHORT_BOOST_INTERVAL = 800; 
-        const SHORT_DEBUFF_INTERVAL = 800; 
-        const LEAD_SLOWDOWN_CHANCE = 0.3; 
-        
-        const VOLATILITY_SWING = 0.3; 
-        
+        const VOLATILITY_SWING = 0.3;
+       
         const CAMERA_SMOOTHING_FACTOR = 0.1;
         let lastBoostTime = 0;
         let lastDebuffTime = 0;
@@ -476,15 +475,14 @@
         let shortDebuffEndTime = 0;
         const STAMINA_COST_SURGE = 35;
         const STAMINA_REGEN_RATE = 2.5;
-
         // POSITIONAL ALGORITHM CONSTANTS
-        const LEADER_DEBUFF_DURATION = 2500; 
-        const LEADER_DEBUFF_MULTIPLIER = 0.3; 
-        const LEADER_DEBUFF_COOLDOWN = 2000; 
-        const LAST_BOOST_DURATION = 3500; 
-        const LAST_BOOST_MULTIPLIER = 2.2; 
-        const LAST_BOOST_COOLDOWN = 1000; 
-       
+        const LEADER_DEBUFF_DURATION = 2500;
+        const LEADER_DEBUFF_MULTIPLIER = 0.3;
+        const LEADER_DEBUFF_COOLDOWN = 2000;
+        const LAST_BOOST_DURATION = 3500;
+        const LAST_BOOST_MULTIPLIER = 2.2;
+        const LAST_BOOST_COOLDOWN = 1000;
+      
         let TARGET_RACE_TIME_SECONDS = 60;
         let racers = [];
         let sceneryLayers = { back: [], mid: [], front: [] };
@@ -494,10 +492,10 @@
         let animationFrameId;
         let frameCount = 0;
         let currentLeaderX = 0;
-        
-        let FIXED_FINISH_LINE_X = 0; 
-        let DYNAMIC_FINISH_LINE_X = 0; 
-        let RACE_LENGTH = 4500; 
+       
+        let FIXED_FINISH_LINE_X = 0;
+        let DYNAMIC_FINISH_LINE_X = 0;
+        let RACE_LENGTH = 4500;
         let IDEAL_SPEED_PER_SECOND = 0;
         let finishPositions = [];
         const RACE_STATES = { SETUP: 'SETUP', PREPARING: 'PREPARING', READY: 'READY' };
@@ -523,13 +521,13 @@
         });
         const logoImage = new Image();
         logoImage.src = 'https://60fb7b08eaf293096e8c.cdn6.editmysite.com/uploads/b/60fb7b08eaf293096e8cb3f63df9e65735b8a1ee75f6d23d21eaed2115dfa2e6/IMG_7388_1701827680.jpeg?width=2400&optimize=medium';
-       
+      
         function getRandomInt(min, max) {
             min = Math.ceil(min);
             max = Math.floor(max);
             return Math.floor(Math.random() * (max - min + 1)) + min;
         }
-        
+       
         function formatMMSS(secondsFloat) {
             if (isNaN(secondsFloat) || secondsFloat === null || secondsFloat === Infinity) return "DNF";
             const total = Math.max(0, secondsFloat);
@@ -537,11 +535,10 @@
             const secs = total % 60;
             return `${String(mins).padStart(2,'0')}:${String(Math.floor(secs)).padStart(2,'0')}`;
         }
-        
+       
         function drawTimer() {
             // Timer functionality removed
         }
-
         function drawSceneryLayer(layer, parallaxFactor) {
             const layerOffset = trackOffset * parallaxFactor;
             layer.forEach(obj => {
@@ -596,16 +593,16 @@
         function drawStartLine(){ ctx.strokeStyle='white'; ctx.lineWidth=8; ctx.beginPath(); ctx.moveTo(START_LINE_X-10, GRASS_AREA_HEIGHT); ctx.lineTo(START_LINE_X-10, canvas.height-GRASS_AREA_HEIGHT); ctx.stroke(); }
         function drawFinishLine(){
             ctx.save();
-            const finishX = DYNAMIC_FINISH_LINE_X; 
+            const finishX = DYNAMIC_FINISH_LINE_X;
             const COLOR_PRIMARY = '#ffffff';
             const COLOR_SECONDARY = '#000000';
-           
+          
             // Draw checkered pattern
             const squareSize = 20;
             const numSquares = Math.ceil((canvas.height - GRASS_AREA_HEIGHT * 2) / squareSize);
-            const lineWidth = 60; 
+            const lineWidth = 60;
             const stripeWidth = lineWidth / 2;
-           
+          
             for (let y = 0; y < numSquares; y++) {
                 ctx.fillStyle = (y) % 2 === 0 ? COLOR_PRIMARY : COLOR_SECONDARY;
                 ctx.fillRect(
@@ -622,19 +619,19 @@
                     squareSize
                 );
             }
-           
+          
             // Draw banner above track
-            const bannerWidth = 300; 
-            const bannerHeight = 50; 
+            const bannerWidth = 300;
+            const bannerHeight = 50;
             const bannerY = GRASS_AREA_HEIGHT - bannerHeight - 10;
             ctx.fillStyle = 'rgba(0,0,0,0.9)';
             ctx.fillRect(finishX - bannerWidth / 2, bannerY, bannerWidth, bannerHeight);
             ctx.strokeStyle = '#00eaff';
             ctx.lineWidth = 6;
             ctx.strokeRect(finishX - bannerWidth / 2, bannerY, bannerWidth, bannerHeight);
-            
-            // Draw "FINISH" text on banner 
-            ctx.font = 'bold 42px Orbitron'; 
+           
+            // Draw "FINISH" text on banner
+            ctx.font = 'bold 42px Orbitron';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             ctx.shadowColor = '#00eaff';
@@ -654,21 +651,21 @@
         }
         function drawAll(){
             ctx.clearRect(0,0,canvas.width,canvas.height);
-            
-            
+           
+           
             ctx.save();
             ctx.translate(-trackOffset, 0);
-            
+           
             drawBackgroundAndTrack();
             drawSceneryLayer(sceneryLayers.back, 0.3);
             drawSceneryLayer(sceneryLayers.mid, 0.6);
             drawStartLine();
             racers.forEach(drawRacer);
             drawFinishLine();
-            
-            ctx.restore(); 
-            
-            drawTimer(); 
+           
+            ctx.restore();
+           
+            drawTimer();
         }
         function initRacers() {
             racers = [];
@@ -715,40 +712,39 @@
             const isFullscreen = raceView.classList.contains('fullscreen');
             CANVAS_VIEWPORT_WIDTH = isFullscreen ? Math.min(window.innerWidth * 0.85, 1400) : Math.max(setupControls.clientWidth, 300);
             CANVAS_VIEWPORT_HEIGHT = isFullscreen ? Math.min(window.innerHeight * 0.85, 800) : Math.max(480, document.documentElement.clientHeight * 0.6);
-            
+           
             // Race time is now approximate, only used to calculate fixed distance
             const targetTime = Math.max(10, Math.min(300, parseInt(document.getElementById('raceTimeSeconds').value) || 60));
-            TARGET_RACE_TIME_SECONDS = targetTime; 
-            
+            TARGET_RACE_TIME_SECONDS = targetTime;
+           
             const tempFinishX = BASE_SPEED_PER_SECOND * TARGET_RACE_TIME_SECONDS;
-            
+           
             // FIXED finish line based on target time
             FIXED_FINISH_LINE_X = Math.max(2000, Math.round(tempFinishX * 1.5));
-            DYNAMIC_FINISH_LINE_X = FIXED_FINISH_LINE_X; 
-            RACE_LENGTH = DYNAMIC_FINISH_LINE_X + 1500; 
+            DYNAMIC_FINISH_LINE_X = FIXED_FINISH_LINE_X;
+            RACE_LENGTH = DYNAMIC_FINISH_LINE_X + 1500;
             document.getElementById('raceLengthDisplay').value = DYNAMIC_FINISH_LINE_X.toFixed(0);
-
             canvas.width = CANVAS_VIEWPORT_WIDTH;
             canvas.height = CANVAS_VIEWPORT_HEIGHT;
             laneHeight = (canvas.height - (GRASS_AREA_HEIGHT * 2)) / Math.max(1, racers.length);
-           
+          
             IDEAL_SPEED_PER_SECOND = (FIXED_FINISH_LINE_X - START_LINE_X) / TARGET_RACE_TIME_SECONDS;
             // MODIFIED: Anchor at 40%
-            cameraAnchorX = CANVAS_VIEWPORT_WIDTH * FIXED_RACER_X_ANCHOR_PCT; 
-           
+            cameraAnchorX = CANVAS_VIEWPORT_WIDTH * FIXED_RACER_X_ANCHOR_PCT;
+          
             if (racers.length > 0) {
                 racers.forEach((racer, index) => {
                     racer.y = GRASS_AREA_HEIGHT + index * laneHeight + laneHeight / 2;
                     // Extreme randomization range (0.85 to 1.15)
-                    racer.baseSpeed = IDEAL_SPEED_PER_SECOND * (1.0 - 0.15 + Math.random() * 0.3); 
+                    racer.baseSpeed = IDEAL_SPEED_PER_SECOND * (1.0 - 0.15 + Math.random() * 0.3);
                 });
             }
         }
-        
+       
         function initScenery() {
             sceneryLayers = { back: [], mid: [], front: [] };
             const sceneryTypes = ['tree', 'house', 'spectator'];
-            const numObjects = 60; 
+            const numObjects = 60;
             for (let i = 0; i < numObjects; i++) {
                 const type = sceneryTypes[Math.floor(Math.random() * sceneryTypes.length)];
                 const top = Math.random() > 0.5;
@@ -760,21 +756,17 @@
                 }
             }
         }
-
         function updateRacers(deltaTimeSeconds){
             if (!raceStartTime) return;
             const now = performance.now();
             const elapsedMilliseconds = now - raceStartTime;
             let elapsedSeconds = elapsedMilliseconds / 1000;
-           
+          
             const sortedRacers = [...racers].sort((a, b) => b.x - a.x);
             let leader = sortedRacers[0];
             let lastRacer = sortedRacers[sortedRacers.length - 1];
-
-            if (!leader || !lastRacer) return; 
-
+            if (!leader || !lastRacer) return;
             const currentTime = performance.now();
-
             racers.forEach(racer => {
                 // Decay the positional effects if their time is up
                 if (racer.debuffEndTime > 0 && currentTime > racer.debuffEndTime) {
@@ -785,7 +777,6 @@
                     racer.isLastBoosted = false;
                     racer.boostEndTime = 0;
                 }
-
                 // --- Leader Debuff Logic ---
                 if (racer === leader) {
                     if (!racer.isLeaderDebuffed) {
@@ -793,14 +784,13 @@
                         if (currentTime - racer.isLeadingSince > LEADER_DEBUFF_COOLDOWN) {
                             racer.isLeaderDebuffed = true;
                             racer.debuffEndTime = currentTime + LEADER_DEBUFF_DURATION;
-                            racer.isLeadingSince = 0; 
+                            racer.isLeadingSince = 0;
                         }
                     }
-                    racer.isLastSince = 0; 
+                    racer.isLastSince = 0;
                 } else if (racer.isLeadingSince !== 0 && !racer.isLeaderDebuffed) {
                     racer.isLeadingSince = 0;
                 }
-
                 // --- Last Place Boost Logic ---
                 if (racer === lastRacer) {
                     if (!racer.isLastBoosted) {
@@ -808,49 +798,47 @@
                         if (currentTime - racer.isLastSince > LAST_BOOST_COOLDOWN) {
                             racer.isLastBoosted = true;
                             racer.boostEndTime = currentTime + LAST_BOOST_DURATION;
-                            racer.isLastSince = 0; 
+                            racer.isLastSince = 0;
                         }
                     }
-                    racer.isLeadingSince = 0; 
+                    racer.isLeadingSince = 0;
                 } else if (racer.isLastSince !== 0 && !racer.isLastBoosted) {
                     racer.isLastSince = 0;
                 }
             });
-           
+          
             // 3. Update Racer Speeds with Modifiers
             const packCenterX = racers.reduce((sum, r) => sum + r.x, 0) / racers.length;
-           
+          
             racers.forEach(racer => {
                 if (racer.stamina < 100) racer.stamina = Math.min(100, racer.stamina + STAMINA_REGEN_RATE * deltaTimeSeconds);
                 const staminaModifier = 0.7 + 0.3 * (racer.stamina / 100);
-               
+              
                 const distanceFromCenter = racer.x - packCenterX;
                 // RUBBER BANDING IS REMOVED
-                const rubberBandAdjustment = -distanceFromCenter * 0.00; 
-                
+                const rubberBandAdjustment = -distanceFromCenter * 0.00;
+               
                 const volatility = 1.0 + (Math.random() * VOLATILITY_SWING * 2 - VOLATILITY_SWING);
-                
+               
                 let naturalSpeed = racer.baseSpeed * BASE_MOMENTUM_FACTOR * staminaModifier + rubberBandAdjustment;
-                
+               
                 naturalSpeed *= volatility;
-                
+               
                 if (racer.surgeActive) naturalSpeed *= SURGE_MULTIPLIER;
                 if (racer.isDebuffed) naturalSpeed *= DEBUFF_MULTIPLIER;
-               
+              
                 if (racer === activeShortBooster) naturalSpeed *= SHORT_BOOST_MULTIPLIER;
                 if (racer === activeShortDebuffer) naturalSpeed *= SHORT_DEBUFF_MULTIPLIER;
-
-                if (racer.isLeaderDebuffed) naturalSpeed *= LEADER_DEBUFF_MULTIPLIER; 
-                if (racer.isLastBoosted) naturalSpeed *= LAST_BOOST_MULTIPLIER; 
-                
+                if (racer.isLeaderDebuffed) naturalSpeed *= LEADER_DEBUFF_MULTIPLIER;
+                if (racer.isLastBoosted) naturalSpeed *= LAST_BOOST_MULTIPLIER;
+               
                 // NO SYNCHRONIZATION LOGIC APPLIED
                 racer.currentSpeed = Math.max(1, naturalSpeed);
             });
-           
+          
             // 4. Race ends when the FIRST racer crosses the line.
             let firstFinisher = null;
             let timeToFinish = Infinity;
-
             for (const racer of racers) {
                 racer.nextX = racer.x + racer.currentSpeed * deltaTimeSeconds;
                 if (racer.nextX >= DYNAMIC_FINISH_LINE_X && racer.x < DYNAMIC_FINISH_LINE_X) {
@@ -862,20 +850,19 @@
                     }
                 }
             }
-
             if (firstFinisher) {
                 isRacing = false;
                 raceFinished = true;
                 cancelAnimationFrame(animationFrameId);
-                
+               
                 // Calculate precise finish time
                 const finalRaceTime = elapsedSeconds + timeToFinish;
-                
+               
                 firstFinisher.x = DYNAMIC_FINISH_LINE_X;
-                
+               
                 captureFinishPositions(finalRaceTime);
                 showWinnerAnimation(firstFinisher.name);
-               
+              
                 requestAnimationFrame(() => {
                     drawAll();
                     setTimeout(() => {
@@ -889,28 +876,25 @@
                 });
                 return;
             }
-           
+          
             // 5. Final Position Update
             racers.forEach(racer => {
                 racer.x += racer.currentSpeed * deltaTimeSeconds;
             });
         }
-
         function updateCamera(){
             if (!isRacing && !raceFinished) { trackOffset = 0; return; };
-           
+          
             const currentLeaderX = racers.reduce((max, r) => Math.max(max, r.x), 0);
             const minX = racers.reduce((min, r) => Math.min(min, r.x), currentLeaderX);
-
             let desiredOffset = currentLeaderX - cameraAnchorX;
+          
+            const minAllowedOffset = Math.max(0, minX - CANVAS_VIEWPORT_WIDTH * 0.1);
            
-            const minAllowedOffset = Math.max(0, minX - CANVAS_VIEWPORT_WIDTH * 0.1); 
-            
             desiredOffset = Math.max(minAllowedOffset, desiredOffset);
-
             const maxOffset = Math.max(0, RACE_LENGTH - CANVAS_VIEWPORT_WIDTH);
             desiredOffset = Math.min(desiredOffset, maxOffset);
-           
+          
             trackOffset += (desiredOffset - trackOffset) * CAMERA_SMOOTHING_FACTOR;
         }
         function animate(currentTime){
@@ -928,22 +912,21 @@
             }
         }
         function captureFinishPositions(winnerTime){
-            
+           
             finishPositions = racers.map(r => {
                 let resultTime;
                 if (r.x >= DYNAMIC_FINISH_LINE_X) {
-                    resultTime = winnerTime; 
+                    resultTime = winnerTime;
                 } else if (r.currentSpeed > 0) {
                      const distanceRemaining = DYNAMIC_FINISH_LINE_X - r.x;
                      const timeRemaining = distanceRemaining / r.currentSpeed;
-                     resultTime = winnerTime + timeRemaining; 
+                     resultTime = winnerTime + timeRemaining;
                 } else {
                     resultTime = Infinity;
                 }
-                
+               
                 return { name: r.name, finalX: r.x, currentSpeed: r.currentSpeed, resultTime };
             });
-
             finishPositions.sort((a, b) => {
                 if (a.resultTime === Infinity) return 1;
                 if (b.resultTime === Infinity) return -1;
@@ -983,12 +966,12 @@
             if (racers.length === 0) {
                 submitNames();
             }
-            
-            if (racers.length === 0) { 
-                statusDisplay.textContent = 'Please enter at least one racer name before starting.'; 
-                return; 
+           
+            if (racers.length === 0) {
+                statusDisplay.textContent = 'Please enter at least one racer name before starting.';
+                return;
             }
-            
+           
             if (raceState === RACE_STATES.SETUP) prepareRace();
             else if (raceState === RACE_STATES.PREPARING) startRace();
         }
@@ -1002,21 +985,20 @@
         }
         function startRace(){
             raceState = RACE_STATES.READY; isRacing = true; raceFinished = false;
-           
+          
             lastBoostTime = performance.now();
             activeShortBooster = null;
             lastDebuffTime = performance.now();
             activeShortDebuffer = null;
-           
-            racers.forEach(r => { 
-                r.isLeadingSince = 0; 
-                r.isLastSince = 0; 
+          
+            racers.forEach(r => {
+                r.isLeadingSince = 0;
+                r.isLastSince = 0;
                 r.isLeaderDebuffed = false;
                 r.debuffEndTime = 0;
                 r.isLastBoosted = false;
                 r.boostEndTime = 0;
             });
-
             raceStartTime = performance.now();
             lastFrameTime = performance.now();
             statusDisplay.textContent = 'GO! RACE HAS BEGUN!';
