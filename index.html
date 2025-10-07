@@ -1,144 +1,644 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gladiators Command Center</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        /* Base Colors (Consistent with Wheel Design) */
-        :root {
-            --tron-blue: #00FFFF;
-            --tron-magenta: #FF00FF;
-            --tron-red: #FF4500;
-            --dark-metal: #1a1a1a;
-            --dark-bg: #0A0A0A;
-            --text-neon: #E0E0E0;
-        }
-
-        /* Background Gradient for Depth */
-        body {
-            background: linear-gradient(135deg, #0d011a, var(--dark-bg), #010a14);
-            min-height: 100vh;
-        }
-
-        /* Header/Title Styling */
-        .neon-title-glow {
-            text-shadow: 0 0 5px #fff, 0 0 10px var(--tron-blue), 0 0 20px var(--tron-blue), 0 0 40px var(--tron-blue);
-        }
-
-        /* Command Button Base Style */
-        .command-button {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 3rem 2rem;
-            border-radius: 1rem;
-            font-weight: 800;
-            text-transform: uppercase;
-            color: var(--dark-bg);
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-            border: 3px solid transparent;
-            min-height: 250px;
-        }
-
-        /* Neon Border/Glow Effect (Pseudo-element for clean button look) */
-        .command-button::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            border-radius: 1rem;
-            border: 3px solid;
-            transition: all 0.3s ease;
-            z-index: 1;
-        }
-
-        /* Race Button (Tron Blue) */
-        #race-button {
-            background-color: var(--tron-blue);
-        }
-        #race-button::before {
-            border-color: var(--tron-blue);
-            box-shadow: 0 0 15px var(--tron-blue);
-        }
-        #race-button:hover {
-            background-color: var(--tron-blue);
-            color: var(--dark-bg);
-        }
-        #race-button:hover::before {
-            box-shadow: 0 0 30px var(--tron-blue), 0 0 60px var(--tron-blue);
-            transform: scale(1.02);
-        }
-
-        /* Wheel Button (Tron Magenta) */
-        #wheel-button {
-            background-color: var(--tron-magenta);
-        }
-        #wheel-button::before {
-            border-color: var(--tron-magenta);
-            box-shadow: 0 0 15px var(--tron-magenta);
-        }
-        #wheel-button:hover {
-            background-color: var(--tron-magenta);
-            color: var(--dark-bg);
-        }
-        #wheel-button:hover::before {
-            box-shadow: 0 0 30px var(--tron-magenta), 0 0 60px var(--tron-magenta);
-            transform: scale(1.02);
-        }
-
-        /* Text Content Layer */
-        .button-content {
-            z-index: 2;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.5); /* Helps dark text pop on neon background */
-        }
-        .button-content h3 {
-            font-size: 2.5rem;
-            line-height: 1;
-            margin-bottom: 0.5rem;
-        }
-        .button-content p {
-            font-size: 1.25rem;
-            font-weight: 500;
-        }
-    </style>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Pokémon Capture Chaos: ULTIMATE SHOWDOWN</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Bebas+Neue&display=swap" rel="stylesheet">
+    <style>
+        :root{
+            /* Neon Blue Aesthetic */
+            --primary-glow: #e0e0e0;
+            --secondary-glow: #00eaff; /* NEON BLUE */
+            --bg-dark: #0d121f; 
+            --text-light: #f0ff00;
+            --neutral-dark: #333;
+            --neutral-medium: #555;
+            --neutral-light: #bbb;
+            --racer-name-color: #FFFFFF;
+            --prepare-color: #ff5500;
+            --neon-red: #ff1744;
+            --grid-color-dark: #1f3b4c; 
+        }
+        html,body{
+            height:100%;
+            margin:0;
+            padding:0;
+            background: linear-gradient(135deg, var(--bg-dark), #010a14, var(--bg-dark));
+            color: var(--text-light);
+            font-family: 'Bebas Neue', sans-serif;
+            -webkit-font-smoothing:antialiased;
+            -moz-osx-font-smoothing:grayscale;
+        }
+        #titleContainer{
+            display:flex; flex-direction:column; align-items:center; justify-content:center;
+            margin: 18px 0 6px; gap:6px; position: relative; z-index: 1200;
+        }
+        #titleContainer.game-active { display: none; }
+        h1{
+            font-family:'Orbitron',sans-serif; color: var(--secondary-glow);
+            text-shadow:0 0 15px var(--secondary-glow), 0 0 30px var(--secondary-glow);
+            letter-spacing:4px; margin:0; text-transform:uppercase;
+            font-size: clamp(1.6em, 3.8vw, 2.8em); text-align:center;
+        }
+        #frontPage{
+            max-width:950px; margin:0 auto; padding:20px;
+            background: linear-gradient(135deg, rgba(10,10,10,0.8), rgba(26,26,26,0.9));
+            border-radius:20px; border:2px solid var(--secondary-glow);
+            box-shadow: 0 0 30px rgba(0, 234, 255, 0.3);
+            text-align:center;
+        }
+        .setup-grid{
+            display:grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap:20px; margin-bottom:20px;
+        }
+        .input-card{
+            background: rgba(0,0,0,0.5); border:1px solid var(--neutral-medium);
+            border-radius:12px; padding:15px; box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+        }
+        .input-card label{
+            display:block; margin-bottom:8px; color:var(--neutral-light);
+            font-size:0.9em; font-weight:bold;
+        }
+        .input-card textarea{ resize:vertical; min-height:120px; }
+        .action-buttons{ display:flex; justify-content:center; gap:15px; margin:20px 0; flex-wrap:wrap; }
+        .game-button{
+            padding: 15px 35px; border:none; border-radius:10px; cursor:pointer;
+            font-weight:bold; font-size:1.1em; transition: all 0.3s;
+            background: linear-gradient(45deg, var(--secondary-glow), #00aaff);
+            color:#111; box-shadow: 0 5px 15px rgba(0, 234, 255, 0.35), 0 0 20px rgba(0, 234, 255, 0.1);
+            text-shadow: 1px 1px 0 rgba(255,255,255,0.2);
+            /* Ensure anchor tags also get button styling */
+            text-decoration: none;
+            display: inline-block;
+            margin: 0 7.5px; /* Adjust margin for flex layout */
+        }
+        .game-button:hover{ transform:translateY(-3px); box-shadow: 0 8px 25px rgba(0, 234, 255, 0.5), 0 0 30px rgba(0, 234, 255, 0.2); }
+        .game-button.prepare{
+            background: linear-gradient(45deg, var(--neon-red), #ff4081);
+            color: var(--text-light); box-shadow: 0 5px 15px rgba(255, 23, 68, 0.6), 0 0 20px rgba(255, 23, 68, 0.3);
+        }
+        #status{
+            padding:12px; background:rgba(0, 234, 255, 0.1); border:1px solid var(--secondary-glow);
+            border-radius:8px; font-family: 'Orbitron', sans-serif; font-size:1.1em;
+            color: var(--primary-glow); text-shadow: 0 0 6px var(--primary-glow); margin-top:15px;
+        }
+        #gameView{
+            width:100%; max-width:800px; margin:20px auto; display:none; min-width:300px;
+            position: relative; text-align: center;
+        }
+        #gameControls {
+            margin: 15px 0; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap;
+        }
+        #gameCanvas {
+            image-rendering: pixelated; 
+            border: 4px solid var(--secondary-glow);
+            box-shadow: 0 0 25px var(--secondary-glow);
+            background-color: var(--grid-color-dark);
+        }
+        #infoPanel {
+            background: linear-gradient(135deg, rgba(0,0,0,0.8), rgba(26,26,26,0.9)); 
+            padding: 15px; border-radius: 12px;
+            border: 2px solid var(--secondary-glow); margin-top: 15px;
+            font-size: 1.0em; text-align: left;
+            box-shadow: 0 0 15px rgba(0, 234, 255, 0.5);
+        }
+        #infoPanel h4 { color: var(--secondary-glow); margin: 0 0 5px 0; font-size: 1.2em; }
+        #currentRacersList { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 10px; }
+        #currentRacersList li { 
+            background: rgba(0, 234, 255, 0.1); padding: 5px 10px; border-radius: 5px;
+            border: 1px solid var(--secondary-glow); font-size: 0.9em;
+        }
+        .eliminated-racer { color: var(--neon-red); text-decoration: line-through; opacity: 0.7; }
+        .eliminated-racer:before { content: "💀"; margin-right: 5px; }
+        #winnerOverlay{
+            position:fixed; top:0; left:0; width:100%; height:100%;
+            background-color: rgba(0,0,0,0.95); color:var(--primary-glow);
+            font-family: 'Orbitron', sans-serif; font-size: 4.5em;
+            display:none; align-items:center; justify-content:center; flex-direction:column;
+            text-shadow: 0 0 25px var(--primary-glow); z-index:2000;
+        }
+        #winnerName{
+            color: var(--secondary-glow); font-size:1.5em; margin-top:20px;
+            text-transform:uppercase; text-shadow: 0 0 15px var(--secondary-glow), 0 0 40px var(--secondary-glow);
+        }
+        #attackStatus {
+            font-size: 1.8em;
+            color: var(--neon-red);
+            text-shadow: 0 0 10px var(--neon-red);
+            margin-top: 5px;
+        }
+    </style>
 </head>
-<body class="text-text-neon p-8">
+<body>
+    <audio id="explosionSound" src="https://www.soundboard.com/media/259837"></audio>
 
-    <header class="text-center mb-12">
-        <h1 class="text-6xl font-black text-text-neon neon-title-glow">
-            GLADIATORS COMMAND CENTER
-        </h1>
-        <p class="mt-3 text-xl font-light text-primary-neon/80">Select a Trial for the Arena.</p>
-    </header>
+    <div id="titleContainer">
+        <img id="logo" src="https://60fb7b08eaf293096e8c.cdn6.editmysite.com/uploads/b/60fb7b08eaf293096e8cb3f63df9e65735b8a1ee75f6d23d21eaed2115dfa2e6/IMG_7388_1701827680.jpeg?width=2400&optimize=medium" alt="Gladiator Collectibles Logo" style="filter: hue-rotate(180deg);">
+        <h1>POKÉMON CAPTURE CHAOS</h1>
+    </div>
+    <div id="frontPage">
+        <h2>Last Pokémon Standing Setup</h2>
+        <div class="setup-grid">
+            <div class="input-card" style="grid-column: span 2;">
+                <label for="racerNames">Racer Names (one per line, max 10):</label>
+                <textarea id="racerNames" rows="5" placeholder="Ash\nMisty\nBrock\nGary\nLance\nSabrina\nGiovanni\nBlue"></textarea>
+            </div>
+        </div>
+        <div class="action-buttons">
+                        <a href="elimination.html" class="game-button prepare">
+                GLADIATOR ELIMINATION
+            </a>
+            <button id="submitNamesButton" class="game-button">SUBMIT NAMES & ASSIGN TYPES</button>
+            <button id="setupStartButton" class="game-button">START GAME</button>
+        </div>
+        <div id="status">Systems nominal. Enter names, submit, and click 'START GAME' to begin.</div>
+    </div>
+    
+    <div id="gameView">
+        <canvas id="gameCanvas" width="500" height="500"></canvas>
+        <div id="attackStatus"></div>
+        <div id="infoPanel">
+            <h4>Round Status: <span id="roundDisplay">N/A</span> | Elimination Mode: **Single Target**</h4>
+            <p>Attack Type: <strong id="attackTypeDisplay">Neutral</strong> (Pattern: <span id="attackPatternDisplay">None</span>)</p>
+            <p>Active Players: <ul id="currentRacersList"></ul></p>
+            <p style="margin-top: 10px;">Type Advantage Key: <span style="color: yellow; text-shadow: 0 0 5px yellow;">⭐ Immune</span> / <span style="color: lime; text-shadow: 0 0 5px lime;">✨ Evasion</span></p>
+        </div>
+        <div id="gameControls">
+            <button id="shuffleButton" class="game-button">SHUFFLE POKEMON</button>
+            <button id="startGameButton" class="game-button prepare">START CAPTURE CHAOS</button>
+        </div>
+    </div>
 
-    <main class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-        
-        <a id="race-button" href="race.html" class="command-button">
-            <div class="button-content">
-                <h3>THE SPEED TRIAL</h3>
-                <p>Launch the Gladiator Race</p>
-            </div>
-        </a>
+    <div id="winnerOverlay">
+        VICTORIOUS!
+        <span id="winnerName"></span>
+        <button onclick="resetGame()" class="game-button" style="margin-top: 40px;">NEW GAME</button>
+    </div>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const setupControls = document.getElementById('frontPage');
+        const gameView = document.getElementById('gameView');
+        const submitNamesButton = document.getElementById('submitNamesButton');
+        const setupStartButton = document.getElementById('setupStartButton');
+        const startGameButton = document.getElementById('startGameButton');
+        const shuffleButton = document.getElementById('shuffleButton');
+        const statusDisplay = document.getElementById('status');
+        const titleContainer = document.getElementById('titleContainer');
+        const roundDisplay = document.getElementById('roundDisplay');
+        const attackTypeDisplay = document.getElementById('attackTypeDisplay');
+        const attackPatternDisplay = document.getElementById('attackPatternDisplay');
+        const currentRacersList = document.getElementById('currentRacersList');
+        const winnerOverlay = document.getElementById('winnerOverlay');
+        const winnerNameDisplay = document.getElementById('winnerName');
+        const attackStatus = document.getElementById('attackStatus');
+        const explosionSound = document.getElementById('explosionSound');
+        
+        const GRID_SIZE = 10;
+        const TILE_SIZE = canvas.width / GRID_SIZE;
+        const POKEMON_IMAGE_SIZE = TILE_SIZE * 0.9;
+        const GAME_STATES = { SETUP: 'SETUP', PREPARING: 'PREPARING', PLAYING: 'PLAYING', FINISHED: 'FINISHED' };
+        let gameState = GAME_STATES.SETUP;
+        let racers = [];
+        let roundNumber = 0;
+        let gameLoopInterval;
+        let roundPhase = 0; // 0: Move (3000ms), 1: Warning/Attack (1500ms), 2: Resolution (500ms)
+        const PHASE_TIMINGS = [3000, 1500, 1000]; // Increased resolution time for visual bomb effect
 
-        <a id="wheel-button" href="gladiators-death-wheel.html" class="command-button">
-            <div class="button-content">
-                <h3>THE DEATH WHEEL</h3>
-                <p>Launch the Elimination Spin</p>
-            </div>
-        </a>
+        // --- Assets ---
+        const POKEBALL_URL = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png';
+        const POKEBALL_IMAGE = new Image();
+        POKEBALL_IMAGE.src = POKEBALL_URL;
 
-    </main>
+        // Custom Bomb Sprite (Use a yellow circle for explosion effect)
+        const BOMB_COLOR = 'rgba(255, 255, 0, 1)';
+        
+        const POKEMON_TYPES = ['Grass', 'Fire', 'Water', 'Electric', 'Ground', 'Fighting', 'Flying', 'Psychic'];
+        
+        // --- Attack Pattern definitions ---
+        const ATTACK_PATTERNS = {
+            'Earthquake': { type: 'Ground', name: 'Earthquake' },
+            'Thunder Wave': { type: 'Electric', name: 'Thunder Wave' },
+            'Hydro Pump': { type: 'Water', name: 'Hydro Pump' },
+            'Fire Blast': { type: 'Fire', name: 'Fire Blast' },
+            'Psychic Surge': { type: 'Psychic', name: 'Psychic Surge' }
+        };
 
-    <footer class="text-center mt-12 text-sm text-neutral-glow/50">
-        ARENA SYSTEMS ACTIVE - COMMAND LOG: 2025
-    </footer>
+        const pokemonData = [];
+        for (let id = 1; id <= 151; id++) {
+            pokemonData.push({
+                id, name: `Poke ${id}`,
+                imageGif: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/${id}.gif`,
+                sprite: null
+            });
+        }
+        pokemonData.forEach(p => {
+            const img = new Image();
+            img.onload = () => { p.sprite = img; };
+            img.src = p.imageGif;
+        });
 
+        // --- Core Game Logic ---
+        let currentAttack = { type: 'Neutral', name: 'Aura Scan', targetRacer: null, dodgeEffect: false };
+        let availableAttacks = Object.keys(ATTACK_PATTERNS);
+
+        function playExplosion() {
+            if (explosionSound.readyState >= 2) {
+                explosionSound.currentTime = 0;
+                explosionSound.play().catch(e => console.error("Audio playback failed:", e));
+            }
+        }
+
+        function drawGame() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // 1. Draw Grid Aura 
+            ctx.fillStyle = 'var(--grid-color-dark)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // 2. Draw Grid Lines (Neon Effect)
+            ctx.strokeStyle = 'var(--secondary-glow)';
+            ctx.shadowColor = 'var(--secondary-glow)';
+            ctx.shadowBlur = 8;
+            ctx.lineWidth = 1;
+            for (let i = 0; i <= GRID_SIZE; i++) {
+                ctx.beginPath(); ctx.moveTo(i * TILE_SIZE, 0); ctx.lineTo(i * TILE_SIZE, canvas.height); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(0, i * TILE_SIZE); ctx.lineTo(canvas.width, i * TILE_SIZE); ctx.stroke();
+            }
+            ctx.shadowBlur = 0; 
+
+            // 3. Draw Target Tile Flashing (Phase 1/2)
+            if (currentAttack.targetRacer && currentAttack.targetRacer.active && (roundPhase === 1 || roundPhase === 2)) {
+                const r = currentAttack.targetRacer;
+                const flash = Math.sin(Date.now() / 50) * 0.5 + 0.5; // High speed flash
+                
+                ctx.fillStyle = `rgba(255, 0, 0, ${0.4 * flash})`; // Red warning
+                ctx.fillRect(r.targetX * TILE_SIZE, r.targetY * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+                
+                // Draw target crosshair
+                ctx.strokeStyle = `rgba(255, 255, 0, ${0.8 * flash})`;
+                ctx.lineWidth = 4;
+                ctx.beginPath();
+                ctx.moveTo(r.targetX * TILE_SIZE, r.targetY * TILE_SIZE);
+                ctx.lineTo((r.targetX + 1) * TILE_SIZE, (r.targetY + 1) * TILE_SIZE);
+                ctx.moveTo((r.targetX + 1) * TILE_SIZE, r.targetY * TILE_SIZE);
+                ctx.lineTo(r.targetX * TILE_SIZE, (r.targetY + 1) * TILE_SIZE);
+                ctx.stroke();
+            }
+
+
+            // 4. Draw Racers
+            racers.filter(r => r.active).forEach(r => {
+                const x = r.x * TILE_SIZE + TILE_SIZE / 2;
+                const y = r.y * TILE_SIZE + TILE_SIZE / 2;
+                const nameText = `${r.name} (${r.data.type})`;
+
+                ctx.save();
+                ctx.translate(x, y);
+
+                // Draw immunity/Evasion glow
+                if (r.isSafe) {
+                    ctx.beginPath();
+                    ctx.arc(0, 0, TILE_SIZE * 0.4, 0, Math.PI * 2);
+                    ctx.fillStyle = r.isSafe === 'IMMUNE' ? 'rgba(255,255,0,0.3)' : 'rgba(0,255,0,0.3)';
+                    ctx.fill();
+                    ctx.strokeStyle = r.isSafe === 'IMMUNE' ? 'yellow' : 'lime';
+                    ctx.lineWidth = 3;
+                    ctx.stroke();
+                }
+
+                // Draw Sprite
+                if (r.data.sprite && r.data.sprite.complete) {
+                    ctx.drawImage(r.data.sprite, -POKEMON_IMAGE_SIZE / 2, -POKEMON_IMAGE_SIZE / 2, POKEMON_IMAGE_SIZE, POKEMON_IMAGE_SIZE);
+                }
+
+                // Draw Name Tag
+                ctx.font = `bold ${TILE_SIZE * 0.25}px "Bebas Neue", sans-serif`;
+                ctx.textAlign = 'center';
+                ctx.fillStyle = 'white';
+                ctx.strokeStyle = 'black';
+                ctx.lineWidth = 3;
+                
+                ctx.strokeText(nameText, 0, -TILE_SIZE / 2);
+                ctx.fillText(nameText, 0, -TILE_SIZE / 2);
+                
+                ctx.restore();
+            });
+
+            // 5. Draw Capture Animation (Explosion Effect)
+            racers.filter(r => r.captureAnimation).forEach(r => {
+                const x = r.x * TILE_SIZE + TILE_SIZE / 2;
+                const y = r.y * TILE_SIZE + TILE_SIZE / 2;
+                const animationTime = Date.now() - r.captureStartTime;
+                const duration = PHASE_TIMINGS[2];
+                const progress = animationTime / duration;
+
+                ctx.save();
+                ctx.translate(x, y);
+
+                if (progress < 1) {
+                    // Draw Poké Ball slamming down
+                    const ballSize = POKEMON_IMAGE_SIZE * 1.5;
+                    const scale = Math.min(1.0, progress * 3); 
+                    ctx.drawImage(POKEBALL_IMAGE, -ballSize * scale / 2, -ballSize * scale / 2, ballSize * scale, ballSize * scale);
+                    
+                    // Draw Explosion (Yellow Expanding circle)
+                    ctx.beginPath();
+                    ctx.arc(0, 0, POKEMON_IMAGE_SIZE * progress * 2, 0, Math.PI * 2);
+                    ctx.fillStyle = BOMB_COLOR;
+                    ctx.globalAlpha = 0.9 * (1 - progress); // Fade out quickly
+                    ctx.fill();
+
+                    // Sucking effect (black circle)
+                    ctx.beginPath();
+                    ctx.arc(0, 0, POKEMON_IMAGE_SIZE * (1.2 - progress), 0, Math.PI * 2);
+                    ctx.fillStyle = 'rgba(0,0,0,0.8)';
+                    ctx.globalAlpha = 0.5 * (1 - progress);
+                    ctx.fill();
+                }
+                
+                ctx.restore();
+                ctx.globalAlpha = 1.0;
+            });
+        }
+
+        // --- Phase Management ---
+
+        function startRound() {
+            const activeRacers = racers.filter(r => r.active);
+            if (activeRacers.length <= 1) {
+                endGame(activeRacers[0]);
+                return;
+            }
+
+            roundNumber++;
+            roundPhase = 0;
+            activeRacers.forEach(r => {
+                r.targetX = r.x; r.targetY = r.y; 
+                r.isSafe = null;
+                r.captureAnimation = false;
+            });
+            updateRacerListDisplay();
+            
+            // 1. Select Attack Type/Name
+            const attackName = availableAttacks[Math.floor(Math.random() * availableAttacks.length)];
+            const attackConfig = ATTACK_PATTERNS[attackName];
+
+            currentAttack.name = attackName;
+            currentAttack.type = attackConfig.type;
+            currentAttack.dodgeEffect = (currentAttack.type === 'Water' || currentAttack.type === 'Fire');
+            currentAttack.targetRacer = null;
+            
+            // 2. Select Single Target
+            currentAttack.targetRacer = activeRacers[Math.floor(Math.random() * activeRacers.length)];
+
+            updateGameInfo();
+            attackStatus.textContent = '';
+            statusDisplay.textContent = `ROUND ${roundNumber} - MOVE PHASE: ${PHASE_TIMINGS[0] / 1000} seconds to dodge!`;
+            
+            setTimeout(attackPhase, PHASE_TIMINGS[0]);
+            drawGame();
+        }
+
+        function attackPhase() {
+            roundPhase = 1;
+            const targetName = currentAttack.targetRacer ? currentAttack.targetRacer.name : 'NO TARGET';
+            attackStatus.textContent = `!! ${targetName} MARKED FOR CAPTURE !!`;
+            statusDisplay.textContent = `ROUND ${roundNumber} - ATTACK WARNING: ${currentAttack.name} Incoming!`;
+            updateGameInfo();
+            drawGame();
+            setTimeout(resolutionPhase, PHASE_TIMINGS[1]);
+        }
+
+        function resolutionPhase() {
+            roundPhase = 2;
+            attackStatus.textContent = '';
+            statusDisplay.textContent = `ROUND ${roundNumber} - RESOLUTION: Did ${currentAttack.targetRacer.name} escape?`;
+            
+            const r = currentAttack.targetRacer;
+            
+            if (r.active) {
+                // Finalize movement before checking capture
+                r.x = r.targetX; 
+                r.y = r.targetY;
+
+                let captured = true;
+                let reason = currentAttack.type;
+
+                // 1. Check for Immunity
+                const type = r.data.type;
+                if ((currentAttack.type === 'Ground' && (type === 'Flying' || type === 'Grass')) || 
+                    (currentAttack.type === 'Electric' && type === 'Ground')) {
+                    r.isSafe = 'IMMUNE';
+                    captured = false;
+                    reason = `IMMUNE (${type})`;
+                } 
+                
+                // 2. Check for Evasion
+                else if (currentAttack.dodgeEffect && (type === 'Water' || type === 'Fire')) {
+                    if (Math.random() < 0.5) { 
+                        captured = false;
+                        r.isSafe = 'EVADED';
+                        reason = `EVADED (${type})`;
+                    } else {
+                        reason = `CAUGHT (Failed Evasion)`;
+                    }
+                } else {
+                    reason = `CAUGHT (Hit by ${currentAttack.type})`;
+                }
+                
+                // 3. Final Elimination
+                if (captured) {
+                    r.captureAnimation = true;
+                    r.captureStartTime = Date.now();
+                    r.eliminationReason = reason;
+                    playExplosion();
+                    
+                    // Set elimination to happen after the animation (PHASE_TIMINGS[2])
+                    setTimeout(() => {
+                        r.active = false;
+                        statusDisplay.textContent = `💥 ${r.name} was CAPTURED!`;
+                        updateRacerListDisplay();
+                        setTimeout(startRound, 200); // Quick transition to next round
+                    }, PHASE_TIMINGS[2]); 
+                } else {
+                    statusDisplay.textContent = `✅ ${r.name} survived! Reason: ${reason}.`;
+                    setTimeout(startRound, 200);
+                }
+            } else {
+                // Target was eliminated in a previous round but was still selected (shouldn't happen with filter)
+                setTimeout(startRound, 50);
+            }
+        }
+
+        function endGame(winner) {
+            gameState = GAME_STATES.FINISHED;
+            winnerNameDisplay.textContent = winner ? `${winner.name} WINS!` : "NO WINNER LEFT!";
+            winnerOverlay.style.display = 'flex';
+            statusDisplay.textContent = `GAME OVER! ${winner ? winner.name : 'Everyone'} survived ${roundNumber} rounds.`;
+            titleContainer.classList.remove('game-active');
+        }
+
+        // --- Utility Functions ---
+
+        function updateRacerListDisplay() {
+            currentRacersList.innerHTML = racers.map(r => {
+                const isEliminated = !r.active;
+                let display = `${r.name} (${r.data.type})`;
+                if (isEliminated) {
+                    display += ` - ${r.eliminationReason || 'Capture'}`;
+                } else if (currentAttack.targetRacer === r && roundPhase !== 0) {
+                     display = `🔥 ${display} 🔥`;
+                }
+                return `<li class="${isEliminated ? 'eliminated-racer' : ''}">${display}</li>`;
+            }).join('');
+        }
+
+        function updateGameInfo() {
+            roundDisplay.textContent = `#${roundNumber}`;
+            attackTypeDisplay.textContent = currentAttack.type;
+            attackPatternDisplay.textContent = currentAttack.name;
+        }
+
+        function submitNames() {
+            initRacers(true);
+            if (racers.length === 0) {
+                statusDisplay.textContent = 'Please enter at least one racer name.';
+                return;
+            }
+            updateRacerListDisplay();
+            statusDisplay.textContent = `Submitted ${racers.length} Pokémon. Ready to start!`;
+            drawGame();
+        }
+
+        function prepareGame() {
+            if (racers.length < 2) {
+                statusDisplay.textContent = 'Need at least 2 racers to start the chaos!';
+                return;
+            }
+            gameState = GAME_STATES.PREPARING;
+            setupControls.style.display = 'none'; 
+            gameView.style.display = 'block'; 
+            titleContainer.classList.add('game-active');
+            statusDisplay.textContent = 'PREPARE: Shuffle Types, then click START CAPTURE CHAOS.';
+            drawGame();
+        }
+
+        function startGame() {
+            gameState = GAME_STATES.PLAYING;
+            setupControls.style.display = 'none'; 
+            startGameButton.style.display = 'none';
+            shuffleButton.style.display = 'none';
+            startRound();
+        }
+
+        function resetGame() {
+            gameState = GAME_STATES.SETUP;
+            roundNumber = 0;
+            currentAttack = { type: 'Neutral', name: 'Aura Scan', targetRacer: null, dodgeEffect: false };
+            winnerOverlay.style.display = 'none';
+            setupControls.style.display = 'block';
+            gameView.style.display = 'none';
+            titleContainer.classList.remove('game-active');
+            updateGameInfo();
+            currentRacersList.innerHTML = '';
+            statusDisplay.textContent = 'Systems nominal. Enter names to begin.';
+            initRacers(false); 
+            drawGame();
+        }
+
+        // --- AI Movement Logic (Simple Random Walk) ---
+        function moveAI() {
+            if (gameState !== GAME_STATES.PLAYING || roundPhase !== 0) return;
+
+            // Update targets during the Move Phase (0) only
+            racers.filter(r => r.active).forEach(r => {
+                const availableMoves = [];
+                // Check all 9 possible moves (8 adjacent + stay put)
+                for (let dx = -1; dx <= 1; dx++) {
+                    for (let dy = -1; dy <= 1; dy++) {
+                        const newX = r.x + dx;
+                        const newY = r.y + dy;
+
+                        if (newX >= 0 && newX < GRID_SIZE && newY >= 0 && newY < GRID_SIZE) {
+                            availableMoves.push({ x: newX, y: newY });
+                        }
+                    }
+                }
+
+                if (availableMoves.length > 0) {
+                    const randomMove = availableMoves[Math.floor(Math.random() * availableMoves.length)];
+                    r.targetX = randomMove.x;
+                    r.targetY = randomMove.y;
+                }
+            });
+            drawGame();
+        }
+        
+        function initRacers(fromSetup = true) {
+            racers = [];
+            const customNamesInput = document.getElementById('racerNames');
+            let customNames = customNamesInput.value.split('\n').map(name => name.trim()).filter(name => name).slice(0, 10);
+            if (customNames.length === 0 && fromSetup) return;
+
+            const shuffledPokemon = [...pokemonData].sort(() => 0.5 - Math.random());
+            const numRacers = Math.min(customNames.length, shuffledPokemon.length);
+
+            const usedTiles = new Set();
+            for (let i = 0; i < numRacers; i++) {
+                let x, y, posKey;
+                do {
+                    x = Math.floor(Math.random() * GRID_SIZE);
+                    y = Math.floor(Math.random() * GRID_SIZE);
+                    posKey = `${x},${y}`;
+                } while (usedTiles.has(posKey));
+                usedTiles.add(posKey);
+
+                racers.push({
+                    name: customNames[i],
+                    data: { ...shuffledPokemon[i], type: POKEMON_TYPES[i % POKEMON_TYPES.length] },
+                    active: true,
+                    x: x,
+                    y: y,
+                    targetX: x,
+                    targetY: y,
+                    isSafe: null,
+                    captureAnimation: false,
+                    eliminationReason: null
+                });
+            }
+            if (racers.length > 0) reassignPokemons(false); 
+        }
+
+        function reassignPokemons(updateDisplay = true) {
+            if (racers.length === 0) return;
+            const shuffledPokemon = [...pokemonData].sort(() => 0.5 - Math.random());
+            const shuffledTypes = [...POKEMON_TYPES].sort(() => 0.5 - Math.random()); 
+
+            racers.forEach((racer, i) => {
+                const newPoke = shuffledPokemon[i % shuffledPokemon.length];
+                const newType = shuffledTypes[i % shuffledTypes.length];
+                racer.data = { ...newPoke, type: newType };
+            });
+            if (updateDisplay) submitNames(false); 
+            drawGame();
+        }
+
+        // --- Event Listeners ---
+        submitNamesButton.addEventListener('click', submitNames);
+        setupStartButton.addEventListener('click', prepareGame);
+        startGameButton.addEventListener('click', startGame);
+        shuffleButton.addEventListener('click', () => reassignPokemons(true));
+
+        // Start game loop (handles AI movement)
+        gameLoopInterval = setInterval(moveAI, 100);
+        // Continuous redraw for animations (Poké Ball slam, flashing grid)
+        setInterval(drawGame, 50);
+
+        // Initial setup
+        initRacers(false); 
+        drawGame();
+    </script>
 </body>
 </html>
