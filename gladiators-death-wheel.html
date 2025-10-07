@@ -18,7 +18,6 @@
 
         /* --- GLOBAL & UTILITY STYLES --- */
         .tron-background {
-            /* Adds a subtle repeating grid pattern for a high-tech/matrix feel */
             background-color: #0A0A0A;
             background-image: linear-gradient(0deg, transparent 95%, rgba(0, 255, 255, 0.05) 100%),
                               linear-gradient(90deg, transparent 95%, rgba(0, 255, 255, 0.05) 100%);
@@ -38,42 +37,27 @@
 
         /* --- WHEEL & POINTER STYLES --- */
         #wheel-canvas {
-            border: 10px solid #222; /* Darker, thicker metal rim */
+            border: 10px solid var(--dark-metal); /* Darker, thicker metal rim */
             border-radius: 50%;
-            /* Stronger Blue Neon Glow on the main wheel edge */
             box-shadow: 0 0 40px var(--tron-blue), 0 0 15px var(--tron-blue);
         }
 
         #pointer {
-            /* Redesigned Pointer: Sharp, metallic, and backlit with neon blue */
+            /* REWORKED POINTER FOR ALIGNMENT AND AESTHETICS */
             position: absolute;
-            top: -65px;
-            width: 0;
-            height: 0;
-            border-left: 30px solid transparent; 
-            border-right: 30px solid transparent; 
-            border-top: 60px solid var(--light-metal); /* Metallic base */
-            border-bottom: 20px solid transparent;
-            z-index: 10;
+            top: -55px; /* Adjusted to sit just above the wheel's edge */
             left: 50%;
-            transform: translateX(-50%);
-            transform-origin: 50% 100%;
-            
-            /* Neon Blue Backlight */
-            box-shadow: 0 0 25px var(--tron-blue);
-            filter: drop-shadow(0 0 5px var(--tron-blue));
-            
-            /* Inner Glow Chevron Tip (Pure White for visual clarity) */
-            content: '';
-            position: absolute;
-            top: -55px;
-            left: -30px; 
+            transform: translateX(-50%); /* Centered horizontally */
             width: 0;
             height: 0;
-            border-left: 30px solid transparent; 
-            border-right: 30px solid transparent; 
-            border-top: 55px solid var(--text-white);
-            filter: drop-shadow(0 0 10px var(--tron-blue));
+            border-left: 25px solid transparent; /* Width of pointer base */
+            border-right: 25px solid transparent; /* Width of pointer base */
+            border-top: 50px solid var(--text-white); /* White triangle body */
+            z-index: 10; /* Ensure it's above the wheel */
+            
+            /* Add intense neon blue glow */
+            filter: drop-shadow(0 0 20px var(--tron-blue));
+            box-shadow: 0 0 15px var(--tron-blue); /* Additional glow */
         }
 
         @keyframes pointerBounce {
@@ -86,7 +70,6 @@
 
         /* --- CONTROL PANEL STYLES --- */
         #spin-button {
-            /* Intense Neon Blue Button */
             background-color: var(--tron-blue) !important;
             color: var(--dark-metal) !important;
             box-shadow: 0 0 20px var(--tron-blue), 0 0 40px var(--tron-blue);
@@ -98,7 +81,6 @@
         }
 
         #elimination-button {
-            /* Intense Neon Red Button for Danger */
             background-color: var(--tron-red) !important;
             box-shadow: 0 0 20px var(--tron-red), 0 0 40px var(--tron-red);
         }
@@ -317,7 +299,7 @@ Eve</textarea>
 
                 ctx.fillStyle = TEXT_COLOR; // PURE WHITE TEXT
                 ctx.shadowColor = 'var(--tron-blue)';
-                ctx.shadowBlur = 4; // Subtle glow for readability
+                ctx.shadowBlur = 5; /* Slightly stronger glow for readability */
                 ctx.font = `bold ${Math.floor(size * 0.035)}px Inter`; 
                 ctx.textAlign = 'right';
                 ctx.textBaseline = 'middle';
@@ -332,8 +314,8 @@ Eve</textarea>
 
             // 2. Draw Pegs (Needles) - White Core, Blue Glow
             const numPegs = dataToDraw.length;
-            const pegRadius = radius; 
-            const pegSize = size * 0.012; 
+            const pegRadius = radius - 5; /* Slightly inside the rim */
+            const pegSize = size * 0.015; /* Larger pegs */
 
             for (let i = 0; i < numPegs; i++) {
                 const angle = (i + 1) * segmentAngle;
@@ -345,10 +327,10 @@ Eve</textarea>
                 
                 // Peg Glow
                 ctx.beginPath();
-                ctx.arc(x, y, pegSize + 2, 0, 2 * Math.PI);
+                ctx.arc(x, y, pegSize + 3, 0, 2 * Math.PI); /* Glow slightly larger than core */
                 ctx.fillStyle = 'var(--tron-blue)';
                 ctx.shadowColor = 'var(--tron-blue)';
-                ctx.shadowBlur = 10;
+                ctx.shadowBlur = 12; /* Stronger glow */
                 ctx.fill();
 
                 // Peg Core (White/Metallic)
@@ -367,18 +349,18 @@ Eve</textarea>
             
             // Neon Ring
             ctx.beginPath();
-            ctx.arc(centerX, centerY, logoRadius + 8, 0, 2 * Math.PI);
+            ctx.arc(centerX, centerY, logoRadius + 10, 0, 2 * Math.PI); /* Thicker ring */
             ctx.fillStyle = 'var(--tron-blue)';
             ctx.shadowColor = 'var(--tron-blue)';
-            ctx.shadowBlur = 15;
+            ctx.shadowBlur = 20; /* More intense glow */
             ctx.fill();
 
             // Inner Metallic Core
             ctx.beginPath();
             ctx.arc(centerX, centerY, logoRadius, 0, 2 * Math.PI);
-            const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, logoRadius);
-            gradient.addColorStop(0, '#666666'); 
-            gradient.addColorStop(1, '#1a1a1a'); 
+            const gradient = ctx.createRadialGradient(centerX, centerY, logoRadius * 0.2, centerX, centerY, logoRadius); /* Gradient refined */
+            gradient.addColorStop(0, '#EEEEEE'); /* Lighter center */
+            gradient.addColorStop(1, '#333333'); /* Darker edge */
             ctx.fillStyle = gradient;
             ctx.shadowBlur = 0;
             ctx.fill();
