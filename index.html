@@ -235,42 +235,28 @@
             box-shadow: 0 0 50px var(--secondary-glow), inset 0 0 20px rgba(0, 234, 255, 0.1);
             border-radius: 15px;
         }
-        /* NEW CSS for Corner Logos on Race Screen */
+        
+        /* CORRECTED CSS FOR CORNER LOGOS (Only visible on fullscreen race screen) */
         .corner-logo {
             position: absolute;
-            width: clamp(60px, 10vh, 75px); /* Slightly smaller than setup screen logo */
+            width: clamp(60px, 10vh, 75px);
             height: auto;
             border-radius: 8px;
             box-shadow: 0 0 12px rgba(255,255,255,0.5), 0 0 20px var(--secondary-glow);
-            z-index: 1200; /* Above canvas and controls */
-            display: none; /* Hide by default */
+            z-index: 1200;
+            display: none; /* Hidden by default */
         }
 
         #raceView.fullscreen .corner-logo {
-            display: block; /* Show only when raceView is fullscreen */
+            display: block; /* Shown only when raceView is fullscreen */
         }
         
-        #logo-tl {
-            top: 20px;
-            left: 20px;
-        }
-
-        #logo-tr {
-            top: 20px;
-            right: 20px;
-        }
-
-        #logo-bl {
-            bottom: 20px;
-            left: 20px;
-        }
-
-        #logo-br {
-            bottom: 20px;
-            right: 20px;
-        }
-        /* END NEW CSS for Corner Logos */
-
+        #logo-tl { top: 20px; left: 20px; }
+        #logo-tr { top: 20px; right: 20px; }
+        #logo-bl { bottom: 20px; left: 20px; }
+        #logo-br { bottom: 20px; right: 20px; }
+        /* END CORRECTED CSS */
+        
         #raceControls {
             position: absolute;
             top: 50%;
