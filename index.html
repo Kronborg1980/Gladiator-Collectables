@@ -10,7 +10,7 @@
         :root {
             --tron-blue: #00FFFF;
             --tron-magenta: #FF00FF;
-            --tron-red: #FF4500;
+            --tron-red: #FF4500; /* Color for Elimination */
             --dark-metal: #1a1a1a;
             --dark-bg: #0A0A0A;
             --text-neon: #E0E0E0;
@@ -59,6 +59,8 @@
             z-index: 1;
         }
 
+        /* --- Button Colors and Hover Effects --- */
+
         /* Race Button (Tron Blue) */
         #race-button {
             background-color: var(--tron-blue);
@@ -66,10 +68,6 @@
         #race-button::before {
             border-color: var(--tron-blue);
             box-shadow: 0 0 15px var(--tron-blue);
-        }
-        #race-button:hover {
-            background-color: var(--tron-blue);
-            color: var(--dark-bg);
         }
         #race-button:hover::before {
             box-shadow: 0 0 30px var(--tron-blue), 0 0 60px var(--tron-blue);
@@ -84,19 +82,32 @@
             border-color: var(--tron-magenta);
             box-shadow: 0 0 15px var(--tron-magenta);
         }
-        #wheel-button:hover {
-            background-color: var(--tron-magenta);
-            color: var(--dark-bg);
-        }
         #wheel-button:hover::before {
             box-shadow: 0 0 30px var(--tron-magenta), 0 0 60px var(--tron-magenta);
             transform: scale(1.02);
         }
 
+        /* Elimination Button (Tron Red) */
+        #elimination-button {
+            background-color: var(--tron-red);
+        }
+        #elimination-button::before {
+            border-color: var(--tron-red);
+            box-shadow: 0 0 15px var(--tron-red);
+        }
+        #elimination-button:hover {
+            background-color: var(--tron-red);
+            color: var(--dark-bg);
+        }
+        #elimination-button:hover::before {
+            box-shadow: 0 0 30px var(--tron-red), 0 0 60px var(--tron-red);
+            transform: scale(1.02);
+        }
+        
         /* Text Content Layer */
         .button-content {
             z-index: 2;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.5); /* Helps dark text pop on neon background */
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5); 
         }
         .button-content h3 {
             font-size: 2.5rem;
@@ -118,7 +129,7 @@
         <p class="mt-3 text-xl font-light text-primary-neon/80">Select a Trial for the Arena.</p>
     </header>
 
-    <main class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+    <main class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
         
         <a id="race-button" href="race.html" class="command-button">
             <div class="button-content">
@@ -131,6 +142,13 @@
             <div class="button-content">
                 <h3>THE DEATH WHEEL</h3>
                 <p>Launch the Elimination Spin</p>
+            </div>
+        </a>
+
+        <a id="elimination-button" href="Elimination.html" class="command-button">
+            <div class="button-content">
+                <h3>GLADIATORS ELIMINATION ARENA</h3>
+                <p>Execute the Final Trial</p>
             </div>
         </a>
 
