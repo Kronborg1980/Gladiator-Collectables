@@ -41,16 +41,6 @@
             justify-content:center;
             margin: 18px 0 6px;
             gap:6px;
-            position: fixed;
-            top: 10px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 2000;
-            background: rgba(0,0,0,0.7);
-            padding: 10px;
-            border-radius: 0 0 15px 15px;
-            border-bottom: 2px solid var(--secondary-glow);
-            box-shadow: 0 0 20px rgba(0,234,255,0.5);
         }
         #logo{
             width: clamp(60px, 12vw, 90px);
@@ -78,7 +68,6 @@
             border:2px solid var(--secondary-glow);
             box-shadow: 0 0 30px rgba(0,234,255,0.3);
             text-align:center;
-            margin-top: 120px;
         }
         #frontPage h2{
             font-family:'Orbitron',sans-serif;
@@ -179,7 +168,6 @@
             font-size:1.1em;
             text-align:center;
             display:none;
-            margin-top: 120px;
         }
         #submittedNames h3{
             margin:0 0 15px 0;
@@ -673,7 +661,7 @@
             ctx.lineWidth = 12;
             ctx.shadowColor = '#00eaff'; 
             ctx.shadowBlur = 30;
-            const borderInset = 1;
+            const borderInset = 6;
             ctx.strokeRect(borderInset, borderInset, canvas.width - 2 * borderInset, canvas.height - 2 * borderInset); 
             ctx.restore();
             
