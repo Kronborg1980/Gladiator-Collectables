@@ -216,8 +216,8 @@
             top:50%;
             left:50%;
             transform: translate(-50%, -50%);
-            width:80vw;
-            height:80vh;
+            width:85vw;
+            height:85vh;
             max-width:none;
             display:flex;
             flex-direction:column;
@@ -225,6 +225,9 @@
             justify-content:center;
             background:var(--bg-dark);
             z-index:1000;
+            border: 3px solid var(--secondary-glow);
+            box-shadow: 0 0 50px var(--secondary-glow), inset 0 0 20px rgba(0, 234, 255, 0.1);
+            border-radius: 15px;
         }
         #raceControls {
             position: absolute;
@@ -652,9 +655,14 @@
         }
         function drawAll(){
             ctx.clearRect(0,0,canvas.width,canvas.height);
+            
             ctx.save();
-            ctx.strokeStyle = '#00eaff'; ctx.lineWidth = 6; ctx.shadowColor = '#00eaff'; ctx.shadowBlur = 16;
-            ctx.strokeRect(2, 2, canvas.width - 4, canvas.height - 4); ctx.restore();
+            ctx.strokeStyle = '#00eaff'; 
+            ctx.lineWidth = 12;
+            ctx.shadowColor = '#00eaff'; 
+            ctx.shadowBlur = 30;
+            ctx.strokeRect(0, 0, canvas.width, canvas.height); 
+            ctx.restore();
             
             ctx.save();
             ctx.translate(-trackOffset, 0);
@@ -723,8 +731,8 @@
         }
         function updateCanvasSettings() {
             const isFullscreen = raceView.classList.contains('fullscreen');
-            CANVAS_VIEWPORT_WIDTH = isFullscreen ? Math.min(window.innerWidth * 0.8, 1400) : Math.max(setupControls.clientWidth, 300);
-            CANVAS_VIEWPORT_HEIGHT = isFullscreen ? Math.min(window.innerHeight * 0.8, 800) : Math.max(480, document.documentElement.clientHeight * 0.6);
+            CANVAS_VIEWPORT_WIDTH = isFullscreen ? Math.min(window.innerWidth * 0.85, 1400) : Math.max(setupControls.clientWidth, 300);
+            CANVAS_VIEWPORT_HEIGHT = isFullscreen ? Math.min(window.innerHeight * 0.85, 800) : Math.max(480, document.documentElement.clientHeight * 0.6);
             
             // Race time is now approximate, only used to calculate fixed distance
             const targetTime = Math.max(10, Math.min(300, parseInt(document.getElementById('raceTimeSeconds').value) || 60));
