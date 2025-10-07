@@ -25,7 +25,6 @@
             background-size: 25px 25px;
         }
 
-        /* 🎯 UPDATED: Using the neon-title-glow from your index.html */
         .neon-title-glow {
             text-shadow: 0 0 5px #fff, 0 0 10px var(--tron-blue), 0 0 20px var(--tron-blue), 0 0 40px var(--tron-blue);
             color: var(--text-white); /* Ensure the base text color is white before glow */
@@ -45,15 +44,16 @@
         }
 
         #pointer {
+            /* Slimmer, Sharper, Closer */
             position: absolute;
             top: -35px; /* Moved closer to the wheel */
             left: 50%;
             transform: translateX(-50%); /* Centered horizontally */
             width: 0;
             height: 0;
-            border-left: 10px solid transparent; /* MUCH SLIMMER BASE */
-            border-right: 10px solid transparent; /* MUCH SLIMMER BASE */
-            border-top: 40px solid var(--text-white); /* SHORTER AND SLIMMER BODY */
+            border-left: 10px solid transparent; 
+            border-right: 10px solid transparent; 
+            border-top: 40px solid var(--text-white); 
             z-index: 10;
             
             /* Add intense neon blue glow */
@@ -175,7 +175,7 @@
         // Constants
         const CANVAS_SIZE = 500;
         const LOGO_URL = 'https://60fb7b08eaf293096e8c.cdn6.editmysite.com/uploads/b/60fb7b08eaf293096e8cb3f63df9e65735b8a1ee75f6d23d21eaed2115dfa2e6/IMG_7388_1701827680.jpeg?width=2400&optimize=medium';
-        const ELIMINATION_SPIN_DURATION = 5; 
+        // REMOVED: const ELIMINATION_SPIN_DURATION = 5; 
         const TEXT_COLOR = '#FFFFFF'; // Pure white for names
 
         // Distinct, neon colors for the segments (Kept varied colors for visibility)
@@ -395,6 +395,7 @@
             pointerWinnerLabel.classList.remove('show-winner-label'); 
             resultBox.classList.remove('success-glow', 'death-glow');
 
+            // Reads duration from the input field
             let duration = parseFloat(spinDurationInput.value) || 5;
 
             const dataToSpin = wheelData;
@@ -444,6 +445,7 @@
             }, duration * 1000 + 50);
         }
 
+        // --- ELIMINATION LOGIC (UPDATED TO USE spin-duration INPUT) ---
         function eliminationSpinCycle() {
             if (currentEliminationParticipants.length <= 1) {
                 const finalWinner = currentEliminationParticipants[0];
@@ -467,7 +469,9 @@
             pointerWinnerLabel.classList.remove('show-winner-label'); 
             resultBox.classList.remove('success-glow');
 
-            const duration = ELIMINATION_SPIN_DURATION; 
+            // READ DURATION from the input field
+            const duration = parseFloat(spinDurationInput.value) || 5; 
+
             const dataToSpin = currentEliminationParticipants;
             const numSegments = dataToSpin.length;
             const segmentAngleDegrees = 360 / numSegments;
