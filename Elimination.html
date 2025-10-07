@@ -4,240 +4,427 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Gladiators Death Arena: Final Showdown</title>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Bebas+Neue&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Bebas+Neue&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        :root{
-            /* Classic Neon Blue Aesthetic */
-            --primary-glow: #e0e0e0;
-            --secondary-glow: #00eaff; /* CLASSIC NEON BLUE */
-            --bg-dark: #0d121f; 
-            --text-light: #f0ff00;
-            --neutral-dark: #333;
-            --neutral-medium: #555;
-            --neutral-light: #bbb;
-            --racer-name-color: #FFFFFF;
-            --prepare-color: #ff5500;
-            --neon-red: #ff1744;
-            --grid-color-dark: #1f3b4c; 
+        /* --- VISUAL CONFIGURATION --- */
+        :root {
+            --primary-glow: #00ffea; /* Cyan neon */
+            --secondary-glow: #ff00ff; /* Magenta neon */
+            --bg-dark: #0a0e1f; /* Deep space blue */
+            --text-light: #f0f0f0; /* Soft white */
+            --neon-red: #ff1744; /* Hot red */
+            --neon-green: #00ff85; /* Bright green */
+            --grid-color-dark: #1a2333; /* Darker grid */
+            --status-bg-color: rgba(0, 255, 234, 0.1);
+            --status-border-color: rgba(0, 255, 234, 0.5);
+            --holo-blue: rgba(0, 255, 234, 0.3);
+            --shadow-glow: 0 0 15px rgba(0, 255, 234, 0.5);
         }
-        /* --- CORE LAYOUT MODIFICATION --- */
-        html,body{
-            height:100%;
-            margin:0;
-            padding:0;
-            background: linear-gradient(135deg, var(--bg-dark), #010a14, var(--bg-dark));
+
+        /* --- CORE LAYOUT & SCALING FIXES --- */
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            background: radial-gradient(circle at center, #0c1426, var(--bg-dark));
             color: var(--text-light);
-            font-family: 'Bebas Neue', sans-serif;
-            -webkit-font-smoothing:antialiased;
-            -moz-osx-font-smoothing:grayscale;
-            /* RE-ENABLE SCROLLING for the whole body/main container */
-            overflow-y: auto; 
+            font-family: 'Roboto Mono', monospace;
             overflow-x: hidden;
+            overflow-y: auto; /* Allow natural scrolling */
         }
+
         #mainContainer {
             display: flex;
             flex-direction: column;
-            min-height: 100vh; /* Use min-height to allow content overflow */
-            padding: 10px;
+            min-height: 100vh;
+            padding: 20px;
+            max-width: 1500px;
+            margin: 0 auto;
             box-sizing: border-box;
         }
-        #titleContainer{
-            display:flex; flex-direction:column; align-items:center; justify-content:center;
-            margin: 0 0 10px; gap:6px; position: relative; z-index: 1200;
+
+        /* --- TITLE & LOGO --- */
+        #titleContainer {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 25px; /* Increased margin for better separation */
+            gap: 15px;
+            position: relative;
+            z-index: 1200;
         }
-        #titleContainer.game-active { 
-            margin-bottom: 5px; gap: 2px; 
-            flex-direction: row; /* Make title horizontal in game view */
+
+        #titleContainer.game-active {
             justify-content: flex-start;
-        } 
+            margin-bottom: 10px;
+        }
 
         #logo {
-            width: 80px; /* Slightly smaller logo */
+            width: 90px;
             height: auto;
-            filter: hue-rotate(180deg);
+            /* Applying blue/cyan drop shadow for meaningful place */
+            filter: drop-shadow(0 0 10px var(--primary-glow));
+            transition: transform 0.3s ease;
+            flex-shrink: 0;
         }
-        #titleContainer.game-active #logo { display: none; } /* Hide logo in game view */
 
-        h1{
-            font-family:'Orbitron',sans-serif; color: var(--secondary-glow);
-            text-shadow:0 0 15px var(--secondary-glow), 0 0 30px var(--secondary-glow);
-            letter-spacing:4px; margin:0; text-transform:uppercase;
-            font-size: clamp(1.6em, 3.8vw, 2.8em); text-align:center;
-            flex-shrink: 0; /* Prevent title from shrinking */
+        #titleContainer.game-active #logo {
+            display: none; /* Hide in game view */
         }
+
+        h1 {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--primary-glow);
+            text-shadow: var(--shadow-glow), 0 0 20px var(--primary-glow);
+            letter-spacing: 5px;
+            margin: 0;
+            text-transform: uppercase;
+            font-size: clamp(2.2em, 5vw, 3.5em);
+            text-align: center;
+            outline: 2px solid var(--primary-glow); /* Blue border as requested */
+            padding: 5px 20px;
+        }
+
         #titleContainer.game-active h1 {
-            font-size: clamp(1.4em, 2.5vw, 2.2em); /* Smaller title when game is active */
-            margin-left: 10px;
+            font-size: clamp(1.6em, 3vw, 2.4em);
+            letter-spacing: 3px;
         }
 
-
-        /* --- Setup Page Modifications to be compact --- */
-        #frontPage{
-            max-width: 800px; /* Reduced max width for setup */
+        /* --- SETUP PAGE (FRONT PAGE) --- */
+        #frontPage {
+            max-width: 900px;
             width: 100%;
-            margin: 0 auto 20px auto;
-            padding: 15px;
-            background: linear-gradient(135deg, rgba(10,10,10,0.8), rgba(26,26,26,0.9));
-            border-radius: 20px; border:2px solid var(--secondary-glow);
-            box-shadow: 0 0 30px rgba(0, 234, 255, 0.3);
-            text-align:center;
-            box-sizing: border-box;
+            margin: 0 auto 30px;
+            padding: 30px;
+            background: rgba(10, 14, 31, 0.9);
+            border-radius: 20px;
+            border: 3px solid var(--primary-glow);
+            box-shadow: var(--shadow-glow);
+            text-align: center;
         }
-        
-        .setup-grid{
-            display:flex; flex-direction: column; 
-            gap:15px; margin-bottom:15px; max-width: 450px; margin-left: auto; margin-right: auto;
+
+        #frontPage h2 {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--secondary-glow);
+            text-shadow: 0 0 10px var(--secondary-glow);
+            margin: 0 0 20px;
+            font-size: 2em;
         }
-        .input-card textarea{ 
-            min-height:80px;
-            width: 95%;
+
+        .setup-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .input-card {
+            background: rgba(0, 0, 0, 0.7);
+            border: 2px solid var(--primary-glow);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: inset 0 0 10px rgba(0, 255, 234, 0.3);
+        }
+
+        .input-card label {
+            color: var(--text-light);
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .input-card textarea {
+            width: 100%;
+            min-height: 120px;
             background: var(--bg-dark);
             color: var(--text-light);
-            border: 1px solid var(--secondary-glow);
-            padding: 5px;
-            border-radius: 5px;
+            border: 2px solid var(--primary-glow);
+            padding: 12px;
+            border-radius: 8px;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 1em;
+            resize: none;
             box-sizing: border-box;
-            resize: none; 
+            transition: border-color 0.3s ease;
         }
 
-        /* --- Game View Layout (The Death Arena) --- */
+        .input-card textarea:focus {
+            outline: none;
+            border-color: var(--secondary-glow);
+            box-shadow: 0 0 10px var(--secondary-glow);
+        }
+        
+        .action-buttons {
+             display: flex; 
+             gap: 15px; 
+             justify-content: center; 
+             margin-top: 25px;
+             flex-wrap: wrap;
+        }
+
+        .game-button {
+            padding: 15px 35px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2em;
+            text-transform: uppercase;
+            background: linear-gradient(45deg, var(--primary-glow), var(--secondary-glow));
+            color: var(--bg-dark);
+            box-shadow: var(--shadow-glow);
+            transition: all 0.3s ease;
+        }
+
+        .game-button:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 0 20px var(--primary-glow);
+            filter: brightness(1.3);
+        }
+        
+        .game-button.prepare-secondary {
+            background: linear-gradient(45deg, #ff5500, #ff9900);
+            color: var(--text-light);
+            box-shadow: 0 0 15px #ff9900;
+        }
+
+        /* --- STATUS DISPLAY --- */
+        #status {
+            padding: 15px;
+            background: var(--status-bg-color);
+            border: 2px solid var(--status-border-color);
+            border-radius: 10px;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 1.1em;
+            color: var(--text-light);
+            text-shadow: 0 0 5px var(--primary-glow);
+            margin-top: 20px;
+        }
+
+        /* --- GAME VIEW (DEATH ARENA) --- */
         #gameView {
             display: none;
             flex-direction: row;
             width: 100%;
-            /* Use flex-grow to take up remaining vertical space if the screen is large */
-            flex-grow: 1; 
-            gap: 15px;
-            max-width: 1400px;
-            margin: 0 auto;
-            /* Allow internal scrolling if content is too tall/wide */
-            min-height: 500px; /* Ensure a minimum height for the game area */
+            flex-grow: 1; /* Allows the game view to occupy the remaining vertical space */
+            gap: 25px;
+            height: 0; 
         }
+
         #sidePanel {
             display: flex;
             flex-direction: column;
-            min-width: 250px; 
-            width: 30%; 
-            max-width: 350px; /* Reduced max-width for controls */
-            padding: 15px;
-            background: linear-gradient(180deg, rgba(10,10,10,0.9), rgba(26,26,26,0.9));
-            border-radius: 12px;
-            border: 2px solid var(--secondary-glow);
-            box-shadow: 0 0 15px rgba(0, 234, 255, 0.5);
+            min-width: 300px;
+            width: 30%;
+            max-width: 400px;
+            padding: 25px;
+            background: rgba(10, 14, 31, 0.85);
+            border-radius: 15px;
+            border: 2px solid var(--primary-glow);
+            box-shadow: var(--shadow-glow);
+            overflow-y: auto;
+            flex-shrink: 0;
+            height: 100%; /* Important for vertical fit */
             box-sizing: border-box;
-            overflow-y: auto; /* ALLOW SCROLLING for the info/control panel */
-            max-height: 100%;
         }
+
         #canvasWrapper {
-            flex-grow: 1; 
+            flex-grow: 1;
             display: flex;
             justify-content: center;
             align-items: center;
             position: relative;
-            /* Added min/max height to help sizing on small screens, ensuring space */
-            min-height: 400px; 
-            max-height: calc(100vh - 100px); /* Constrain canvas wrapper height */
+            height: 100%; /* Important for vertical fit */
+            min-height: 400px;
         }
+
         #gameCanvas {
             max-width: 100%;
             max-height: 100%;
-            aspect-ratio: 1 / 1; 
-            border: 4px solid var(--secondary-glow);
-            box-shadow: 0 0 25px var(--secondary-glow);
-            background-color: var(--grid-color-dark);
+            aspect-ratio: 1 / 1;
+            border: 4px solid var(--primary-glow);
+            box-shadow: var(--shadow-glow);
+            background: var(--grid-color-dark);
         }
 
-        /* Info Panel & Lists - Adjusted list max height */
-        #currentRacersList { 
-            list-style: none; padding: 0; margin: 0; 
-            max-height: 150px; /* Reduced max height for list */
-            overflow-y: auto; 
+        /* Info Panel & List */
+        #infoPanel {
+            background: rgba(0, 0, 0, 0.6);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid var(--primary-glow);
+            margin-bottom: 20px;
         }
 
-        /* Responsive adjustments for very small screens, shifting to stacked layout */
+        #infoPanel h4 {
+            color: var(--secondary-glow);
+            margin: 0 0 10px;
+            font-size: 1.4em;
+            font-family: 'Orbitron', sans-serif;
+            text-shadow: 0 0 8px var(--secondary-glow);
+        }
+
+        #currentRacersList {
+            list-style: none;
+            padding: 0;
+            margin: 10px 0 0;
+            max-height: 200px;
+            overflow-y: auto;
+            border-top: 1px solid var(--primary-glow);
+            padding-top: 10px;
+        }
+
+        #currentRacersList li {
+            padding: 8px 0;
+            font-size: 1em;
+            color: var(--text-light);
+            font-family: 'Roboto Mono', monospace;
+        }
+
+        .eliminated-racer {
+            color: var(--neon-red);
+            text-decoration: line-through;
+            opacity: 0.7;
+        }
+
+        .eliminated-racer:before {
+            content: "💀";
+            margin-right: 8px;
+        }
+
+        #attackStatus {
+            font-size: 2em;
+            color: var(--neon-red);
+            text-shadow: 0 0 15px var(--neon-red);
+            margin: 10px 0;
+            text-align: center;
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        #scoreDisplay {
+            font-size: 1.2em;
+            color: var(--neon-green);
+            text-shadow: 0 0 8px var(--neon-green);
+            margin: 10px 0;
+            text-align: center;
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        /* --- WINNER OVERLAY --- */
+        #winnerOverlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: var(--primary-glow);
+            font-family: 'Orbitron', sans-serif;
+            text-shadow: var(--shadow-glow);
+            z-index: 2000;
+        }
+
+        #winnerOverlay h2 {
+            font-size: 3em;
+            margin: 10px 0;
+            color: var(--secondary-glow);
+        }
+
+        #winnerName {
+            font-size: 2.5em;
+            color: var(--neon-green);
+            text-shadow: 0 0 15px var(--neon-green);
+        }
+
+        /* --- RESPONSIVE LAYOUT --- */
         @media (max-width: 768px) {
             #titleContainer.game-active {
                 flex-direction: column;
                 text-align: center;
-                margin-bottom: 10px;
+                margin-bottom: 20px;
             }
-            #titleContainer.game-active h1 {
-                margin-left: 0;
-            }
+
             #gameView {
-                flex-direction: column; /* Stack controls and arena vertically */
-                gap: 10px;
+                flex-direction: column;
+                gap: 20px;
+                height: auto; /* Allow game view to scroll when elements are stacked */
             }
+
             #sidePanel {
-                width: 100%; 
+                width: 100%;
                 max-width: none;
-                max-height: 40vh; /* Limit controls height when stacked */
+                max-height: 50vh; /* Allow controls to be seen without dominating */
+                height: auto;
             }
+
             #canvasWrapper {
-                min-height: 300px; 
-                max-height: none;
+                min-height: 300px;
+                height: 100vw; /* Attempt to make it full screen width square when stacked */
             }
         }
     </style>
 </head>
 <body>
-    <audio id="explosionSound" src="https://www.soundboard.com/media/259837"></audio>
-
+    <audio id="explosionSound" src="https://freesound.org/data/previews/171/171671_3025331-lq.mp3"></audio>
     <div id="mainContainer">
         <div id="titleContainer">
             <img id="logo" src="https://60fb7b08eaf293096e8c.cdn6.editmysite.com/uploads/b/60fb7b08eaf293096e8cb3f63df9e65735b8a1ee75f6d23d21eaed2115dfa2e6/IMG_7388_1701827680.jpeg?width=2400&optimize=medium" alt="Gladiator Collectibles Logo">
             <h1>GLADIATORS DEATH ARENA</h1>
         </div>
-
         <div id="frontPage">
-            <h2>Last Pokémon Standing Setup</h2>
+            <h2>LAST POKÉMON STANDING SETUP</h2>
             <div class="setup-grid">
                 <div class="input-card">
-                    <label for="racerNames">Racer Names (one per line, max 10):</label>
+                    <label for="racerNames">Contender Names (one per line, **Max 151 Gladiators**):</label>
                     <textarea id="racerNames" rows="5" placeholder="Ash\nMisty\nBrock\nGary\nLance\nSabrina\nGiovanni\nBlue"></textarea>
                 </div>
             </div>
             <div class="action-buttons">
-                <button id="submitNamesButton" class="game-button">SUBMIT NAMES & ASSIGN TYPES</button>
-                <button id="setupStartButton" class="game-button">PREPARE ARENA</button>
+                <button id="submitNamesButton" class="game-button">SUBMIT CONTENDERS</button>
+                <button id="setupStartButton" class="game-button prepare-secondary">PREPARE ARENA</button>
             </div>
-            <div id="status">Systems nominal. Enter names, submit, and click 'PREPARE ARENA' to continue.</div>
+            <div id="status">Arena online. Enter contenders and submit to begin.</div>
         </div>
-
         <div id="gameView">
             <div id="sidePanel">
                 <div id="infoPanel">
-                    <h4>Arena Status | Round: <span id="roundDisplay">N/A</span></h4>
-                    <p>Attack Type: <strong id="attackTypeDisplay">Neutral</strong> (Pattern: <span id="attackPatternDisplay">Aura Scan</span>)</p>
-                    <p>Active Racers:</p>
+                    <h4>ARENA CORE | ROUND: <span id="roundDisplay">N/A</span></h4>
+                    <p>Attack Protocol: <strong id="attackTypeDisplay" style="color: var(--neon-red);">Neutral</strong> (Pattern: <span id="attackPatternDisplay">Aura Scan</span>)</p>
+                    <p>Score: <strong id="scoreDisplay">0</strong></p>
+                    <p>Active Contenders:</p>
                     <ul id="currentRacersList"></ul>
-                    <p style="margin-top: 10px; font-size: 0.8em;">Type Advantage Key: <span style="color: yellow; text-shadow: 0 0 3px yellow;">⭐ Immune</span> / <span style="color: lime; text-shadow: 0 0 3px lime;">✨ Evasion</span></p>
+                    <p style="margin-top: 15px; font-size: 0.9em; text-align: center; border-top: 1px solid var(--primary-glow); padding-top: 10px;">
+                        Battle Key: <span style="color: var(--neon-green); text-shadow: 0 0 5px var(--neon-green);">⭐ Immune</span> / <span style="color: var(--secondary-glow); text-shadow: 0 0 5px var(--secondary-glow);">✨ Evasion</span>
+                    </p>
                 </div>
-
-                <div id="statusContainer" style="margin-bottom: 15px;">
+                <div id="statusContainer">
                     <div id="attackStatus"></div>
-                    <div id="status" style="margin-top: 5px; font-size: 0.9em;">Awaiting Start...</div>
+                    <div id="status" style="margin-top: 15px;">Initializing Battle...</div>
                 </div>
-                
-                <div id="gameControls" style="display: flex; flex-direction: column; gap: 10px; flex-grow: 1; justify-content: flex-end;">
-                    <button id="shuffleButton" class="game-button">SHUFFLE POKEMON</button>
-                    <button id="startGameButton" class="game-button prepare">START CAPTURE CHAOS</button>
-                    <button onclick="resetGame()" class="game-button" style="background: linear-gradient(45deg, #ff9900, #ff5500); padding: 10px 20px;">RETURN TO SETUP</button>
+                <div id="gameControls" style="display: flex; flex-direction: column; gap: 15px; flex-grow: 1; justify-content: flex-end;">
+                    <button id="shuffleButton" class="game-button">RECONFIGURE POKÉMON</button>
+                    <button id="startGameButton" class="game-button">LAUNCH BATTLE</button>
+                    <button onclick="resetGame()" class="game-button prepare-secondary">RESET ARENA</button>
                 </div>
             </div>
-
             <div id="canvasWrapper">
-                <canvas id="gameCanvas" width="500" height="500"></canvas>
+                <canvas id="gameCanvas" width="600" height="600"></canvas>
             </div>
         </div>
-
         <div id="winnerOverlay">
-            VICTORIOUS!
+            <h2>VICTOR EMERGES!</h2>
             <span id="winnerName"></span>
-            <button onclick="resetGame()" class="game-button" style="margin-top: 40px;">NEW GAME</button>
+            <p>Final Score: <span id="finalScore"></span></p>
+            <button onclick="resetGame()" class="game-button" style="margin-top: 30px;">NEW BATTLE</button>
         </div>
     </div>
-    
+
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
@@ -255,36 +442,41 @@
         const currentRacersList = document.getElementById('currentRacersList');
         const winnerOverlay = document.getElementById('winnerOverlay');
         const winnerNameDisplay = document.getElementById('winnerName');
+        const finalScoreDisplay = document.getElementById('finalScore');
         const attackStatus = document.getElementById('attackStatus');
+        const scoreDisplay = document.getElementById('scoreDisplay');
         const explosionSound = document.getElementById('explosionSound');
-        
+
         const GRID_SIZE = 10;
-        let TILE_SIZE = canvas.width / GRID_SIZE; // Will be recalculated on resize
-        let POKEMON_IMAGE_SIZE = TILE_SIZE * 0.9;
+        let TILE_SIZE = canvas.width / GRID_SIZE;
+        let POKEMON_IMAGE_SIZE = TILE_SIZE * 0.85;
         
+        // Duration of the blink effect (first half of the resolution phase)
+        const BLINK_DURATION = 100; // milliseconds for the flash
+        const CAPTURE_DURATION = 1100; // milliseconds for the post-blink animation
+
         const GAME_STATES = { SETUP: 'SETUP', PREPARING: 'PREPARING', PLAYING: 'PLAYING', FINISHED: 'FINISHED' };
         let gameState = GAME_STATES.SETUP;
         let racers = [];
         let roundNumber = 0;
+        let gameScore = 0;
         let gameLoopInterval;
-        let roundPhase = 0; // 0: Move (3000ms), 1: Warning/Attack (1500ms), 2: Resolution (1000ms)
-        const PHASE_TIMINGS = [3000, 1500, 1000]; 
+        let roundPhase = 0;
+        const PHASE_TIMINGS = [3000, 1500, 1200];
 
-        // --- Assets ---
         const POKEBALL_URL = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png';
         const POKEBALL_IMAGE = new Image();
         POKEBALL_IMAGE.src = POKEBALL_URL;
-        const BOMB_COLOR = 'rgba(255, 255, 0, 1)';
         
         const POKEMON_TYPES = ['Grass', 'Fire', 'Water', 'Electric', 'Ground', 'Fighting', 'Flying', 'Psychic'];
         const ATTACK_PATTERNS = {
-            'Earthquake': { type: 'Ground', name: 'Earthquake' },
-            'Thunder Wave': { type: 'Electric', name: 'Thunder Wave' },
-            'Hydro Pump': { type: 'Water', name: 'Hydro Pump' },
-            'Fire Blast': { type: 'Fire', name: 'Fire Blast' },
-            'Psychic Surge': { type: 'Psychic', name: 'Psychic Surge' }
+            'Earthquake': { type: 'Ground', name: 'Seismic Overload' },
+            'Thunder Wave': { type: 'Electric', name: 'Volt Surge' },
+            'Hydro Pump': { type: 'Water', name: 'Aqua Barrage' },
+            'Fire Blast': { type: 'Fire', name: 'Inferno Strike' },
+            'Psychic Surge': { type: 'Psychic', name: 'Psyonic Pulse' }
         };
-
+        
         const pokemonData = [];
         for (let id = 1; id <= 151; id++) {
             pokemonData.push({
@@ -299,143 +491,154 @@
             img.src = p.imageGif;
         });
 
-        // --- Core Game Logic ---
         let currentAttack = { type: 'Neutral', name: 'Aura Scan', targetRacer: null, dodgeEffect: false };
         let availableAttacks = Object.keys(ATTACK_PATTERNS);
 
         function playExplosion() {
-            const audio = document.getElementById('explosionSound');
-            if (audio.readyState >= 2) {
-                audio.currentTime = 0;
-                audio.play().catch(e => console.error("Audio playback failed:", e));
-            }
+            explosionSound.currentTime = 0;
+            explosionSound.play().catch(e => console.error("Audio playback failed:", e));
         }
-        
+
         function updateCanvasSize() {
             const wrapper = document.getElementById('canvasWrapper');
-            // Use Math.min of wrapper's clientHeight and clientWidth to get the largest possible square
             const size = Math.min(wrapper.clientWidth, wrapper.clientHeight);
-            
-            // Set canvas dimensions to the largest possible square
             canvas.width = size;
             canvas.height = size;
-
-            // Recalculate tile and sprite sizes based on new canvas size
             TILE_SIZE = canvas.width / GRID_SIZE;
-            POKEMON_IMAGE_SIZE = TILE_SIZE * 0.9;
+            POKEMON_IMAGE_SIZE = TILE_SIZE * 0.85;
         }
 
         function drawGame() {
-            updateCanvasSize(); // Ensure canvas matches wrapper size every frame
+            updateCanvasSize();
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // 1. Draw Grid Aura 
+            // Draw grid
             ctx.fillStyle = 'var(--grid-color-dark)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            // 2. Draw Grid Lines (Neon Effect)
-            ctx.strokeStyle = 'var(--secondary-glow)';
-            ctx.shadowColor = 'var(--secondary-glow)';
-            ctx.shadowBlur = 8;
-            ctx.lineWidth = 1;
+            ctx.strokeStyle = 'var(--primary-glow)';
+            ctx.shadowColor = 'var(--primary-glow)';
+            ctx.shadowBlur = 10;
+            ctx.lineWidth = 1.5;
             for (let i = 0; i <= GRID_SIZE; i++) {
-                ctx.beginPath(); ctx.moveTo(i * TILE_SIZE, 0); ctx.lineTo(i * TILE_SIZE, canvas.height); ctx.stroke();
-                ctx.beginPath(); ctx.moveTo(0, i * TILE_SIZE); ctx.lineTo(canvas.width, i * TILE_SIZE); ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(i * TILE_SIZE, 0);
+                ctx.lineTo(i * TILE_SIZE, canvas.height);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(0, i * TILE_SIZE);
+                ctx.lineTo(canvas.width, i * TILE_SIZE);
+                ctx.stroke();
             }
-            ctx.shadowBlur = 0; 
+            ctx.shadowBlur = 0;
 
-            // 3. Draw Target Visualization
-            if (currentAttack.targetRacer && currentAttack.targetRacer.active && (roundPhase === 1 || roundPhase === 2)) {
+            // Draw target visualization
+            if (currentAttack.targetRacer && currentAttack.targetRacer.active && (roundPhase === 1 || (roundPhase === 2 && Date.now() - currentAttack.targetRacer.captureStartTime < BLINK_DURATION))) {
                 const r = currentAttack.targetRacer;
                 const xCenter = r.x * TILE_SIZE + TILE_SIZE / 2;
                 const yCenter = r.y * TILE_SIZE + TILE_SIZE / 2;
-                const halfSize = POKEMON_IMAGE_SIZE / 2;
-                
-                const flash = Math.sin(Date.now() / 50) * 0.5 + 0.5;
-                
-                ctx.strokeStyle = `rgba(255, 0, 0, ${0.8 * flash})`;
-                ctx.lineWidth = 6;
-                ctx.shadowColor = 'red';
-                ctx.shadowBlur = 10;
-                
-                // Draw X centered ON THE POKEMON's current position
+                const flash = Math.sin(Date.now() / 100) * 0.5 + 0.5;
+
+                // Laser targeting effect
                 ctx.beginPath();
-                ctx.moveTo(xCenter - halfSize, yCenter - halfSize);
-                ctx.lineTo(xCenter + halfSize, yCenter + halfSize);
-                ctx.moveTo(xCenter + halfSize, yCenter - halfSize);
-                ctx.lineTo(xCenter - halfSize, yCenter + halfSize);
+                ctx.arc(xCenter, yCenter, TILE_SIZE * 0.5, 0, Math.PI * 2);
+                ctx.strokeStyle = `rgba(255, 0, 0, ${0.8 * flash})`;
+                ctx.lineWidth = 4;
+                ctx.shadowColor = 'var(--neon-red)';
+                ctx.shadowBlur = 15;
                 ctx.stroke();
 
+                // Crosshair
+                ctx.beginPath();
+                ctx.moveTo(xCenter - TILE_SIZE * 0.6, yCenter);
+                ctx.lineTo(xCenter + TILE_SIZE * 0.6, yCenter);
+                ctx.moveTo(xCenter, yCenter - TILE_SIZE * 0.6);
+                ctx.lineTo(xCenter, yCenter + TILE_SIZE * 0.6);
+                ctx.strokeStyle = `rgba(255, 0, 0, ${0.6 * flash})`;
+                ctx.lineWidth = 2;
+                ctx.stroke();
                 ctx.shadowBlur = 0;
             }
 
-
-            // 4. Draw Racers
+            // Draw racers with enhanced visuals
             racers.filter(r => r.active).forEach(r => {
                 const x = r.x * TILE_SIZE + TILE_SIZE / 2;
                 const y = r.y * TILE_SIZE + TILE_SIZE / 2;
                 const nameText = `${r.name} (${r.data.type})`;
-
                 ctx.save();
                 ctx.translate(x, y);
 
-                // Draw immunity/Evasion glow
+                // Holographic base effect
+                ctx.beginPath();
+                ctx.arc(0, 0, TILE_SIZE * 0.45, 0, Math.PI * 2);
+                ctx.fillStyle = 'var(--holo-blue)';
+                ctx.fill();
+
+                // Immunity/Evasion glow
                 if (r.isSafe) {
                     ctx.beginPath();
                     ctx.arc(0, 0, TILE_SIZE * 0.4, 0, Math.PI * 2);
-                    ctx.fillStyle = r.isSafe === 'IMMUNE' ? 'rgba(255,255,0,0.3)' : 'rgba(0,255,0,0.3)';
+                    ctx.fillStyle = r.isSafe === 'IMMUNE' ? 'rgba(240,255,0,0.4)' : 'rgba(0,255,133,0.4)';
                     ctx.fill();
-                    ctx.strokeStyle = r.isSafe === 'IMMUNE' ? 'yellow' : 'lime';
+                    ctx.strokeStyle = r.isSafe === 'IMMUNE' ? 'var(--neon-green)' : 'var(--secondary-glow)';
                     ctx.lineWidth = 3;
                     ctx.stroke();
                 }
 
-                // Draw Sprite
-                if (r.data.sprite && r.data.sprite.complete) {
-                    ctx.drawImage(r.data.sprite, -POKEMON_IMAGE_SIZE / 2, -POKEMON_IMAGE_SIZE / 2, POKEMON_IMAGE_SIZE, POKEMON_IMAGE_SIZE);
+                // **Capture Blink Logic:** Only draw the Pokemon if the elimination phase hasn't started OR if the elimination is post-blink (after BLINK_DURATION).
+                let isCapturing = r.captureAnimation && (Date.now() - r.captureStartTime < CAPTURE_DURATION);
+                let isBlinking = isCapturing && (Date.now() - r.captureStartTime < BLINK_DURATION);
+                
+                if (!isCapturing || (isCapturing && !isBlinking)) {
+                    // Draw Pokémon sprite
+                    if (r.data.sprite && r.data.sprite.complete) {
+                        ctx.drawImage(r.data.sprite, -POKEMON_IMAGE_SIZE / 2, -POKEMON_IMAGE_SIZE / 2, POKEMON_IMAGE_SIZE, POKEMON_IMAGE_SIZE);
+                    }
                 }
-
-                // Draw Name Tag
-                ctx.font = `bold ${TILE_SIZE * 0.25}px "Bebas Neue", sans-serif`;
+                
+                // Draw name tag (always visible for active racers)
+                ctx.font = `bold ${TILE_SIZE * 0.28}px 'Roboto Mono', monospace`;
                 ctx.textAlign = 'center';
-                ctx.fillStyle = 'white';
-                ctx.strokeStyle = 'black';
-                ctx.lineWidth = 3;
-                
-                ctx.strokeText(nameText, 0, -TILE_SIZE / 2);
-                ctx.fillText(nameText, 0, -TILE_SIZE / 2);
-                
+                ctx.fillStyle = 'var(--text-light)';
+                ctx.strokeStyle = 'var(--bg-dark)';
+                ctx.lineWidth = 4;
+                ctx.strokeText(nameText, 0, -TILE_SIZE / 1.8);
+                ctx.fillText(nameText, 0, -TILE_SIZE / 1.8);
+
                 ctx.restore();
             });
 
-            // 5. Draw Capture Animation (Explosion Effect)
+            // --- Capture Animation ---
             racers.filter(r => r.captureAnimation).forEach(r => {
                 const x = r.x * TILE_SIZE + TILE_SIZE / 2;
                 const y = r.y * TILE_SIZE + TILE_SIZE / 2;
                 const animationTime = Date.now() - r.captureStartTime;
-                const duration = PHASE_TIMINGS[2];
-                const progress = animationTime / duration;
-
                 ctx.save();
                 ctx.translate(x, y);
 
-                if (progress < 1) {
-                    // Draw Poké Ball slamming down
-                    const ballSize = POKEMON_IMAGE_SIZE * 1.5;
-                    const scale = Math.min(1.0, progress * 3); 
-                    ctx.drawImage(POKEBALL_IMAGE, -ballSize * scale / 2, -ballSize * scale / 2, ballSize * scale, ballSize * scale);
-                    
-                    // Draw Explosion (Yellow Expanding circle)
+                // 1. **THE BLINK (First BLINK_DURATION milliseconds)**
+                if (animationTime < BLINK_DURATION) {
                     ctx.beginPath();
-                    ctx.arc(0, 0, POKEMON_IMAGE_SIZE * progress * 2, 0, Math.PI * 2);
-                    ctx.fillStyle = BOMB_COLOR;
-                    ctx.globalAlpha = 0.9 * (1 - progress); 
+                    ctx.arc(0, 0, TILE_SIZE * 1.5, 0, Math.PI * 2);
+                    ctx.fillStyle = 'rgba(255, 255, 255, 1)'; 
+                    ctx.shadowColor = 'var(--neon-red)';
+                    ctx.shadowBlur = 40;
                     ctx.fill();
+                    playExplosion(); // Play sound immediately on blink
+                } 
+                // 2. **THE CATCH (Rest of the duration)**
+                else if (animationTime < CAPTURE_DURATION) {
+                    const progress = (animationTime - BLINK_DURATION) / (CAPTURE_DURATION - BLINK_DURATION);
+                    
+                    // Poké Ball slamming down
+                    const ballSize = POKEMON_IMAGE_SIZE * 1.6;
+                    const scale = 1 + Math.sin(progress * Math.PI) * 0.3;
+                    ctx.globalAlpha = 1 - progress;
+                    ctx.drawImage(POKEBALL_IMAGE, -ballSize * scale / 2, -ballSize * scale / 2, ballSize * scale, ballSize * scale);
 
-                    // Sucking effect (black circle)
+                    // Sucking in effect (magenta glow)
                     ctx.beginPath();
                     ctx.arc(0, 0, POKEMON_IMAGE_SIZE * (1.2 - progress), 0, Math.PI * 2);
-                    ctx.fillStyle = 'rgba(0,0,0,0.8)';
+                    ctx.fillStyle = 'var(--secondary-glow)';
                     ctx.globalAlpha = 0.5 * (1 - progress);
                     ctx.fill();
                 }
@@ -445,40 +648,35 @@
             });
         }
 
-        // --- Phase Management ---
-
         function startRound() {
             const activeRacers = racers.filter(r => r.active);
             if (activeRacers.length <= 1) {
                 endGame(activeRacers[0]);
                 return;
             }
-
             roundNumber++;
             roundPhase = 0;
+            gameScore += 100; // Score for surviving a round
             activeRacers.forEach(r => {
-                r.targetX = r.x; r.targetY = r.y; 
+                r.targetX = r.x;
+                r.targetY = r.y;
                 r.isSafe = null;
                 r.captureAnimation = false;
             });
             updateRacerListDisplay();
-            
-            // 1. Select Attack Type/Name
+            updateScoreDisplay();
+
             const attackName = availableAttacks[Math.floor(Math.random() * availableAttacks.length)];
             const attackConfig = ATTACK_PATTERNS[attackName];
-
             currentAttack.name = attackName;
             currentAttack.type = attackConfig.type;
             currentAttack.dodgeEffect = (currentAttack.type === 'Water' || currentAttack.type === 'Fire');
-            currentAttack.targetRacer = null;
-            
-            // 2. Select Single Target
             currentAttack.targetRacer = activeRacers[Math.floor(Math.random() * activeRacers.length)];
 
             updateGameInfo();
             attackStatus.textContent = '';
-            statusDisplay.textContent = `ROUND ${roundNumber} - MOVE PHASE: ${PHASE_TIMINGS[0] / 1000} seconds to dodge!`;
-            
+            statusDisplay.textContent = `ROUND ${roundNumber} - MOVE PHASE: ${PHASE_TIMINGS[0] / 1000}s to evade!`;
+
             setTimeout(attackPhase, PHASE_TIMINGS[0]);
             drawGame();
         }
@@ -486,8 +684,8 @@
         function attackPhase() {
             roundPhase = 1;
             const targetName = currentAttack.targetRacer ? currentAttack.targetRacer.name : 'N/A';
-            attackStatus.textContent = `!! ${targetName} MARKED FOR CAPTURE !!`;
-            statusDisplay.textContent = `ROUND ${roundNumber} - ATTACK WARNING: ${currentAttack.name} Incoming!`;
+            attackStatus.textContent = `⚠ ${targetName} TARGETED!`;
+            statusDisplay.textContent = `ROUND ${roundNumber} - ${ATTACK_PATTERNS[currentAttack.name].name} DEPLOYING!`;
             updateGameInfo();
             drawGame();
             setTimeout(resolutionPhase, PHASE_TIMINGS[1]);
@@ -496,79 +694,81 @@
         function resolutionPhase() {
             roundPhase = 2;
             attackStatus.textContent = '';
-            
             const r = currentAttack.targetRacer;
-            
-            if (r.active) {
-                r.x = r.targetX; 
-                r.y = r.targetY;
 
+            if (r.active) {
+                r.x = r.targetX;
+                r.y = r.targetY;
                 let captured = true;
                 let reason = currentAttack.type;
 
-                // 1. Check for Immunity
+                // Immunity check
                 const type = r.data.type;
-                if ((currentAttack.type === 'Ground' && (type === 'Flying' || type === 'Grass')) || 
+                if ((currentAttack.type === 'Ground' && (type === 'Flying' || type === 'Grass')) ||
                     (currentAttack.type === 'Electric' && type === 'Ground')) {
                     r.isSafe = 'IMMUNE';
                     captured = false;
                     reason = `IMMUNE (${type})`;
-                } 
-                
-                // 2. Check for Evasion
+                    gameScore += 200; // Bonus for immunity
+                }
+                // Evasion check
                 else if (currentAttack.dodgeEffect && (type === 'Water' || type === 'Fire')) {
-                    if (Math.random() < 0.5) { 
+                    if (Math.random() < 0.5) {
                         captured = false;
                         r.isSafe = 'EVADED';
                         reason = `EVADED (${type})`;
+                        gameScore += 150; // Bonus for evasion
                     } else {
                         reason = `CAUGHT (Failed Evasion)`;
                     }
                 } else {
-                    reason = `CAUGHT (Hit by ${currentAttack.type})`;
+                    reason = `CAUGHT (${currentAttack.type} Hit)`;
                 }
-                
-                // 3. Final Elimination
+
                 if (captured) {
+                    // Start the capture animation
                     r.captureAnimation = true;
                     r.captureStartTime = Date.now();
                     r.eliminationReason = reason;
-                    playExplosion();
-                    
+
+                    // Final elimination occurs after the animation finishes
                     setTimeout(() => {
                         r.active = false;
-                        statusDisplay.textContent = `💥 ${r.name} was CAPTURED!`;
+                        r.captureAnimation = false;
+                        statusDisplay.textContent = `💥 ${r.name} ELIMINATED!`;
                         updateRacerListDisplay();
+                        updateScoreDisplay();
                         setTimeout(startRound, 200);
-                    }, PHASE_TIMINGS[2]); 
+                    }, CAPTURE_DURATION);
                 } else {
-                    statusDisplay.textContent = `✅ ${r.name} survived! Reason: ${reason}.`;
+                    statusDisplay.textContent = `✅ ${r.name} survived! Reason: ${reason}`;
+                    updateRacerListDisplay();
+                    updateScoreDisplay();
                     setTimeout(startRound, 200);
                 }
             } else {
-                // Failsafe: if the target was eliminated by a delayed process, just start the next round
                 setTimeout(startRound, 50);
             }
         }
 
         function endGame(winner) {
             gameState = GAME_STATES.FINISHED;
-            winnerNameDisplay.textContent = winner ? `${winner.name} WINS!` : "NO WINNER LEFT!";
+            winnerNameDisplay.textContent = winner ? `${winner.name}` : "NO VICTOR!";
+            finalScoreDisplay.textContent = gameScore;
             winnerOverlay.style.display = 'flex';
-            statusDisplay.textContent = `GAME OVER! ${winner ? winner.name : 'Everyone'} survived ${roundNumber} rounds.`;
+            statusDisplay.textContent = `BATTLE TERMINATED! ${winner ? winner.name : 'All'} survived ${roundNumber} rounds. Score: ${gameScore}`;
             titleContainer.classList.remove('game-active');
+            clearInterval(gameLoopInterval);
         }
-
-        // --- Utility Functions ---
 
         function updateRacerListDisplay() {
             currentRacersList.innerHTML = racers.map(r => {
                 const isEliminated = !r.active;
                 let display = `${r.name} (${r.data.type})`;
                 if (isEliminated) {
-                    display += ` - ${r.eliminationReason || 'Capture'}`;
+                    display += ` - ${r.eliminationReason || 'Eliminated'}`;
                 } else if (currentAttack.targetRacer === r && roundPhase !== 0) {
-                     display = `🔥 ${display} 🔥`;
+                    display = `<strong style="color: var(--neon-red);">🔥 ${display} 🔥</strong>`;
                 }
                 return `<li class="${isEliminated ? 'eliminated-racer' : ''}">${display}</li>`;
             }).join('');
@@ -577,79 +777,81 @@
         function updateGameInfo() {
             roundDisplay.textContent = `#${roundNumber}`;
             attackTypeDisplay.textContent = currentAttack.type;
-            attackPatternDisplay.textContent = currentAttack.name;
+            attackPatternDisplay.textContent = ATTACK_PATTERNS[currentAttack.name].name;
+        }
+
+        function updateScoreDisplay() {
+            scoreDisplay.textContent = gameScore;
         }
 
         function submitNames() {
             initRacers(true);
             if (racers.length === 0) {
-                statusDisplay.textContent = 'Please enter at least one racer name.';
+                statusDisplay.textContent = 'Enter at least one contender name.';
                 return;
             }
             updateRacerListDisplay();
-            statusDisplay.textContent = `Submitted ${racers.length} Pokémon. Ready to prepare the arena!`;
+            statusDisplay.textContent = `${racers.length} contenders locked in. Activate Arena!`;
             drawGame();
         }
 
         function prepareGame() {
             if (racers.length < 2) {
-                statusDisplay.textContent = 'Need at least 2 racers to start the chaos!';
+                statusDisplay.textContent = 'Require at least 2 contenders to initiate Battle!';
                 return;
             }
             gameState = GAME_STATES.PREPARING;
-            setupControls.style.display = 'none'; 
-            gameView.style.display = 'flex'; // Use flex for the side-by-side layout
+            setupControls.style.display = 'none';
+            gameView.style.display = 'flex';
             titleContainer.classList.add('game-active');
-            statusDisplay.textContent = 'PREPARE: Shuffle Types, then click START CAPTURE CHAOS.';
-            updateCanvasSize(); // Initial sizing for the arena
+            statusDisplay.textContent = 'CONFIGURE: Reassign Pokémon, then launch battle.';
+            updateCanvasSize();
             drawGame();
         }
 
         function startGame() {
             gameState = GAME_STATES.PLAYING;
-            setupControls.style.display = 'none'; 
+            setupControls.style.display = 'none';
             startGameButton.style.display = 'none';
             shuffleButton.style.display = 'none';
+            gameScore = 0;
+            updateScoreDisplay();
             startRound();
         }
 
         function resetGame() {
             gameState = GAME_STATES.SETUP;
             roundNumber = 0;
+            gameScore = 0;
             currentAttack = { type: 'Neutral', name: 'Aura Scan', targetRacer: null, dodgeEffect: false };
             winnerOverlay.style.display = 'none';
             setupControls.style.display = 'block';
             gameView.style.display = 'none';
             titleContainer.classList.remove('game-active');
             updateGameInfo();
+            updateScoreDisplay();
             currentRacersList.innerHTML = '';
-            statusDisplay.textContent = 'Systems nominal. Enter names to begin.';
-            initRacers(false); 
-            
-            // Restore buttons in the control panel
+            statusDisplay.textContent = 'Arena online. Enter contenders to begin.';
+            initRacers(false);
             startGameButton.style.display = 'block';
             shuffleButton.style.display = 'block';
-            
             drawGame();
+            gameLoopInterval = setInterval(moveAI, 100);
         }
 
-        // --- AI Movement Logic (Simple Random Walk) ---
         function moveAI() {
             if (gameState !== GAME_STATES.PLAYING || roundPhase !== 0) return;
-
             racers.filter(r => r.active).forEach(r => {
                 const availableMoves = [];
                 for (let dx = -1; dx <= 1; dx++) {
                     for (let dy = -1; dy <= 1; dy++) {
                         const newX = r.x + dx;
                         const newY = r.y + dy;
-
                         if (newX >= 0 && newX < GRID_SIZE && newY >= 0 && newY < GRID_SIZE) {
                             availableMoves.push({ x: newX, y: newY });
                         }
                     }
                 }
-
                 if (availableMoves.length > 0) {
                     const randomMove = availableMoves[Math.floor(Math.random() * availableMoves.length)];
                     r.targetX = randomMove.x;
@@ -658,16 +860,17 @@
             });
             drawGame();
         }
-        
+
         function initRacers(fromSetup = true) {
             racers = [];
             const customNamesInput = document.getElementById('racerNames');
-            let customNames = customNamesInput.value.split('\n').map(name => name.trim()).filter(name => name).slice(0, 10);
+            let customNames = customNamesInput.value.split('\n').map(name => name.trim()).filter(name => name);
+            
             if (customNames.length === 0 && fromSetup) return;
-
+            
             const shuffledPokemon = [...pokemonData].sort(() => 0.5 - Math.random());
-            const numRacers = Math.min(customNames.length, shuffledPokemon.length);
-
+            const numRacers = Math.min(customNames.length, shuffledPokemon.length); 
+            
             const usedTiles = new Set();
             for (let i = 0; i < numRacers; i++) {
                 let x, y, posKey;
@@ -677,7 +880,6 @@
                     posKey = `${x},${y}`;
                 } while (usedTiles.has(posKey));
                 usedTiles.add(posKey);
-
                 racers.push({
                     name: customNames[i],
                     data: { ...shuffledPokemon[i], type: POKEMON_TYPES[i % POKEMON_TYPES.length] },
@@ -691,41 +893,33 @@
                     eliminationReason: null
                 });
             }
-            if (racers.length > 0) reassignPokemons(false); 
+            if (racers.length > 0) reassignPokemons(false);
         }
 
         function reassignPokemons(updateDisplay = true) {
             if (racers.length === 0) return;
             const shuffledPokemon = [...pokemonData].sort(() => 0.5 - Math.random());
-            const shuffledTypes = [...POKEMON_TYPES].sort(() => 0.5 - Math.random()); 
-
+            const shuffledTypes = [...POKEMON_TYPES].sort(() => 0.5 - Math.random());
             racers.forEach((racer, i) => {
                 const newPoke = shuffledPokemon[i % shuffledPokemon.length];
                 const newType = shuffledTypes[i % shuffledTypes.length];
                 racer.data = { ...newPoke, type: newType };
             });
             if (updateDisplay) {
-                // Simply update the list and draw without re-reading the textarea
                 updateRacerListDisplay();
-                statusDisplay.textContent = `${racers.length} Pokémon types and sprites shuffled. Ready to start!`;
+                statusDisplay.textContent = `${racers.length} contenders reconfigured. Ready to launch!`;
             }
             drawGame();
         }
 
-        // --- Event Listeners ---
         submitNamesButton.addEventListener('click', submitNames);
         setupStartButton.addEventListener('click', prepareGame);
         startGameButton.addEventListener('click', startGame);
         shuffleButton.addEventListener('click', () => reassignPokemons(true));
-        window.addEventListener('resize', drawGame); // Redraw canvas on window resize
-
-        // Start game loop (handles AI movement)
+        window.addEventListener('resize', drawGame);
         gameLoopInterval = setInterval(moveAI, 100);
-        // Continuous redraw for animations (Poké Ball slam, flashing grid)
-        setInterval(drawGame, 50);
-
-        // Initial setup
-        initRacers(false); 
+        setInterval(drawGame, 30);
+        initRacers(false);
         drawGame();
     </script>
 </body>
