@@ -720,17 +720,6 @@
                 }
                 ctx.restore();
             }
-
-            // Draw single dashed center line
-            ctx.strokeStyle = '#ffffff';
-            ctx.lineWidth = 2;
-            ctx.setLineDash([15, 15]);
-            const centerY = trackTop + trackHeight / 2;
-            ctx.beginPath();
-            ctx.moveTo(0, centerY);
-            ctx.lineTo(currentTrackLength, centerY);
-            ctx.stroke();
-            ctx.setLineDash([]);
         }
         function initScenery() {
             sceneryLayers = { back: [], mid: [], front: [] };
