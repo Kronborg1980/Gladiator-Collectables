@@ -1,0 +1,1003 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Gladiator Collectibles</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Bebas+Neue&display=swap" rel="stylesheet">
+    <style>
+        :root{
+            --primary-glow: #e0e0e0;
+            --secondary-glow: #00eaff;
+            --bg-dark: #0a0a0a;
+            --text-light: #f0ff00;
+            --neutral-dark: #333;
+            --neutral-medium: #555;
+            --neutral-light: #bbb;
+            --track-color-dark: #1a1a1a;
+            --track-color-medium: #2a2a2a;
+            --track-color-light: #3a3a3a;
+            --finish-line-color-primary: #ffffff;
+            --finish-line-color-secondary: #000000;
+            --racer-name-color: #FFFFFF;
+            --prepare-color: #ff5500;
+            --surge-color: #ff0044;
+            --neon-red: #ff1744;
+            /* NEW DESIGN VARIABLES */
+            --header-height: 80px;
+            --control-panel-width: 300px;
+        }
+        html,body{
+            height:100%;
+            margin:0;
+            padding:0;
+            background: linear-gradient(135deg, #0d011a, var(--bg-dark), #010a14);
+            color: var(--text-light);
+            font-family: 'Bebas Neue', sans-serif;
+            -webkit-font-smoothing:antialiased;
+            -moz-osx-font-smoothing:grayscale;
+            overflow: hidden; /* Prevent body scroll */
+        }
+        
+        /* HEADER - Always visible */
+        #header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: var(--header-height);
+            background: rgba(10, 10, 10, 0.95);
+            box-shadow: 0 4px 15px rgba(0, 234, 255, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+        #mainLogo {
+            width: 50px;
+            height: 50px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px var(--secondary-glow);
+            margin-right: 15px;
+        }
+        #mainTitle {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--secondary-glow);
+            text-shadow: 0 0 10px var(--secondary-glow);
+            letter-spacing: 2px;
+            font-size: 2.2em;
+            margin: 0;
+            text-transform: uppercase;
+        }
+
+        /* MAIN CONTENT AREA */
+        #mainContent {
+            display: flex;
+            height: calc(100vh - var(--header-height));
+            margin-top: var(--header-height);
+        }
+
+        /* CONTROL PANEL */
+        #controlPanel {
+            width: var(--control-panel-width);
+            min-width: 300px;
+            background: linear-gradient(180deg, rgba(10,10,10,0.9), rgba(26,26,26,0.9));
+            border-right: 2px solid var(--secondary-glow);
+            padding: 20px;
+            box-sizing: border-box;
+            overflow-y: auto;
+            position: relative;
+            z-index: 100;
+        }
+        #controlPanel h2 {
+            font-family:'Orbitron',sans-serif;
+            color: var(--secondary-glow);
+            text-shadow:0 0 10px var(--secondary-glow);
+            margin: 0 0 15px 0;
+            letter-spacing:2px;
+            font-size: 1.8em;
+            text-align: center;
+        }
+        .input-group label {
+            display: block;
+            margin-top: 15px;
+            margin-bottom: 5px;
+            color: var(--neutral-light);
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+        .input-group input, .input-group textarea {
+            width: 100%;
+            background: var(--neutral-dark);
+            color: var(--text-light);
+            border: 1px solid var(--secondary-glow);
+            padding: 8px;
+            border-radius: 4px;
+            font-size: 1em;
+            box-sizing: border-box;
+            resize: vertical;
+            min-height: 60px;
+        }
+        .action-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .race-button {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1em;
+            transition: all 0.3s;
+            background: linear-gradient(45deg, var(--secondary-glow), #00aaff);
+            color: #111;
+            box-shadow: 0 4px 10px rgba(0,234,255,0.35);
+            text-shadow: 1px 1px 0 rgba(255,255,255,0.2);
+        }
+        .race-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0,234,255,0.5);
+        }
+        .race-button.prepare {
+            background: linear-gradient(45deg, var(--neon-red), #ff4081);
+            color: var(--text-light);
+            box-shadow: 0 4px 10px rgba(255, 23, 68, 0.6);
+        }
+        .race-button:disabled { cursor: not-allowed; opacity: 0.6; transform: none; box-shadow: none; }
+        
+        #status {
+            padding: 10px;
+            background: rgba(0,234,255,0.1);
+            border: 1px solid var(--secondary-glow);
+            border-radius: 6px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.9em;
+            color: var(--primary-glow);
+            text-shadow: 0 0 4px var(--primary-glow);
+            margin-top: 15px;
+            text-align: center;
+        }
+
+        /* RACE VIEW & CANVAS */
+        #raceView {
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            background: radial-gradient(circle at center, #1a1a1a 0%, #0a0a0a 100%);
+        }
+        #raceCanvas {
+            max-width: 100%;
+            max-height: 100%;
+            display: block;
+        }
+
+        /* CORNER LOGOS (for fullscreen race view only) */
+        .corner-logo {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            border-radius: 6px;
+            box-shadow: 0 0 8px rgba(255,255,255,0.5), 0 0 15px var(--secondary-glow);
+            z-index: 1500;
+            opacity: 0.8;
+            display: none; /* Hidden by default */
+        }
+        #raceView.fullscreen .corner-logo {
+            display: block; /* Show only when raceView is fullscreen */
+        }
+        #logo-tl { top: 15px; left: 15px; }
+        #logo-tr { top: 15px; right: 15px; }
+        #logo-bl { bottom: 15px; left: 15px; }
+        #logo-br { bottom: 15px; right: 15px; }
+
+        /* FULLSCREEN RACE OVERLAY */
+        #raceView.fullscreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            margin-top: 0; /* Override margin from body */
+            z-index: 1900;
+        }
+        #raceView.fullscreen #raceControls {
+            position: fixed; /* Keep controls visible over canvas */
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 2000;
+        }
+        .controls.hidden { display: none; }
+        
+        /* LEADERBOARD & WINNER (Kept original styling) */
+        #leaderboard { display: none; }
+        #leaderboard.fullscreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: linear-gradient(135deg, #0d011a, var(--bg-dark), #010a14);
+            z-index: 3000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            box-sizing: border-box;
+            overflow-y: auto;
+        }
+        .leaderboard-content {
+            width: 100%;
+            max-width: 700px;
+            text-align: center;
+        }
+        #postRaceControls { margin-top: 40px; }
+        #winnerOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.95);
+            color: var(--primary-glow);
+            font-family: 'Orbitron', sans-serif;
+            font-size: 4.5em;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            text-shadow: 0 0 25px var(--primary-glow);
+            z-index: 4000;
+        }
+        #winnerName { color: var(--secondary-glow); font-size: 1.5em; margin-top: 20px; text-transform: uppercase; text-shadow: 0 0 15px var(--secondary-glow); }
+        
+        /* MOBILE / RESPONSIVE STYLES */
+        @media (max-width: 900px) {
+            #mainContent {
+                flex-direction: column;
+                height: auto;
+            }
+            #controlPanel {
+                width: 100%;
+                max-height: 40vh;
+                border-right: none;
+                border-bottom: 2px solid var(--secondary-glow);
+            }
+            #raceView {
+                height: 60vh;
+            }
+            #raceView.fullscreen {
+                width: 100vw;
+                height: 100vh;
+            }
+        }
+        @media (max-width: 500px) {
+            #mainTitle { font-size: 1.6em; }
+            #header { height: 60px; }
+            #mainContent { margin-top: 60px; }
+            .race-button { padding: 10px 15px; font-size: 0.9em; }
+        }
+    </style>
+</head>
+<body>
+        <div id="header">
+        <img id="mainLogo" src="https://60fb7b08eaf293096e8c.cdn6.editmysite.com/uploads/b/60fb7b08eaf293096e8cb3f63df9e65735b8a1ee75f6d23d21eaed2115dfa2e6/IMG_7388_1701827680.jpeg?width=2400&optimize=medium" alt="Gladiator Collectibles Logo">
+        <h1 id="mainTitle">GLADIATOR COLLECTIBLES</h1>
+    </div>
+
+    <div id="mainContent">
+                <div id="controlPanel">
+            <h2>Race Setup</h2>
+            <div class="input-group">
+                <label for="raceTimeSeconds">Target Race Time (seconds):</label>
+                <input type="number" id="raceTimeSeconds" min="10" max="300" value="69">
+            </div>
+            <div class="input-group">
+                <label for="raceLengthDisplay">Target Finish Line (px):</label>
+                <input type="number" id="raceLengthDisplay" value="0" readonly title="The calculated finish line distance.">
+            </div>
+            <div class="input-group">
+                <label for="racerNames">Racer Names (one per line):</label>
+                <textarea id="racerNames" rows="5" placeholder="Ash\nMisty\nBrock\nGary\nLance"></textarea>
+            </div>
+            <div class="action-buttons">
+                <button id="submitNamesButton" class="race-button">SUBMIT NAMES</button>
+                <button id="setupStartButton" class="race-button">START RACE</button>
+            </div>
+            <div id="status">Systems nominal. Enter names (one per line), submit, and click 'START RACE' to begin.</div>
+        </div>
+
+                <div id="raceView">
+                        <img class="corner-logo" id="logo-tl" src="https://60fb7b08eaf293096e8c.cdn6.editmysite.com/uploads/b/60fb7b08eaf293096e8cb3f63df9e65735b8a1ee75f6d23d21eaed2115dfa2e6/IMG_7388_1701827680.jpeg?width=2400&optimize=medium" alt="Gladiator Collectibles Logo Top Left">
+            <img class="corner-logo" id="logo-tr" src="https://60fb7b08eaf293096e8c.cdn6.editmysite.com/uploads/b/60fb7b08eaf293096e8cb3f63df9e65735b8a1ee75f6d23d21eaed2115dfa2e6/IMG_7388_1701827680.jpeg?width=2400&optimize=medium" alt="Gladiator Collectibles Logo Top Right">
+            <img class="corner-logo" id="logo-bl" src="https://60fb7b08eaf293096e8c.cdn6.editmysite.com/uploads/b/60fb7b08eaf293096e8cb3f63df9e65735b8a1ee75f6d23d21eaed2115dfa2e6/IMG_7388_1701827680.jpeg?width=2400&optimize=medium" alt="Gladiator Collectibles Logo Bottom Left">
+            <img class="corner-logo" id="logo-br" src="https://60fb7b08eaf293096e8c.cdn6.editmysite.com/uploads/b/60fb7b08eaf293096e8cb3f63df9e65735b8a1ee75f6d23d21eaed2115dfa2e6/IMG_7388_1701827680.jpeg?width=2400&optimize=medium" alt="Gladiator Collectibles Logo Bottom Right">
+
+            <div id="raceControls" class="controls">
+                <button id="shuffleButton" class="race-button">SHUFFLE POKEMON</button>
+                <button id="raceScreenStartButton" class="race-button prepare">START RACE (GO!)</button>
+            </div>
+            <canvas id="raceCanvas"></canvas>
+        </div>
+    </div>
+    
+        <div id="leaderboard">
+        <div class="leaderboard-content">
+            <div id="leaderboardTitle"></div>
+            <div id="leaderboardList"></div>
+            <div id="postRaceControls" class="controls" style="display:none;">
+                <button onclick="resetRace()" class="race-button" style="background: linear-gradient(45deg, #ff9900, #ff5500);">RETURN TO SETUP</button>
+            </div>
+        </div>
+    </div>
+    <div id="winnerOverlay">
+        VICTORY!
+        <span id="winnerName"></span>
+    </div>
+    
+    <script>
+        const canvas = document.getElementById('raceCanvas');
+        const ctx = canvas.getContext('2d');
+        const controlPanel = document.getElementById('controlPanel');
+        const raceView = document.getElementById('raceView');
+        const raceControls = document.getElementById('raceControls');
+        const postRaceControls = document.getElementById('postRaceControls');
+        const winnerOverlay = document.getElementById('winnerOverlay');
+        const leaderboard = document.getElementById('leaderboard');
+        const submitNamesButton = document.getElementById('submitNamesButton');
+        const setupStartButton = document.getElementById('setupStartButton');
+        const raceScreenStartButton = document.getElementById('raceScreenStartButton');
+        const shuffleButton = document.getElementById('shuffleButton');
+        const statusDisplay = document.getElementById('status');
+        
+        let CANVAS_VIEWPORT_WIDTH, CANVAS_VIEWPORT_HEIGHT;
+        // MODIFIED: Increased anchor to 40% for better visual centering
+        const FIXED_RACER_X_ANCHOR_PCT = 0.40;
+       
+        let cameraAnchorX;
+        let trackOffset = 0;
+        let lastFrameTime = 0;
+        const POKEMON_IMAGE_SIZE = 88;
+        const NAME_TAG_FONT_SIZE = 20;
+        const NAME_TAG_PADDING = 8;
+        const GRASS_AREA_HEIGHT = 100;
+        let laneHeight = 100;
+        const START_LINE_X = 50;
+       
+        const BASE_SPEED_PER_SECOND = 80 * 1.25;
+        const BASE_MOMENTUM_FACTOR = 0.95;
+        const SURGE_MULTIPLIER = 1.6;
+        const DEBUFF_MULTIPLIER = 0.6;
+       
+        const RUBBER_BAND_FACTOR = 0.00;
+        const SHORT_BOOST_MULTIPLIER = 1.7;
+        const SHORT_DEBUFF_MULTIPLIER = 0.4;
+        const SHORT_BOOST_INTERVAL = 800;
+        const SHORT_DEBUFF_INTERVAL = 800;
+        const LEAD_SLOWDOWN_CHANCE = 0.3;
+       
+        const VOLATILITY_SWING = 0.3;
+       
+        const CAMERA_SMOOTHING_FACTOR = 0.1;
+        let lastBoostTime = 0;
+        let lastDebuffTime = 0;
+        let activeShortBooster = null;
+        let activeShortDebuffer = null;
+        let shortBoostEndTime = 0;
+        let shortDebuffEndTime = 0;
+        const STAMINA_COST_SURGE = 35;
+        const STAMINA_REGEN_RATE = 2.5;
+        // POSITIONAL ALGORITHM CONSTANTS
+        const LEADER_DEBUFF_DURATION = 2500;
+        const LEADER_DEBUFF_MULTIPLIER = 0.3;
+        const LEADER_DEBUFF_COOLDOWN = 2000;
+        const LAST_BOOST_DURATION = 3500;
+        const LAST_BOOST_MULTIPLIER = 2.2;
+        const LAST_BOOST_COOLDOWN = 1000;
+       
+        let TARGET_RACE_TIME_SECONDS = 60;
+        let racers = [];
+        let sceneryLayers = { back: [], mid: [], front: [] };
+        let isRacing = false;
+        let raceFinished = false;
+        let raceStartTime;
+        let animationFrameId;
+        let frameCount = 0;
+        let currentLeaderX = 0;
+       
+        let FIXED_FINISH_LINE_X = 0;
+        let DYNAMIC_FINISH_LINE_X = 0;
+        let RACE_LENGTH = 4500;
+        let IDEAL_SPEED_PER_SECOND = 0;
+        let finishPositions = [];
+        const RACE_STATES = { SETUP: 'SETUP', PREPARING: 'PREPARING', READY: 'READY' };
+        let raceState = RACE_STATES.SETUP;
+        const pokemonData = [];
+        for (let id = 1; id <= 151; id++) {
+            pokemonData.push({
+                id, name: `Poke ${id}`,
+                imageGif: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/${id}.gif`,
+                imagePng: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png`,
+                sprite: null
+            });
+        }
+        pokemonData.forEach(p => {
+            const img = new Image();
+            img.onload = () => { p.sprite = img; };
+            img.onerror = () => {
+                const img2 = new Image();
+                img2.onload = () => { p.sprite = img2; };
+                img2.src = p.imagePng;
+            };
+            img.src = p.imageGif;
+        });
+        const logoImage = new Image();
+        logoImage.src = 'https://60fb7b08eaf293096e8c.cdn6.editmysite.com/uploads/b/60fb7b08eaf293096e8cb3f63df9e65735b8a1ee75f6d23d21eaed2115dfa2e6/IMG_7388_1701827680.jpeg?width=2400&optimize=medium';
+       
+        function getRandomInt(min, max) {
+            min = Math.ceil(min);
+            max = Math.floor(max);
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+       
+        function formatMMSS(secondsFloat) {
+            if (isNaN(secondsFloat) || secondsFloat === null || secondsFloat === Infinity) return "DNF";
+            const total = Math.max(0, secondsFloat);
+            const mins = Math.floor(total / 60);
+            const secs = total % 60;
+            return `${String(mins).padStart(2,'0')}:${String(Math.floor(secs)).padStart(2,'0')}`;
+        }
+       
+        function drawTimer() {
+            // Timer functionality removed
+        }
+        function drawSceneryLayer(layer, parallaxFactor) {
+            const layerOffset = trackOffset * parallaxFactor;
+            layer.forEach(obj => {
+                if (obj.x > layerOffset - 50 && obj.x < layerOffset + canvas.width + 50) {
+                    ctx.save();
+                    ctx.translate(obj.x, obj.y);
+                    if (obj.type === 'tree') {
+                        ctx.scale(obj.scale, obj.scale);
+                        ctx.fillStyle = '#6a3e1a'; ctx.fillRect(0, 0, 12, 24);
+                        ctx.fillStyle = '#005400'; ctx.beginPath(); ctx.arc(6, 0, 18, 0, Math.PI * 2); ctx.fill();
+                    } else if (obj.type === 'house') {
+                        ctx.scale(obj.scale, obj.scale);
+                        ctx.fillStyle = '#8B0000';
+                        ctx.fillRect(0, 0, 50, 40);
+                        ctx.fillStyle = '#555';
+                        ctx.beginPath();
+                        ctx.moveTo(-5, 0); ctx.lineTo(55, 0); ctx.lineTo(25, -25);
+                        ctx.fill();
+                    } else if (obj.type === 'spectator') {
+                        ctx.scale(obj.scale, obj.scale);
+                        ctx.fillStyle = '#008000';
+                        ctx.beginPath();
+                        ctx.arc(0, 0, 10, 0, Math.PI * 2); ctx.fill();
+                        ctx.fillStyle = '#FFDAB9';
+                        ctx.beginPath();
+                        ctx.arc(0, -15, 5, 0, Math.PI * 2); ctx.fill();
+                    }
+                    ctx.restore();
+                }
+            });
+        }
+        
+        // MODIFIED drawRacer function for sharper text
+        function drawRacer(racer){
+            ctx.save();
+            ctx.translate(racer.x, racer.y);
+            const strideBob = isRacing ? Math.sin(frameCount / 8 + racer.speedPhase) * 4 : 0;
+            ctx.translate(0, strideBob);
+            
+            if (racer.data.sprite && racer.data.sprite.complete) {
+                try { ctx.drawImage(racer.data.sprite, -POKEMON_IMAGE_SIZE/2, -POKEMON_IMAGE_SIZE/2, POKEMON_IMAGE_SIZE, POKEMON_IMAGE_SIZE); } catch(e){}
+            }
+            
+            // **IMPROVED TEXT RENDERING FOR SHARPNESS**
+            ctx.imageSmoothingEnabled = false; // Prevents the canvas from blurring the sprite/text on transformations
+            ctx.font = `bold ${NAME_TAG_FONT_SIZE}px "Bebas Neue", sans-serif`; // Ensure custom font is used correctly
+            
+            const nameText = racer.name;
+            const textWidth = ctx.measureText(nameText).width;
+            const tagY = -POKEMON_IMAGE_SIZE/2 - (NAME_TAG_FONT_SIZE + NAME_TAG_PADDING)/2 - 5;
+            
+            // Draw name tag background
+            ctx.fillStyle = 'rgba(0,0,0,0.7)';
+            ctx.strokeStyle = '#aaaaaa';
+            ctx.lineWidth = 2;
+            ctx.fillRect(-textWidth/2 - NAME_TAG_PADDING, tagY - (NAME_TAG_FONT_SIZE + NAME_TAG_PADDING)/2, textWidth + NAME_TAG_PADDING*2, NAME_TAG_FONT_SIZE + NAME_TAG_PADDING);
+            ctx.strokeRect(-textWidth/2 - NAME_TAG_PADDING, tagY - (NAME_TAG_FONT_SIZE + NAME_TAG_PADDING)/2, textWidth + NAME_TAG_PADDING*2, NAME_TAG_FONT_SIZE + NAME_TAG_PADDING);
+            
+            // Draw name text
+            ctx.fillStyle = '#FFFFFF'; 
+            ctx.textAlign = 'center'; 
+            ctx.textBaseline = 'middle'; 
+            ctx.fillText(nameText, 0, tagY);
+            
+            ctx.restore();
+        }
+        // END MODIFIED drawRacer
+        
+        function drawStartLine(){ ctx.strokeStyle='white'; ctx.lineWidth=8; ctx.beginPath(); ctx.moveTo(START_LINE_X-10, GRASS_AREA_HEIGHT); ctx.lineTo(START_LINE_X-10, canvas.height-GRASS_AREA_HEIGHT); ctx.stroke(); }
+        function drawFinishLine(){
+            ctx.save();
+            const finishX = DYNAMIC_FINISH_LINE_X;
+            const COLOR_PRIMARY = '#ffffff';
+            const COLOR_SECONDARY = '#000000';
+           
+            // Draw checkered pattern
+            const squareSize = 20;
+            const numSquares = Math.ceil((canvas.height - GRASS_AREA_HEIGHT * 2) / squareSize);
+            const lineWidth = 60;
+            const stripeWidth = lineWidth / 2;
+           
+            for (let y = 0; y < numSquares; y++) {
+                ctx.fillStyle = (y) % 2 === 0 ? COLOR_PRIMARY : COLOR_SECONDARY;
+                ctx.fillRect(
+                    finishX - lineWidth / 2,
+                    GRASS_AREA_HEIGHT + y * squareSize,
+                    stripeWidth,
+                    squareSize
+                );
+                ctx.fillStyle = (y) % 2 === 0 ? COLOR_SECONDARY : COLOR_PRIMARY;
+                ctx.fillRect(
+                    finishX - lineWidth / 2 + stripeWidth,
+                    GRASS_AREA_HEIGHT + y * squareSize,
+                    stripeWidth,
+                    squareSize
+                );
+            }
+           
+            // Draw banner above track
+            const bannerWidth = 300;
+            const bannerHeight = 50;
+            const bannerY = GRASS_AREA_HEIGHT - bannerHeight - 10;
+            ctx.fillStyle = 'rgba(0,0,0,0.9)';
+            ctx.fillRect(finishX - bannerWidth / 2, bannerY, bannerWidth, bannerHeight);
+            ctx.strokeStyle = '#00eaff';
+            ctx.lineWidth = 6;
+            ctx.strokeRect(finishX - bannerWidth / 2, bannerY, bannerWidth, bannerHeight);
+           
+            // Draw "FINISH" text on banner
+            ctx.font = 'bold 42px Orbitron';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.shadowColor = '#00eaff';
+            ctx.shadowBlur = 15;
+            ctx.fillStyle = '#00eaff';
+            ctx.fillText('FINISH LINE', finishX, bannerY + bannerHeight / 2);
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 3;
+            ctx.strokeText('FINISH LINE', finishX, bannerY + bannerHeight / 2);
+            ctx.shadowBlur = 0;
+            ctx.restore();
+        }
+        function drawBackgroundAndTrack(){
+            const currentTrackLength = RACE_LENGTH;
+            ctx.fillStyle = '#2b6f2b'; ctx.fillRect(0, 0, currentTrackLength, canvas.height);
+            ctx.fillStyle = '#5a5a5a'; ctx.fillRect(0, GRASS_AREA_HEIGHT, currentTrackLength, canvas.height - (GRASS_AREA_HEIGHT * 2));
+        }
+        function drawAll(){
+            ctx.clearRect(0,0,canvas.width,canvas.height);
+           
+           
+            ctx.save();
+            ctx.translate(-trackOffset, 0);
+           
+            drawBackgroundAndTrack();
+            drawSceneryLayer(sceneryLayers.back, 0.3);
+            drawSceneryLayer(sceneryLayers.mid, 0.6);
+            drawStartLine();
+            racers.forEach(drawRacer);
+            drawFinishLine();
+           
+            ctx.restore();
+           
+            drawTimer();
+        }
+        function initRacers() {
+            racers = [];
+            const customNamesInput = document.getElementById('racerNames');
+            let customNames = customNamesInput.value.split('\n').map(name => name.trim()).filter(name => name);
+            if (customNames.length === 0) {
+                // Using default names if textarea is empty
+                customNames = ["Ash","Misty","Brock","Gary","Lance"];
+            }
+            const shuffledPokemon = [...pokemonData].sort(() => 0.5 - Math.random());
+            const numRacers = Math.min(customNames.length, shuffledPokemon.length);
+            for (let i = 0; i < numRacers; i++) {
+                racers.push({
+                    name: customNames[i],
+                    data: shuffledPokemon[i],
+                    x: START_LINE_X,
+                    y: GRASS_AREA_HEIGHT + i * laneHeight + laneHeight / 2,
+                    baseSpeed: 0,
+                    currentSpeed: 0,
+                    speedPhase: Math.random() * Math.PI * 2,
+                    surgeActive: false,
+                    isDebuffed: false,
+                    lastSurgeTime: 0,
+                    stamina: 100,
+                    headTurn: 0,
+                    isDrafting: false,
+                    isLeadingSince: 0,
+                    isLastSince: 0,
+                    isLeaderDebuffed: false,
+                    debuffEndTime: 0,
+                    isLastBoosted: false,
+                    boostEndTime: 0
+                });
+            }
+        }
+        function reassignPokemons() {
+            if (racers.length === 0) return;
+            const shuffledPokemon = [...pokemonData].sort(() => 0.5 - Math.random());
+            racers.forEach((racer, i) => {
+                racer.data = shuffledPokemon[i];
+            });
+            drawAll();
+        }
+        function updateCanvasSettings() {
+            const isFullscreen = raceView.classList.contains('fullscreen');
+            
+            // Calculate available canvas space based on screen/container size
+            if (isFullscreen) {
+                CANVAS_VIEWPORT_WIDTH = window.innerWidth;
+                CANVAS_VIEWPORT_HEIGHT = window.innerHeight;
+            } else {
+                const rect = raceView.getBoundingClientRect();
+                CANVAS_VIEWPORT_WIDTH = rect.width;
+                CANVAS_VIEWPORT_HEIGHT = rect.height;
+            }
+           
+            // Race time is now approximate, only used to calculate fixed distance
+            const targetTime = Math.max(10, Math.min(300, parseInt(document.getElementById('raceTimeSeconds').value) || 60));
+            TARGET_RACE_TIME_SECONDS = targetTime;
+           
+            const tempFinishX = BASE_SPEED_PER_SECOND * TARGET_RACE_TIME_SECONDS;
+           
+            // FIXED finish line based on target time
+            FIXED_FINISH_LINE_X = Math.max(2000, Math.round(tempFinishX * 1.5));
+            DYNAMIC_FINISH_LINE_X = FIXED_FINISH_LINE_X;
+            RACE_LENGTH = DYNAMIC_FINISH_LINE_X + 1500;
+            document.getElementById('raceLengthDisplay').value = DYNAMIC_FINISH_LINE_X.toFixed(0);
+            
+            // Scale canvas to the size of its container
+            canvas.width = CANVAS_VIEWPORT_WIDTH;
+            canvas.height = CANVAS_VIEWPORT_HEIGHT;
+            
+            laneHeight = (canvas.height - (GRASS_AREA_HEIGHT * 2)) / Math.max(1, racers.length);
+           
+            IDEAL_SPEED_PER_SECOND = (FIXED_FINISH_LINE_X - START_LINE_X) / TARGET_RACE_TIME_SECONDS;
+            // MODIFIED: Anchor at 40%
+            cameraAnchorX = CANVAS_VIEWPORT_WIDTH * FIXED_RACER_X_ANCHOR_PCT;
+           
+            if (racers.length > 0) {
+                racers.forEach((racer, index) => {
+                    racer.y = GRASS_AREA_HEIGHT + index * laneHeight + laneHeight / 2;
+                    // Extreme randomization range (0.85 to 1.15)
+                    racer.baseSpeed = IDEAL_SPEED_PER_SECOND * (1.0 - 0.15 + Math.random() * 0.3);
+                });
+            }
+        }
+       
+        function initScenery() {
+            sceneryLayers = { back: [], mid: [], front: [] };
+            const sceneryTypes = ['tree', 'house', 'spectator'];
+            const numObjects = 60;
+            for (let i = 0; i < numObjects; i++) {
+                const type = sceneryTypes[Math.floor(Math.random() * sceneryTypes.length)];
+                const top = Math.random() > 0.5;
+                const y = top ? Math.random() * (GRASS_AREA_HEIGHT - 30) + 10 : canvas.height - GRASS_AREA_HEIGHT + Math.random() * (GRASS_AREA_HEIGHT - 30) + 10;
+                if (Math.random() < 0.3) {
+                    sceneryLayers.back.push({ type, x: Math.random() * RACE_LENGTH * 1.2, y, scale: 0.7 });
+                } else {
+                    sceneryLayers.mid.push({ type, x: Math.random() * RACE_LENGTH, y, scale: 1.0 });
+                }
+            }
+        }
+        function updateRacers(deltaTimeSeconds){
+            if (!raceStartTime) return;
+            const now = performance.now();
+            const elapsedMilliseconds = now - raceStartTime;
+            let elapsedSeconds = elapsedMilliseconds / 1000;
+           
+            const sortedRacers = [...racers].sort((a, b) => b.x - a.x);
+            let leader = sortedRacers[0];
+            let lastRacer = sortedRacers[sortedRacers.length - 1];
+            if (!leader || !lastRacer) return;
+            const currentTime = performance.now();
+            racers.forEach(racer => {
+                // Decay the positional effects if their time is up
+                if (racer.debuffEndTime > 0 && currentTime > racer.debuffEndTime) {
+                    racer.isLeaderDebuffed = false;
+                    racer.debuffEndTime = 0;
+                }
+                if (racer.boostEndTime > 0 && currentTime > racer.boostEndTime) {
+                    racer.isLastBoosted = false;
+                    racer.boostEndTime = 0;
+                }
+                // --- Leader Debuff Logic ---
+                if (racer === leader) {
+                    if (!racer.isLeaderDebuffed) {
+                        if (racer.isLeadingSince === 0) racer.isLeadingSince = currentTime;
+                        if (currentTime - racer.isLeadingSince > LEADER_DEBUFF_COOLDOWN) {
+                            racer.isLeaderDebuffed = true;
+                            racer.debuffEndTime = currentTime + LEADER_DEBUFF_DURATION;
+                            racer.isLeadingSince = 0;
+                        }
+                    }
+                    racer.isLastSince = 0;
+                } else if (racer.isLeadingSince !== 0 && !racer.isLeaderDebuffed) {
+                    racer.isLeadingSince = 0;
+                }
+                // --- Last Place Boost Logic ---
+                if (racer === lastRacer) {
+                    if (!racer.isLastBoosted) {
+                            if (racer.isLastSince === 0) racer.isLastSince = currentTime;
+                        if (currentTime - racer.isLastSince > LAST_BOOST_COOLDOWN) {
+                            racer.isLastBoosted = true;
+                            racer.boostEndTime = currentTime + LAST_BOOST_DURATION;
+                            racer.isLastSince = 0;
+                        }
+                    }
+                    racer.isLeadingSince = 0;
+                } else if (racer.isLastSince !== 0 && !racer.isLastBoosted) {
+                    racer.isLastSince = 0;
+                }
+            });
+           
+            // 3. Update Racer Speeds with Modifiers
+            const packCenterX = racers.reduce((sum, r) => sum + r.x, 0) / racers.length;
+           
+            racers.forEach(racer => {
+                if (racer.stamina < 100) racer.stamina = Math.min(100, racer.stamina + STAMINA_REGEN_RATE * deltaTimeSeconds);
+                const staminaModifier = 0.7 + 0.3 * (racer.stamina / 100);
+               
+                const distanceFromCenter = racer.x - packCenterX;
+                // RUBBER BANDING IS REMOVED
+                const rubberBandAdjustment = -distanceFromCenter * 0.00;
+               
+                const volatility = 1.0 + (Math.random() * VOLATILITY_SWING * 2 - VOLATILITY_SWING);
+               
+                let naturalSpeed = racer.baseSpeed * BASE_MOMENTUM_FACTOR * staminaModifier + rubberBandAdjustment;
+               
+                naturalSpeed *= volatility;
+               
+                if (racer.surgeActive) naturalSpeed *= SURGE_MULTIPLIER;
+                if (racer.isDebuffed) naturalSpeed *= DEBUFF_MULTIPLIER;
+               
+                if (racer === activeShortBooster) naturalSpeed *= SHORT_BOOST_MULTIPLIER;
+                if (racer === activeShortDebuffer) naturalSpeed *= SHORT_DEBUFF_MULTIPLIER;
+                if (racer.isLeaderDebuffed) naturalSpeed *= LEADER_DEBUFF_MULTIPLIER;
+                if (racer.isLastBoosted) naturalSpeed *= LAST_BOOST_MULTIPLIER;
+               
+                // NO SYNCHRONIZATION LOGIC APPLIED
+                racer.currentSpeed = Math.max(1, naturalSpeed);
+            });
+           
+            // 4. Race ends when the FIRST racer crosses the line.
+            let firstFinisher = null;
+            let timeToFinish = Infinity;
+            for (const racer of racers) {
+                racer.nextX = racer.x + racer.currentSpeed * deltaTimeSeconds;
+                if (racer.nextX >= DYNAMIC_FINISH_LINE_X && racer.x < DYNAMIC_FINISH_LINE_X) {
+                    const distToFinish = DYNAMIC_FINISH_LINE_X - racer.x;
+                    const ttF = distToFinish / racer.currentSpeed;
+                    if (ttF < timeToFinish) {
+                        timeToFinish = ttF;
+                        firstFinisher = racer;
+                    }
+                }
+            }
+            if (firstFinisher) {
+                isRacing = false;
+                raceFinished = true;
+                cancelAnimationFrame(animationFrameId);
+               
+                // Calculate precise finish time
+                const finalRaceTime = elapsedSeconds + timeToFinish;
+               
+                firstFinisher.x = DYNAMIC_FINISH_LINE_X;
+               
+                captureFinishPositions(finalRaceTime);
+                showWinnerAnimation(firstFinisher.name);
+               
+                requestAnimationFrame(() => {
+                    drawAll();
+                    setTimeout(() => {
+                        winnerOverlay.style.display = 'none';
+                        raceView.classList.remove('fullscreen');
+                        controlPanel.style.display = 'block'; // Show controls again
+                        displayFinalLeaderboard();
+                        leaderboard.style.display = 'flex';
+                        leaderboard.classList.add('fullscreen');
+                        postRaceControls.style.display = 'flex';
+                    }, 3000);
+                });
+                return;
+            }
+           
+            // 5. Final Position Update
+            racers.forEach(racer => {
+                racer.x += racer.currentSpeed * deltaTimeSeconds;
+            });
+        }
+        function updateCamera(){
+            if (!isRacing && !raceFinished) { trackOffset = 0; return; };
+           
+            const currentLeaderX = racers.reduce((max, r) => Math.max(max, r.x), 0);
+            const minX = racers.reduce((min, r) => Math.min(min, r.x), currentLeaderX);
+            let desiredOffset = currentLeaderX - cameraAnchorX;
+           
+            const minAllowedOffset = Math.max(0, minX - CANVAS_VIEWPORT_WIDTH * 0.1);
+           
+            desiredOffset = Math.max(minAllowedOffset, desiredOffset);
+            const maxOffset = Math.max(0, RACE_LENGTH - CANVAS_VIEWPORT_WIDTH);
+            desiredOffset = Math.min(desiredOffset, maxOffset);
+           
+            trackOffset += (desiredOffset - trackOffset) * CAMERA_SMOOTHING_FACTOR;
+        }
+        function animate(currentTime){
+            if (!lastFrameTime) lastFrameTime = currentTime;
+            const deltaTimeSeconds = (currentTime - lastFrameTime) / 1000;
+            lastFrameTime = currentTime;
+            frameCount++;
+            if (isRacing) {
+                updateRacers(deltaTimeSeconds);
+            }
+            updateCamera();
+            drawAll();
+            if (!raceFinished) {
+                animationFrameId = requestAnimationFrame(animate);
+            }
+        }
+        function captureFinishPositions(winnerTime){
+           
+            finishPositions = racers.map(r => {
+                let resultTime;
+                if (r.x >= DYNAMIC_FINISH_LINE_X) {
+                    resultTime = winnerTime;
+                } else if (r.currentSpeed > 0) {
+                     const distanceRemaining = DYNAMIC_FINISH_LINE_X - r.x;
+                     const timeRemaining = distanceRemaining / r.currentSpeed;
+                     resultTime = winnerTime + timeRemaining;
+                } else {
+                    resultTime = Infinity;
+                }
+               
+                return { name: r.name, finalX: r.x, currentSpeed: r.currentSpeed, resultTime };
+            });
+            finishPositions.sort((a, b) => {
+                if (a.resultTime === Infinity) return 1;
+                if (b.resultTime === Infinity) return -1;
+                return a.resultTime - b.resultTime;
+            });
+        }
+        function displayFinalLeaderboard(){
+            document.getElementById('leaderboardTitle').textContent = '🏁 FINAL RACE RESULTS 🏆';
+            const listContainer = document.getElementById('leaderboardList');
+            listContainer.innerHTML = finishPositions.map((r, i) => {
+                const rank = i + 1;
+                const isWinner = rank === 1;
+                const rankDisplay = isWinner ? `<span class="trophy">🏆</span> 1.` : `${rank}.`;
+                return `<div class="leaderboard-entry ${isWinner ? 'winner-entry' : ''}">
+                              <span class="rank-number">${rankDisplay}</span>
+                              <strong class="racer-name-leaderboard">${r.name}</strong>
+                              <span class="time-result">${formatMMSS(r.resultTime)}</span>
+                            </div>`;
+            }).join('');
+        }
+        function submitNames(){
+            const customNames = document.getElementById('racerNames').value.split('\n').map(name => name.trim()).filter(Boolean);
+            // Removed submittedNames div logic as it's no longer used
+            if (customNames.length === 0) {
+                statusDisplay.textContent = 'Please enter at least one racer name.';
+                return;
+            }
+            statusDisplay.textContent = `Submitted ${customNames.length} racer${customNames.length===1?'':'s'}. Ready to roll!`;
+            initRacers();
+            updateCanvasSettings();
+            drawAll();
+        }
+        function handleStartButton(){
+            if (racers.length === 0) {
+                submitNames();
+            }
+           
+            if (racers.length === 0) {
+                statusDisplay.textContent = 'Please enter at least one racer name before starting.';
+                return;
+            }
+           
+            if (raceState === RACE_STATES.SETUP) prepareRace();
+            else if (raceState === RACE_STATES.PREPARING) startRace();
+        }
+        function prepareRace(){
+            raceState = RACE_STATES.PREPARING;
+            controlPanel.style.display = 'none'; 
+            raceView.style.display = 'flex'; 
+            raceControls.style.display = 'flex';
+            raceView.classList.add('fullscreen');
+            initRacers(); 
+            updateCanvasSettings(); 
+            initScenery(); 
+            drawAll();
+            statusDisplay.textContent = 'PREPARE: Click START RACE (GO!).';
+        }
+        function startRace(){
+            raceState = RACE_STATES.READY; isRacing = true; raceFinished = false;
+           
+            lastBoostTime = performance.now();
+            activeShortBooster = null;
+            lastDebuffTime = performance.now();
+            activeShortDebuffer = null;
+           
+            racers.forEach(r => {
+                r.isLeadingSince = 0;
+                r.isLastSince = 0;
+                r.isLeaderDebuffed = false;
+                r.debuffEndTime = 0;
+                r.isLastBoosted = false;
+                r.boostEndTime = 0;
+            });
+            raceStartTime = performance.now();
+            lastFrameTime = performance.now();
+            statusDisplay.textContent = 'GO! RACE HAS BEGUN!';
+            raceControls.style.display = 'none';
+            cancelAnimationFrame(animationFrameId); animationFrameId = requestAnimationFrame(animate);
+        }
+        function resetRace(){
+            raceState = RACE_STATES.SETUP; isRacing = false; raceFinished = false;
+            cancelAnimationFrame(animationFrameId);
+            winnerOverlay.style.display = 'none'; leaderboard.style.display = 'none';
+            leaderboard.classList.remove('fullscreen');
+            controlPanel.style.display = 'block'; 
+            raceView.style.display = 'flex'; // Keep raceView displayed to show initial canvas in mainContent flow
+            raceView.classList.remove('fullscreen');
+            postRaceControls.style.display = 'none';
+            statusDisplay.textContent = 'Systems nominal. Enter names to begin.';
+            initRacers();
+            updateCanvasSettings();
+            drawAll();
+        }
+        function showWinnerAnimation(winnerName){
+            document.getElementById('winnerName').textContent = winnerName + " WINS!";
+            winnerOverlay.style.display = 'flex';
+        }
+        submitNamesButton.addEventListener('click', submitNames);
+        setupStartButton.addEventListener('click', handleStartButton);
+        raceScreenStartButton.addEventListener('click', handleStartButton);
+        shuffleButton.addEventListener('click', reassignPokemons);
+        window.addEventListener('resize', () => {
+            // Only update settings if not on the initial setup screen and if race view is active
+            if (raceView.style.display === 'flex') {
+                updateCanvasSettings(); 
+                initScenery(); 
+                drawAll();
+            }
+        });
+        
+        // Initial setup for the redesigned layout
+        document.addEventListener('DOMContentLoaded', () => {
+            // Ensure the main setup elements are visible initially
+            // The raceView is hidden by CSS rules now, so we need to ensure the container is visible
+            controlPanel.style.display = 'block'; 
+            raceView.style.display = 'flex';
+           
+            // Re-initialize race elements for canvas drawing in the window
+            initRacers();
+            updateCanvasSettings();
+            initScenery();
+            drawAll();
+        });
+    </script>
+</body>
+</html>
