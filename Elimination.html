@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Gladiators Death Arena: Final Showdown</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Bebas+Neue&display=swap" rel="stylesheet">
+    <style>
+        :root{
+            /* Classic Neon Blue Aesthetic */
+            --primary-glow: #e0e0e0;
+            --secondary-glow: #00eaff; /* CLASSIC NEON BLUE */
+            --bg-dark: #0d121f; 
+            --text-light: #f0ff00;
+            --neutral-dark: #333;
+            --neutral-medium: #555;
+            --neutral-light: #bbb;
+            --racer-name-color: #FFFFFF;
+            --prepare-color: #ff5500;
+            --neon-red: #ff1744;
+            --grid-color-dark: #1f3b4c; 
+        }
+        /* --- CORE LAYOUT MODIFICATION --- */
+        html,body{
+            height:100%;
+            margin:0;
+            padding:0;
+            background: linear-gradient(135deg, var(--bg-dark), #010a14, var(--bg-dark));
+            color: var(--text-light);
+            font-family: 'Bebas Neue', sans-serif;
+            -webkit-font-smoothing:antialiased;
+            -moz-osx-font-smoothing:grayscale;
+            /* RE-ENABLE SCROLLING for the whole body/main container */
+            overflow-y: auto; 
+            overflow-x: hidden;
+        }
+        #mainContainer {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh; /* Use min-height to allow content overflow */
+            padding: 10px;
+            box-sizing: border-box;
+        }
+        #titleContainer{
+            display:flex; flex-direction:column; align-items:center; justify-content:center;
+            margin: 0 0 10px; gap:6px; position: relative; z-index: 1200;
+        }
+        #titleContainer.game-active { 
+            margin-bottom: 5px; gap: 2px; 
+            flex-direction: row; /* Make title horizontal in game view */
+            justify-content: flex-start;
+        } 
+
+        #logo {
+            width: 80px; /* Slightly smaller logo */
+            height: auto;
+            filter: hue-rotate(180deg);
+        }
+        #titleContainer.game-active #logo { display: none; } /* Hide logo in game view */
+
+        h1{
+            font-family:'Orbitron',sans-serif; color: var(--secondary-glow);
+            text-shadow:0 0 15px var(--secondary-glow), 0 0 30px var(--secondary-glow);
+            letter-spacing:4px; margin:0; text-transform:uppercase;
+            font-size: clamp(1.6em, 3.8vw, 2.8em); text-align:center;
+            flex-shrink: 0; /* Prevent title from shrinking */
+        }
+        #titleContainer.game-active h1 {
+            font-size: clamp(1.4em, 2.5vw, 2.2em); /* Smaller title when game is active */
+            margin-left: 10px;
+        }
+
+
+        /* --- Setup Page Modifications to be compact --- */
+        #frontPage{
+            max-width: 800px; /* Reduced max width for setup */
+            width: 100%;
+            margin: 0 auto 20px auto;
+            padding: 15px;
+            background: linear-gradient(135deg, rgba(10,10,10,0.8), rgba(26,26,26,0.9));
+            border-radius: 20px; border:2px solid var(--secondary-glow);
+            box-shadow: 0 0 30px rgba(0, 234, 255, 0.3);
+            text-align:center;
+            box-sizing: border-box;
+        }
+        
+        .setup-grid{
+            display:flex; flex-direction: column; 
+            gap:15px; margin-bottom:15px; max-width: 450px; margin-left: auto; margin-right: auto;
+        }
+        .input-card textarea{ 
+            min-height:80px;
+            width: 95%;
+            background: var(--bg-dark);
+            color: var(--text-light);
+            border: 1px solid var(--secondary-glow);
+            padding: 5px;
+            border-radius: 5px;
+            box-sizing: border-box;
+            resize: none; 
+        }
+
+        /* --- Game View Layout (The Death Arena) --- */
+        #gameView {
+            display: none;
+            flex-direction: row;
+            width: 100%;
+            /* Use flex-grow to take up remaining vertical space if the screen is large */
+            flex-grow: 1; 
+            gap: 15px;
+            max-width: 1400px;
+            margin: 0 auto;
+            /* Allow internal scrolling if content is too tall/wide */
+            min-height: 500px; /* Ensure a minimum height for the game area */
+        }
+        #sidePanel {
+            display: flex;
+            flex-direction: column;
+            min-width: 250px; 
+            width: 30%; 
+            max-width: 350px; /* Reduced max-width for controls */
+            padding: 15px;
+            background: linear-gradient(180deg, rgba(10,10,10,0.9), rgba(26,26,26,0.9));
+            border-radius: 12px;
+            border: 2px solid var(--secondary-glow);
+            box-shadow: 0 0 15px rgba(0, 234, 255, 0.5);
+            box-sizing: border-box;
+            overflow-y: auto; /* ALLOW SCROLLING for the info/control panel */
+            max-height: 100%;
+        }
+        #canvasWrapper {
+            flex-grow: 1; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            /* Added min/max height to help sizing on small screens, ensuring space */
+            min-height: 400px; 
+            max-height: calc(100vh - 100px); /* Constrain canvas wrapper height */
+        }
+        #gameCanvas {
+            max-width: 100%;
+            max-height: 100%;
+            aspect-ratio: 1 / 1; 
+            border: 4px solid var(--secondary-glow);
+            box-shadow: 0 0 25px var(--secondary-glow);
+            background-color: var(--grid-color-dark);
+        }
+
+        /* Info Panel & Lists - Adjusted list max height */
+        #currentRacersList { 
+            list-style: none; padding: 0; margin: 0; 
+            max-height: 150px; /* Reduced max height for list */
+            overflow-y: auto; 
+        }
+
+        /* Responsive adjustments for very small screens, shifting to stacked layout */
+        @media (max-width: 768px) {
+            #titleContainer.game-active {
+                flex-direction: column;
+                text-align: center;
+                margin-bottom: 10px;
+            }
+            #titleContainer.game-active h1 {
+                margin-left: 0;
+            }
+            #gameView {
+                flex-direction: column; /* Stack controls and arena vertically */
+                gap: 10px;
+            }
+            #sidePanel {
+                width: 100%; 
+                max-width: none;
+                max-height: 40vh; /* Limit controls height when stacked */
+            }
+            #canvasWrapper {
+                min-height: 300px; 
+                max-height: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <audio id="explosionSound" src="https://www.soundboard.com/media/259837"></audio>
+
+    <div id="mainContainer">
+        <div id="titleContainer">
+            <img id="logo" src="https://60fb7b08eaf293096e8c.cdn6.editmysite.com/uploads/b/60fb7b08eaf293096e8cb3f63df9e65735b8a1ee75f6d23d21eaed2115dfa2e6/IMG_7388_1701827680.jpeg?width=2400&optimize=medium" alt="Gladiator Collectibles Logo">
+            <h1>GLADIATORS DEATH ARENA</h1>
+        </div>
+
+        <div id="frontPage">
+            <h2>Last Pokémon Standing Setup</h2>
+            <div class="setup-grid">
+                <div class="input-card">
+                    <label for="racerNames">Racer Names (one per line, max 10):</label>
+                    <textarea id="racerNames" rows="5" placeholder="Ash\nMisty\nBrock\nGary\nLance\nSabrina\nGiovanni\nBlue"></textarea>
+                </div>
+            </div>
+            <div class="action-buttons">
+                <button id="submitNamesButton" class="game-button">SUBMIT NAMES & ASSIGN TYPES</button>
+                <button id="setupStartButton" class="game-button">PREPARE ARENA</button>
+            </div>
+            <div id="status">Systems nominal. Enter names, submit, and click 'PREPARE ARENA' to continue.</div>
+        </div>
+
+        <div id="gameView">
+            <div id="sidePanel">
+                <div id="infoPanel">
+                    <h4>Arena Status | Round: <span id="roundDisplay">N/A</span></h4>
+                    <p>Attack Type: <strong id="attackTypeDisplay">Neutral</strong> (Pattern: <span id="attackPatternDisplay">Aura Scan</span>)</p>
+                    <p>Active Racers:</p>
+                    <ul id="currentRacersList"></ul>
+                    <p style="margin-top: 10px; font-size: 0.8em;">Type Advantage Key: <span style="color: yellow; text-shadow: 0 0 3px yellow;">⭐ Immune</span> / <span style="color: lime; text-shadow: 0 0 3px lime;">✨ Evasion</span></p>
+                </div>
+
+                <div id="statusContainer" style="margin-bottom: 15px;">
+                    <div id="attackStatus"></div>
+                    <div id="status" style="margin-top: 5px; font-size: 0.9em;">Awaiting Start...</div>
+                </div>
+                
+                <div id="gameControls" style="display: flex; flex-direction: column; gap: 10px; flex-grow: 1; justify-content: flex-end;">
+                    <button id="shuffleButton" class="game-button">SHUFFLE POKEMON</button>
+                    <button id="startGameButton" class="game-button prepare">START CAPTURE CHAOS</button>
+                    <button onclick="resetGame()" class="game-button" style="background: linear-gradient(45deg, #ff9900, #ff5500); padding: 10px 20px;">RETURN TO SETUP</button>
+                </div>
+            </div>
+
+            <div id="canvasWrapper">
+                <canvas id="gameCanvas" width="500" height="500"></canvas>
+            </div>
+        </div>
+
+        <div id="winnerOverlay">
+            VICTORIOUS!
+            <span id="winnerName"></span>
+            <button onclick="resetGame()" class="game-button" style="margin-top: 40px;">NEW GAME</button>
+        </div>
+    </div>
+    
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const setupControls = document.getElementById('frontPage');
+        const gameView = document.getElementById('gameView');
+        const submitNamesButton = document.getElementById('submitNamesButton');
+        const setupStartButton = document.getElementById('setupStartButton');
+        const startGameButton = document.getElementById('startGameButton');
+        const shuffleButton = document.getElementById('shuffleButton');
+        const statusDisplay = document.getElementById('status');
+        const titleContainer = document.getElementById('titleContainer');
+        const roundDisplay = document.getElementById('roundDisplay');
+        const attackTypeDisplay = document.getElementById('attackTypeDisplay');
+        const attackPatternDisplay = document.getElementById('attackPatternDisplay');
+        const currentRacersList = document.getElementById('currentRacersList');
+        const winnerOverlay = document.getElementById('winnerOverlay');
+        const winnerNameDisplay = document.getElementById('winnerName');
+        const attackStatus = document.getElementById('attackStatus');
+        const explosionSound = document.getElementById('explosionSound');
+        
+        const GRID_SIZE = 10;
+        let TILE_SIZE = canvas.width / GRID_SIZE; // Will be recalculated on resize
+        let POKEMON_IMAGE_SIZE = TILE_SIZE * 0.9;
+        
+        const GAME_STATES = { SETUP: 'SETUP', PREPARING: 'PREPARING', PLAYING: 'PLAYING', FINISHED: 'FINISHED' };
+        let gameState = GAME_STATES.SETUP;
+        let racers = [];
+        let roundNumber = 0;
+        let gameLoopInterval;
+        let roundPhase = 0; // 0: Move (3000ms), 1: Warning/Attack (1500ms), 2: Resolution (1000ms)
+        const PHASE_TIMINGS = [3000, 1500, 1000]; 
+
+        // --- Assets ---
+        const POKEBALL_URL = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png';
+        const POKEBALL_IMAGE = new Image();
+        POKEBALL_IMAGE.src = POKEBALL_URL;
+        const BOMB_COLOR = 'rgba(255, 255, 0, 1)';
+        
+        const POKEMON_TYPES = ['Grass', 'Fire', 'Water', 'Electric', 'Ground', 'Fighting', 'Flying', 'Psychic'];
+        const ATTACK_PATTERNS = {
+            'Earthquake': { type: 'Ground', name: 'Earthquake' },
+            'Thunder Wave': { type: 'Electric', name: 'Thunder Wave' },
+            'Hydro Pump': { type: 'Water', name: 'Hydro Pump' },
+            'Fire Blast': { type: 'Fire', name: 'Fire Blast' },
+            'Psychic Surge': { type: 'Psychic', name: 'Psychic Surge' }
+        };
+
+        const pokemonData = [];
+        for (let id = 1; id <= 151; id++) {
+            pokemonData.push({
+                id, name: `Poke ${id}`,
+                imageGif: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/${id}.gif`,
+                sprite: null
+            });
+        }
+        pokemonData.forEach(p => {
+            const img = new Image();
+            img.onload = () => { p.sprite = img; };
+            img.src = p.imageGif;
+        });
+
+        // --- Core Game Logic ---
+        let currentAttack = { type: 'Neutral', name: 'Aura Scan', targetRacer: null, dodgeEffect: false };
+        let availableAttacks = Object.keys(ATTACK_PATTERNS);
+
+        function playExplosion() {
+            const audio = document.getElementById('explosionSound');
+            if (audio.readyState >= 2) {
+                audio.currentTime = 0;
+                audio.play().catch(e => console.error("Audio playback failed:", e));
+            }
+        }
+        
+        function updateCanvasSize() {
+            const wrapper = document.getElementById('canvasWrapper');
+            // Use Math.min of wrapper's clientHeight and clientWidth to get the largest possible square
+            const size = Math.min(wrapper.clientWidth, wrapper.clientHeight);
+            
+            // Set canvas dimensions to the largest possible square
+            canvas.width = size;
+            canvas.height = size;
+
+            // Recalculate tile and sprite sizes based on new canvas size
+            TILE_SIZE = canvas.width / GRID_SIZE;
+            POKEMON_IMAGE_SIZE = TILE_SIZE * 0.9;
+        }
+
+        function drawGame() {
+            updateCanvasSize(); // Ensure canvas matches wrapper size every frame
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // 1. Draw Grid Aura 
+            ctx.fillStyle = 'var(--grid-color-dark)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // 2. Draw Grid Lines (Neon Effect)
+            ctx.strokeStyle = 'var(--secondary-glow)';
+            ctx.shadowColor = 'var(--secondary-glow)';
+            ctx.shadowBlur = 8;
+            ctx.lineWidth = 1;
+            for (let i = 0; i <= GRID_SIZE; i++) {
+                ctx.beginPath(); ctx.moveTo(i * TILE_SIZE, 0); ctx.lineTo(i * TILE_SIZE, canvas.height); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(0, i * TILE_SIZE); ctx.lineTo(canvas.width, i * TILE_SIZE); ctx.stroke();
+            }
+            ctx.shadowBlur = 0; 
+
+            // 3. Draw Target Visualization
+            if (currentAttack.targetRacer && currentAttack.targetRacer.active && (roundPhase === 1 || roundPhase === 2)) {
+                const r = currentAttack.targetRacer;
+                const xCenter = r.x * TILE_SIZE + TILE_SIZE / 2;
+                const yCenter = r.y * TILE_SIZE + TILE_SIZE / 2;
+                const halfSize = POKEMON_IMAGE_SIZE / 2;
+                
+                const flash = Math.sin(Date.now() / 50) * 0.5 + 0.5;
+                
+                ctx.strokeStyle = `rgba(255, 0, 0, ${0.8 * flash})`;
+                ctx.lineWidth = 6;
+                ctx.shadowColor = 'red';
+                ctx.shadowBlur = 10;
+                
+                // Draw X centered ON THE POKEMON's current position
+                ctx.beginPath();
+                ctx.moveTo(xCenter - halfSize, yCenter - halfSize);
+                ctx.lineTo(xCenter + halfSize, yCenter + halfSize);
+                ctx.moveTo(xCenter + halfSize, yCenter - halfSize);
+                ctx.lineTo(xCenter - halfSize, yCenter + halfSize);
+                ctx.stroke();
+
+                ctx.shadowBlur = 0;
+            }
+
+
+            // 4. Draw Racers
+            racers.filter(r => r.active).forEach(r => {
+                const x = r.x * TILE_SIZE + TILE_SIZE / 2;
+                const y = r.y * TILE_SIZE + TILE_SIZE / 2;
+                const nameText = `${r.name} (${r.data.type})`;
+
+                ctx.save();
+                ctx.translate(x, y);
+
+                // Draw immunity/Evasion glow
+                if (r.isSafe) {
+                    ctx.beginPath();
+                    ctx.arc(0, 0, TILE_SIZE * 0.4, 0, Math.PI * 2);
+                    ctx.fillStyle = r.isSafe === 'IMMUNE' ? 'rgba(255,255,0,0.3)' : 'rgba(0,255,0,0.3)';
+                    ctx.fill();
+                    ctx.strokeStyle = r.isSafe === 'IMMUNE' ? 'yellow' : 'lime';
+                    ctx.lineWidth = 3;
+                    ctx.stroke();
+                }
+
+                // Draw Sprite
+                if (r.data.sprite && r.data.sprite.complete) {
+                    ctx.drawImage(r.data.sprite, -POKEMON_IMAGE_SIZE / 2, -POKEMON_IMAGE_SIZE / 2, POKEMON_IMAGE_SIZE, POKEMON_IMAGE_SIZE);
+                }
+
+                // Draw Name Tag
+                ctx.font = `bold ${TILE_SIZE * 0.25}px "Bebas Neue", sans-serif`;
+                ctx.textAlign = 'center';
+                ctx.fillStyle = 'white';
+                ctx.strokeStyle = 'black';
+                ctx.lineWidth = 3;
+                
+                ctx.strokeText(nameText, 0, -TILE_SIZE / 2);
+                ctx.fillText(nameText, 0, -TILE_SIZE / 2);
+                
+                ctx.restore();
+            });
+
+            // 5. Draw Capture Animation (Explosion Effect)
+            racers.filter(r => r.captureAnimation).forEach(r => {
+                const x = r.x * TILE_SIZE + TILE_SIZE / 2;
+                const y = r.y * TILE_SIZE + TILE_SIZE / 2;
+                const animationTime = Date.now() - r.captureStartTime;
+                const duration = PHASE_TIMINGS[2];
+                const progress = animationTime / duration;
+
+                ctx.save();
+                ctx.translate(x, y);
+
+                if (progress < 1) {
+                    // Draw Poké Ball slamming down
+                    const ballSize = POKEMON_IMAGE_SIZE * 1.5;
+                    const scale = Math.min(1.0, progress * 3); 
+                    ctx.drawImage(POKEBALL_IMAGE, -ballSize * scale / 2, -ballSize * scale / 2, ballSize * scale, ballSize * scale);
+                    
+                    // Draw Explosion (Yellow Expanding circle)
+                    ctx.beginPath();
+                    ctx.arc(0, 0, POKEMON_IMAGE_SIZE * progress * 2, 0, Math.PI * 2);
+                    ctx.fillStyle = BOMB_COLOR;
+                    ctx.globalAlpha = 0.9 * (1 - progress); 
+                    ctx.fill();
+
+                    // Sucking effect (black circle)
+                    ctx.beginPath();
+                    ctx.arc(0, 0, POKEMON_IMAGE_SIZE * (1.2 - progress), 0, Math.PI * 2);
+                    ctx.fillStyle = 'rgba(0,0,0,0.8)';
+                    ctx.globalAlpha = 0.5 * (1 - progress);
+                    ctx.fill();
+                }
+                
+                ctx.restore();
+                ctx.globalAlpha = 1.0;
+            });
+        }
+
+        // --- Phase Management ---
+
+        function startRound() {
+            const activeRacers = racers.filter(r => r.active);
+            if (activeRacers.length <= 1) {
+                endGame(activeRacers[0]);
+                return;
+            }
+
+            roundNumber++;
+            roundPhase = 0;
+            activeRacers.forEach(r => {
+                r.targetX = r.x; r.targetY = r.y; 
+                r.isSafe = null;
+                r.captureAnimation = false;
+            });
+            updateRacerListDisplay();
+            
+            // 1. Select Attack Type/Name
+            const attackName = availableAttacks[Math.floor(Math.random() * availableAttacks.length)];
+            const attackConfig = ATTACK_PATTERNS[attackName];
+
+            currentAttack.name = attackName;
+            currentAttack.type = attackConfig.type;
+            currentAttack.dodgeEffect = (currentAttack.type === 'Water' || currentAttack.type === 'Fire');
+            currentAttack.targetRacer = null;
+            
+            // 2. Select Single Target
+            currentAttack.targetRacer = activeRacers[Math.floor(Math.random() * activeRacers.length)];
+
+            updateGameInfo();
+            attackStatus.textContent = '';
+            statusDisplay.textContent = `ROUND ${roundNumber} - MOVE PHASE: ${PHASE_TIMINGS[0] / 1000} seconds to dodge!`;
+            
+            setTimeout(attackPhase, PHASE_TIMINGS[0]);
+            drawGame();
+        }
+
+        function attackPhase() {
+            roundPhase = 1;
+            const targetName = currentAttack.targetRacer ? currentAttack.targetRacer.name : 'N/A';
+            attackStatus.textContent = `!! ${targetName} MARKED FOR CAPTURE !!`;
+            statusDisplay.textContent = `ROUND ${roundNumber} - ATTACK WARNING: ${currentAttack.name} Incoming!`;
+            updateGameInfo();
+            drawGame();
+            setTimeout(resolutionPhase, PHASE_TIMINGS[1]);
+        }
+
+        function resolutionPhase() {
+            roundPhase = 2;
+            attackStatus.textContent = '';
+            
+            const r = currentAttack.targetRacer;
+            
+            if (r.active) {
+                r.x = r.targetX; 
+                r.y = r.targetY;
+
+                let captured = true;
+                let reason = currentAttack.type;
+
+                // 1. Check for Immunity
+                const type = r.data.type;
+                if ((currentAttack.type === 'Ground' && (type === 'Flying' || type === 'Grass')) || 
+                    (currentAttack.type === 'Electric' && type === 'Ground')) {
+                    r.isSafe = 'IMMUNE';
+                    captured = false;
+                    reason = `IMMUNE (${type})`;
+                } 
+                
+                // 2. Check for Evasion
+                else if (currentAttack.dodgeEffect && (type === 'Water' || type === 'Fire')) {
+                    if (Math.random() < 0.5) { 
+                        captured = false;
+                        r.isSafe = 'EVADED';
+                        reason = `EVADED (${type})`;
+                    } else {
+                        reason = `CAUGHT (Failed Evasion)`;
+                    }
+                } else {
+                    reason = `CAUGHT (Hit by ${currentAttack.type})`;
+                }
+                
+                // 3. Final Elimination
+                if (captured) {
+                    r.captureAnimation = true;
+                    r.captureStartTime = Date.now();
+                    r.eliminationReason = reason;
+                    playExplosion();
+                    
+                    setTimeout(() => {
+                        r.active = false;
+                        statusDisplay.textContent = `💥 ${r.name} was CAPTURED!`;
+                        updateRacerListDisplay();
+                        setTimeout(startRound, 200);
+                    }, PHASE_TIMINGS[2]); 
+                } else {
+                    statusDisplay.textContent = `✅ ${r.name} survived! Reason: ${reason}.`;
+                    setTimeout(startRound, 200);
+                }
+            } else {
+                // Failsafe: if the target was eliminated by a delayed process, just start the next round
+                setTimeout(startRound, 50);
+            }
+        }
+
+        function endGame(winner) {
+            gameState = GAME_STATES.FINISHED;
+            winnerNameDisplay.textContent = winner ? `${winner.name} WINS!` : "NO WINNER LEFT!";
+            winnerOverlay.style.display = 'flex';
+            statusDisplay.textContent = `GAME OVER! ${winner ? winner.name : 'Everyone'} survived ${roundNumber} rounds.`;
+            titleContainer.classList.remove('game-active');
+        }
+
+        // --- Utility Functions ---
+
+        function updateRacerListDisplay() {
+            currentRacersList.innerHTML = racers.map(r => {
+                const isEliminated = !r.active;
+                let display = `${r.name} (${r.data.type})`;
+                if (isEliminated) {
+                    display += ` - ${r.eliminationReason || 'Capture'}`;
+                } else if (currentAttack.targetRacer === r && roundPhase !== 0) {
+                     display = `🔥 ${display} 🔥`;
+                }
+                return `<li class="${isEliminated ? 'eliminated-racer' : ''}">${display}</li>`;
+            }).join('');
+        }
+
+        function updateGameInfo() {
+            roundDisplay.textContent = `#${roundNumber}`;
+            attackTypeDisplay.textContent = currentAttack.type;
+            attackPatternDisplay.textContent = currentAttack.name;
+        }
+
+        function submitNames() {
+            initRacers(true);
+            if (racers.length === 0) {
+                statusDisplay.textContent = 'Please enter at least one racer name.';
+                return;
+            }
+            updateRacerListDisplay();
+            statusDisplay.textContent = `Submitted ${racers.length} Pokémon. Ready to prepare the arena!`;
+            drawGame();
+        }
+
+        function prepareGame() {
+            if (racers.length < 2) {
+                statusDisplay.textContent = 'Need at least 2 racers to start the chaos!';
+                return;
+            }
+            gameState = GAME_STATES.PREPARING;
+            setupControls.style.display = 'none'; 
+            gameView.style.display = 'flex'; // Use flex for the side-by-side layout
+            titleContainer.classList.add('game-active');
+            statusDisplay.textContent = 'PREPARE: Shuffle Types, then click START CAPTURE CHAOS.';
+            updateCanvasSize(); // Initial sizing for the arena
+            drawGame();
+        }
+
+        function startGame() {
+            gameState = GAME_STATES.PLAYING;
+            setupControls.style.display = 'none'; 
+            startGameButton.style.display = 'none';
+            shuffleButton.style.display = 'none';
+            startRound();
+        }
+
+        function resetGame() {
+            gameState = GAME_STATES.SETUP;
+            roundNumber = 0;
+            currentAttack = { type: 'Neutral', name: 'Aura Scan', targetRacer: null, dodgeEffect: false };
+            winnerOverlay.style.display = 'none';
+            setupControls.style.display = 'block';
+            gameView.style.display = 'none';
+            titleContainer.classList.remove('game-active');
+            updateGameInfo();
+            currentRacersList.innerHTML = '';
+            statusDisplay.textContent = 'Systems nominal. Enter names to begin.';
+            initRacers(false); 
+            
+            // Restore buttons in the control panel
+            startGameButton.style.display = 'block';
+            shuffleButton.style.display = 'block';
+            
+            drawGame();
+        }
+
+        // --- AI Movement Logic (Simple Random Walk) ---
+        function moveAI() {
+            if (gameState !== GAME_STATES.PLAYING || roundPhase !== 0) return;
+
+            racers.filter(r => r.active).forEach(r => {
+                const availableMoves = [];
+                for (let dx = -1; dx <= 1; dx++) {
+                    for (let dy = -1; dy <= 1; dy++) {
+                        const newX = r.x + dx;
+                        const newY = r.y + dy;
+
+                        if (newX >= 0 && newX < GRID_SIZE && newY >= 0 && newY < GRID_SIZE) {
+                            availableMoves.push({ x: newX, y: newY });
+                        }
+                    }
+                }
+
+                if (availableMoves.length > 0) {
+                    const randomMove = availableMoves[Math.floor(Math.random() * availableMoves.length)];
+                    r.targetX = randomMove.x;
+                    r.targetY = randomMove.y;
+                }
+            });
+            drawGame();
+        }
+        
+        function initRacers(fromSetup = true) {
+            racers = [];
+            const customNamesInput = document.getElementById('racerNames');
+            let customNames = customNamesInput.value.split('\n').map(name => name.trim()).filter(name => name).slice(0, 10);
+            if (customNames.length === 0 && fromSetup) return;
+
+            const shuffledPokemon = [...pokemonData].sort(() => 0.5 - Math.random());
+            const numRacers = Math.min(customNames.length, shuffledPokemon.length);
+
+            const usedTiles = new Set();
+            for (let i = 0; i < numRacers; i++) {
+                let x, y, posKey;
+                do {
+                    x = Math.floor(Math.random() * GRID_SIZE);
+                    y = Math.floor(Math.random() * GRID_SIZE);
+                    posKey = `${x},${y}`;
+                } while (usedTiles.has(posKey));
+                usedTiles.add(posKey);
+
+                racers.push({
+                    name: customNames[i],
+                    data: { ...shuffledPokemon[i], type: POKEMON_TYPES[i % POKEMON_TYPES.length] },
+                    active: true,
+                    x: x,
+                    y: y,
+                    targetX: x,
+                    targetY: y,
+                    isSafe: null,
+                    captureAnimation: false,
+                    eliminationReason: null
+                });
+            }
+            if (racers.length > 0) reassignPokemons(false); 
+        }
+
+        function reassignPokemons(updateDisplay = true) {
+            if (racers.length === 0) return;
+            const shuffledPokemon = [...pokemonData].sort(() => 0.5 - Math.random());
+            const shuffledTypes = [...POKEMON_TYPES].sort(() => 0.5 - Math.random()); 
+
+            racers.forEach((racer, i) => {
+                const newPoke = shuffledPokemon[i % shuffledPokemon.length];
+                const newType = shuffledTypes[i % shuffledTypes.length];
+                racer.data = { ...newPoke, type: newType };
+            });
+            if (updateDisplay) {
+                // Simply update the list and draw without re-reading the textarea
+                updateRacerListDisplay();
+                statusDisplay.textContent = `${racers.length} Pokémon types and sprites shuffled. Ready to start!`;
+            }
+            drawGame();
+        }
+
+        // --- Event Listeners ---
+        submitNamesButton.addEventListener('click', submitNames);
+        setupStartButton.addEventListener('click', prepareGame);
+        startGameButton.addEventListener('click', startGame);
+        shuffleButton.addEventListener('click', () => reassignPokemons(true));
+        window.addEventListener('resize', drawGame); // Redraw canvas on window resize
+
+        // Start game loop (handles AI movement)
+        gameLoopInterval = setInterval(moveAI, 100);
+        // Continuous redraw for animations (Poké Ball slam, flashing grid)
+        setInterval(drawGame, 50);
+
+        // Initial setup
+        initRacers(false); 
+        drawGame();
+    </script>
+</body>
+</html>
