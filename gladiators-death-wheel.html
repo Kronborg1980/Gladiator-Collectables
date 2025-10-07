@@ -6,18 +6,20 @@
     <title>Gladiators Death Wheel</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Base Dark/Tron Colors */
+        /* --- 1. BASE COLORS: ALL NEON BLUE / WHITE NAMES --- */
         :root {
-            --tron-blue: #00FFFF;
-            --tron-magenta: #FF00FF;
-            --tron-red: #FF4500; /* For Death/Elimination */
+            --tron-blue: #00FFFF; /* Primary Neon Color (Used for all general glow/accents) */
+            --tron-magenta: #00FFFF; /* Secondary Neon Color (Changed to Blue) */
+            --tron-red: #FF4500; /* For Death/Elimination (Kept red for danger) */
             --dark-metal: #1a1a1a;
             --light-metal: #444444;
-            --text-neon: #E0E0E0;
+            --text-neon: #FFFFFF; /* Changed to White as requested for names and primary text */
+            --winner-color: #39FF14; /* Success Green (Kept for winner/success for contrast) */
         }
 
         /* Utility Styles */
         .neon-text-glow {
+            /* General text glow now uses the primary tron-blue */
             text-shadow: 0 0 5px #fff, 0 0 10px var(--tron-blue), 0 0 20px var(--tron-blue);
         }
         .death-glow {
@@ -25,8 +27,8 @@
             border-color: var(--tron-red) !important;
         }
         .success-glow {
-            box-shadow: 0 0 15px #39FF14, inset 0 0 10px #39FF14;
-            border-color: #39FF14 !important;
+            box-shadow: 0 0 15px var(--winner-color), inset 0 0 10px var(--winner-color);
+            border-color: var(--winner-color) !important;
         }
         .metal-panel {
             background: linear-gradient(145deg, var(--dark-metal), #000000);
@@ -48,22 +50,27 @@
             transition: transform 0s ease-out;
         }
 
+        /* Wheel Rim: Enhanced to look more like heavy, dark metal with a strong blue neon ring */
         #wheel-canvas {
-            border: 10px solid var(--light-metal); /* Simulated Metal Rim */
+            border: 10px solid var(--dark-metal); 
             border-radius: 50%;
-            /* Intense Neon Glow for the Tron Effect */
+            /* Intense Neon Glow for the Tron Effect, using the primary blue */
             box-shadow: 0 0 30px var(--tron-blue), 0 0 10px var(--tron-blue);
         }
 
+        /* --- 3. POINTER REALISM ENHANCEMENT (More Angular/Metallic) --- */
         #pointer {
-            /* Realistic, heavier-looking metal pointer */
             position: absolute;
-            top: -60px; /* Positioned higher to clear the wheel edge */
+            top: -70px; /* Positioned higher to clear the wheel edge */
             width: 0;
             height: 0;
             border-left: 35px solid transparent; 
             border-right: 35px solid transparent; 
-            border-top: 65px solid var(--tron-blue); 
+            /* Shape changed from pure triangle to a metallic chevron/arrow head */
+            border-top: 50px solid var(--tron-blue); 
+            /* A solid, metallic base for the pointer */
+            border-bottom: 20px solid #FFFFFF; 
+            /* Adjust the size and position to center the new shape */
             filter: drop-shadow(0 0 15px var(--tron-blue)); /* Stronger glow */
             z-index: 10;
             left: 50%;
@@ -82,17 +89,17 @@
             font-size: 1rem;
             font-weight: bold;
             color: var(--dark-metal);
-            background-color: #39FF14;
+            background-color: var(--winner-color); /* Success green label */
             opacity: 0;
             transition: opacity 0.3s ease-in;
         }
 
         .show-winner-label {
             opacity: 1 !important;
-            box-shadow: 0 0 10px #39FF14, 0 0 20px #39FF14;
+            box-shadow: 0 0 10px var(--winner-color), 0 0 20px var(--winner-color);
         }
 
-        /* Pointer Animation (Kept from original) */
+        /* Pointer Animation */
         @keyframes pointerBounce {
             0% { transform: translateX(-50%) rotate(-10deg); }
             100% { transform: translateX(-50%) rotate(10deg); }
@@ -101,7 +108,7 @@
             animation: pointerBounce 0.1s infinite alternate;
         }
 
-        /* Elimination Button Neon Red Style */
+        /* Elimination Button (Kept Red for danger) */
         #elimination-button {
             background-color: var(--tron-red);
             color: var(--text-neon);
@@ -112,16 +119,22 @@
             transform: scale(1.02);
             box-shadow: 0 0 25px var(--tron-red), 0 0 40px var(--tron-red);
         }
+        
+        /* Spin button changed to neon blue */
+        #spin-button {
+             background-color: var(--tron-blue) !important;
+             box-shadow: 0 0 15px var(--tron-blue), 0 0 30px var(--tron-blue) !important;
+        }
     </style>
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     colors: {
-                        'primary-neon': '#00FFFF',   
-                        'secondary-neon': '#FF00FF', 
-                        'dark-bg': '#0A0A0A',       
-                        'neutral-glow': '#E0E0E0', 
+                        'primary-neon': '#00FFFF', /* All primary is neon blue */ 
+                        'secondary-neon': '#00FFFF', /* Secondary is also neon blue */
+                        'dark-bg': '#0A0A0A',
+                        'neutral-glow': '#FFFFFF', /* White as requested */
                     },
                     fontFamily: {
                         sans: ['Inter', 'sans-serif'],
@@ -133,7 +146,7 @@
 </head>
 <body class="bg-dark-bg min-h-screen p-4 font-sans flex flex-col items-center text-text-neon">
 
-    <h1 class="text-5xl font-extrabold text-tron-red mt-4 mb-8 text-center neon-text-glow" style="color: var(--tron-red);">
+    <h1 class="text-5xl font-extrabold text-primary-neon mt-4 mb-8 text-center neon-text-glow">
         GLADIATORS DEATH WHEEL
     </h1>
 
@@ -156,7 +169,7 @@ Eve</textarea>
             </label>
             <input type="number" id="spin-duration" value="5" min="1" max="60" class="w-full p-3 border border-primary-neon/50 bg-gray-900 text-text-neon rounded-lg focus:ring-primary-neon focus:border-primary-neon transition duration-150 shadow-inner text-center" />
 
-            <button id="spin-button" class="w-full mt-6 py-4 px-4 bg-secondary-neon text-dark-metal font-extrabold rounded-xl shadow-md hover:opacity-90 transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed" style="box-shadow: 0 0 15px var(--tron-magenta), 0 0 30px var(--tron-magenta);">
+            <button id="spin-button" class="w-full mt-6 py-4 px-4 bg-secondary-neon text-dark-metal font-extrabold rounded-xl shadow-md hover:opacity-90 transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed">
                 THE FATE SPIN
             </button>
             
@@ -190,7 +203,7 @@ Eve</textarea>
         const LOGO_URL = 'https://60fb7b08eaf293096e8c.cdn6.editmysite.com/uploads/b/60fb7b08eaf293096e8cb3f63df9e65735b8a1ee75f6d23d21eaed2115dfa2e6/IMG_7388_1701827680.jpeg?width=2400&optimize=medium';
         const ELIMINATION_SPIN_DURATION = 5; 
 
-        // Distinct, neon colors for the segments (Tron theme)
+        // Distinct, neon colors for the segments (Kept varied colors for wheel segments for visibility/design)
         const VIBRANT_COLORS = [
             '#00FFFF', // Cyan
             '#FF00FF', // Magenta
@@ -309,12 +322,12 @@ Eve</textarea>
                 ctx.fillStyle = item.color;
                 ctx.fill();
 
-                // Draw Text
+                // Draw Text - Changed to White (#FFFFFF) as requested
                 ctx.save();
                 ctx.translate(centerX, centerY);
                 ctx.rotate(startAngle + segmentAngle / 2);
 
-                ctx.fillStyle = '#0A0A0A'; // Dark text for contrast
+                ctx.fillStyle = '#FFFFFF'; // WHITE TEXT FOR NAMES
                 ctx.font = `bold ${Math.floor(size * 0.032)}px Inter`; 
                 ctx.textAlign = 'right';
                 ctx.textBaseline = 'middle';
@@ -326,14 +339,12 @@ Eve</textarea>
                 currentAngle = endAngle;
             });
 
-            // 2. Draw Pegs (Needles)
+            // 2. Draw Pegs (Needles) - Enhanced for Realism
             const numPegs = dataToDraw.length;
             const pegRadius = radius; 
-            const pegSize = size * 0.015; // Slightly larger pegs
+            const pegSize = size * 0.015;
 
-            // Draw pegs at the end of each segment
             for (let i = 0; i < numPegs; i++) {
-                // Angle is the end of the segment
                 const angle = (i + 1) * segmentAngle;
 
                 const x = centerX + pegRadius * Math.cos(angle);
@@ -344,15 +355,15 @@ Eve</textarea>
                 // Peg Glow (Tron Blue)
                 ctx.beginPath();
                 ctx.arc(x, y, pegSize, 0, 2 * Math.PI);
-                ctx.fillStyle = '#FFFFFF'; 
+                ctx.fillStyle = 'var(--tron-blue)'; // Neon Blue Glow
                 ctx.shadowColor = 'var(--tron-blue)';
                 ctx.shadowBlur = 15;
                 ctx.fill();
 
-                // Peg Core (Darker metal look)
+                // Peg Core (Metallic look for realism)
                 ctx.beginPath();
                 ctx.arc(x, y, pegSize * 0.6, 0, 2 * Math.PI);
-                ctx.fillStyle = 'var(--dark-metal)'; 
+                ctx.fillStyle = '#AAAAAA'; // Light Gray/Metal Core
                 ctx.shadowBlur = 0; 
                 ctx.fill();
 
@@ -360,20 +371,25 @@ Eve</textarea>
             }
             ctx.shadowBlur = 0;
 
-            // 3. Draw Center Hole (Glow Circle)
+            // 3. Draw Center Hole (Glow Circle) - Enhanced for Realism
             const logoRadius = radius * 0.25;
-            // Neon border (Magenta)
+            
+            // Neon border (Changed to Blue)
             ctx.beginPath();
             ctx.arc(centerX, centerY, logoRadius + 10, 0, 2 * Math.PI);
-            ctx.fillStyle = 'var(--tron-magenta)';
-            ctx.shadowColor = 'var(--tron-magenta)';
+            ctx.fillStyle = 'var(--tron-blue)';
+            ctx.shadowColor = 'var(--tron-blue)';
             ctx.shadowBlur = 10;
             ctx.fill();
 
-            // Inner metal circle
+            // Inner metal circle (Darker metal)
             ctx.beginPath();
             ctx.arc(centerX, centerY, logoRadius, 0, 2 * Math.PI);
-            ctx.fillStyle = 'var(--light-metal)';
+            // Use a radial gradient for a more realistic metal hub effect
+            const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, logoRadius);
+            gradient.addColorStop(0, '#666666'); // Lighter center
+            gradient.addColorStop(1, '#1a1a1a'); // Darker edge
+            ctx.fillStyle = gradient;
             ctx.shadowBlur = 0;
             ctx.fill();
             
@@ -436,8 +452,6 @@ Eve</textarea>
             const winnerName = dataToSpin[winningIndex].name;
 
             // 3. Determine the target rotation angle (in degrees)
-            // Pointer is at 270 degrees (straight up). Segments start at 0 (right) and increase clockwise.
-            // We want the *center* of the winning segment to align with the *pointer*.
             let targetSegmentMidpoint = winningIndex * segmentAngleDegrees + (segmentAngleDegrees / 2);
             const pointerAngle = 270; 
             let landingAngleOffset = pointerAngle - targetSegmentMidpoint;
