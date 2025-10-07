@@ -21,6 +21,26 @@
             --shadow-glow: 0 0 15px rgba(0, 255, 234, 0.5);
         }
 
+        /* --- KEYFRAME ANIMATIONS (Modern Effects) --- */
+        @keyframes scanlines {
+            0% { background-position: 0 0; }
+            100% { background-position: 0 50em; }
+        }
+        @keyframes flicker {
+            0%, 18%, 22%, 25%, 53%, 57%, 100% { text-shadow: var(--shadow-glow), 0 0 20px var(--primary-glow); }
+            20%, 24%, 55% { text-shadow: none; }
+            58% { text-shadow: 0.5px 0 1px var(--secondary-glow), -0.5px 0 1px var(--neon-red); }
+        }
+        @keyframes canvas-flicker {
+            0%, 100% { box-shadow: var(--shadow-glow); }
+            50% { box-shadow: 0 0 10px var(--secondary-glow); }
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 0.8; }
+            50% { transform: scale(1.01); opacity: 1; }
+            100% { transform: scale(1); opacity: 0.8; }
+        }
+
         /* --- CORE LAYOUT & SCALING FIXES --- */
         html, body {
             height: 100%;
@@ -30,7 +50,27 @@
             color: var(--text-light);
             font-family: 'Roboto Mono', monospace;
             overflow-x: hidden;
-            overflow-y: auto; /* Allow natural scrolling */
+            overflow-y: auto;
+            position: relative; /* Needed for scanlines */
+        }
+        /* Scanline and Noise Overlay */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 9999;
+            opacity: 0.1;
+            background: 
+                /* Scanlines */
+                linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.5) 50%),
+                /* Noise */
+                repeating-linear-gradient(transparent, transparent 1px, rgba(0, 0, 0, 0.2) 1px, rgba(0, 0, 0, 0.2) 2px);
+            background-size: 100% 2px, 2px 2px;
+            animation: scanlines 6s linear infinite;
         }
 
         #mainContainer {
@@ -47,8 +87,7 @@
         #titleContainer {
             display: flex;
             align-items: center;
-            /* Center the title on the front page */
-            justify-content: center; 
+            justify-content: center;
             margin-bottom: 25px; 
             gap: 15px;
             position: relative;
@@ -56,7 +95,6 @@
         }
 
         #titleContainer.game-active {
-            /* Left-align the title in the game view */
             justify-content: flex-start;
             margin-bottom: 10px;
         }
@@ -64,7 +102,8 @@
         h1 {
             font-family: 'Orbitron', sans-serif;
             color: var(--primary-glow);
-            text-shadow: var(--shadow-glow), 0 0 20px var(--primary-glow);
+            /* Apply flicker animation */
+            animation: flicker 4s linear infinite;
             letter-spacing: 5px;
             margin: 0;
             text-transform: uppercase;
@@ -90,6 +129,7 @@
             border: 3px solid var(--primary-glow);
             box-shadow: var(--shadow-glow);
             text-align: center;
+            animation: pulse 10s ease-in-out infinite; /* Subtle pulse effect */
         }
 
         #frontPage h2 {
@@ -229,6 +269,25 @@
             min-height: 400px;
         }
 
+        /* Holographic Frame Effect around Canvas */
+        #canvasWrapper::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: 8px solid rgba(0, 255, 234, 0.1);
+            border-radius: 20px;
+            pointer-events: none;
+            box-sizing: border-box;
+            opacity: 0.5;
+            z-index: 10;
+            /* Thin dashed border for technical look */
+            border-style: dashed;
+            animation: pulse 4s ease-in-out infinite;
+        }
+
         #gameCanvas {
             max-width: 100%;
             max-height: 100%;
@@ -236,6 +295,9 @@
             border: 4px solid var(--primary-glow);
             box-shadow: var(--shadow-glow);
             background: var(--grid-color-dark);
+            z-index: 11;
+            position: relative;
+            animation: canvas-flicker 5s ease-in-out infinite;
         }
 
         /* Info Panel & List */
@@ -525,10 +587,20 @@
                 const xCenter = r.x * TILE_SIZE + TILE_SIZE / 2;
                 const yCenter = r.y * TILE_SIZE + TILE_SIZE / 2;
                 
-                // Control blink rate to only be visible twice (1500ms / 500ms cycle = 3 cycles, 2 blinks)
-                const blinkCycle = PHASE_TIMINGS[1] / 3; // ~500ms cycle
-                const timeInPhase = Date.now() % blinkCycle;
-                const flash = (timeInPhase < 250) ? 0.8 : 0.0; // Blink is on for 250ms, off for 250ms
+                // Control blink rate: Phase 1 is 1500ms. Blink cycle is 500ms (250ms ON, 250ms OFF). 
+                const timeElapsedInPhase1 = Date.now() - r.roundStartTime - PHASE_TIMINGS[0];
+                let flash = 0;
+                
+                if (roundPhase === 1 && timeElapsedInPhase1 < PHASE_TIMINGS[1]) {
+                    const timeInCycle = timeElapsedInPhase1 % 500;
+                    if (timeInCycle < 250) {
+                        flash = 0.8;
+                    } else {
+                        flash = 0.0;
+                    }
+                } else if (roundPhase === 2) {
+                    flash = 0; // Hide targeting during resolution animation
+                }
 
                 // Laser targeting circle - only draw when flash is on
                 if (flash > 0) {
@@ -592,7 +664,7 @@
                 
                 // Draw name tag (White with Black Border for visibility)
                 ctx.font = `bold ${TILE_SIZE * 0.28}px 'Bebas Neue', sans-serif`;
-                ctx.textAlign = 'center'; // Aligned name in the middle
+                ctx.textAlign = 'center'; 
                 ctx.fillStyle = 'white';
                 ctx.strokeStyle = 'black';
                 ctx.lineWidth = 6; 
@@ -652,11 +724,14 @@
             roundNumber++;
             roundPhase = 0;
             gameScore += 100; // Score for surviving a round
-            activeRacers.forEach(r => {
+            
+            // Set round start time for blink logic
+            racers.forEach(r => {
                 r.targetX = r.x;
                 r.targetY = r.y;
                 r.isSafe = null;
                 r.captureAnimation = false;
+                r.roundStartTime = Date.now(); 
             });
             updateRacerListDisplay();
             updateScoreDisplay();
@@ -800,7 +875,7 @@
             setupControls.style.display = 'none';
             gameView.style.display = 'flex';
             titleContainer.classList.add('game-active');
-            statusDisplay.textContent = 'CONFIGURE: Reassign Pokémon, then launch battle.';
+            statusDisplay.textContent = 'CONFIGURE: Shuffle Pokémon, then launch battle.';
             updateCanvasSize();
             drawGame();
         }
@@ -886,7 +961,8 @@
                     targetY: y,
                     isSafe: null,
                     captureAnimation: false,
-                    eliminationReason: null
+                    eliminationReason: null,
+                    roundStartTime: Date.now() // Initialize round start time
                 });
             }
             if (racers.length > 0) reassignPokemons(false);
@@ -896,14 +972,32 @@
             if (racers.length === 0) return;
             const shuffledPokemon = [...pokemonData].sort(() => 0.5 - Math.random());
             const shuffledTypes = [...POKEMON_TYPES].sort(() => 0.5 - Math.random());
+            const usedTiles = new Set();
+
             racers.forEach((racer, i) => {
+                // 1. Assign new type and sprite
                 const newPoke = shuffledPokemon[i % shuffledPokemon.length];
                 const newType = shuffledTypes[i % shuffledTypes.length];
                 racer.data = { ...newPoke, type: newType };
+
+                // 2. Assign new random position (positional shuffle)
+                let x, y, posKey;
+                do {
+                    x = Math.floor(Math.random() * GRID_SIZE);
+                    y = Math.floor(Math.random() * GRID_SIZE);
+                    posKey = `${x},${y}`;
+                } while (usedTiles.has(posKey));
+                usedTiles.add(posKey);
+                
+                racer.x = x;
+                racer.y = y;
+                racer.targetX = x;
+                racer.targetY = y;
             });
+
             if (updateDisplay) {
                 updateRacerListDisplay();
-                statusDisplay.textContent = `${racers.length} contenders reconfigured. Ready to launch!`;
+                statusDisplay.textContent = `${racers.length} contenders shuffled and repositioned. Ready to launch!`;
             }
             drawGame();
         }
