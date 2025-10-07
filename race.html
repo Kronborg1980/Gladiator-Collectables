@@ -1,667 +1,1136 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gladiators Death Wheel</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Gladiator Collectibles</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Bebas+Neue&display=swap" rel="stylesheet">
     <style>
-        /* --- 1. BASE COLORS: ALL NEON BLUE / WHITE NAMES --- */
-        :root {
-            --tron-blue: #00FFFF; /* Primary Neon Color (Used for all general glow/accents) */
-            --tron-magenta: #00FFFF; /* Secondary Neon Color (Changed to Blue) */
-            --tron-red: #FF4500; /* For Death/Elimination (Kept red for danger) */
-            --dark-metal: #1a1a1a;
-            --light-metal: #444444;
-            --text-neon: #FFFFFF; /* Changed to White as requested for names and primary text */
-            --winner-color: #39FF14; /* Success Green (Kept for winner/success for contrast) */
+        :root{
+            --primary-glow: #e0e0e0;
+            --secondary-glow: #00eaff;
+            --bg-dark: #0a0a0a;
+            --text-light: #f0ff00;
+            --neutral-dark: #333;
+            --neutral-medium: #555;
+            --neutral-light: #bbb;
+            --track-color-dark: #1a1a1a;
+            --track-color-medium: #2a2a2a;
+            --track-color-light: #3a3a3a;
+            --finish-line-color-primary: #ffffff;
+            --finish-line-color-secondary: #000000;
+            --racer-name-color: #FFFFFF;
+            --prepare-color: #ff5500;
+            --surge-color: #ff0044;
+            --neon-red: #ff1744;
         }
-
-        /* Utility Styles */
-        .neon-text-glow {
-            /* General text glow now uses the primary tron-blue */
-            text-shadow: 0 0 5px #fff, 0 0 10px var(--tron-blue), 0 0 20px var(--tron-blue);
+        html,body{
+            height:100%;
+            margin:0;
+            padding:0;
+            background: linear-gradient(135deg, #0d011a, var(--bg-dark), #010a14);
+            color: var(--text-light);
+            font-family: 'Bebas Neue', sans-serif;
+            -webkit-font-smoothing:antialiased;
+            -moz-osx-font-smoothing:grayscale;
         }
-        .death-glow {
-            box-shadow: 0 0 15px var(--tron-red), inset 0 0 10px var(--tron-red);
-            border-color: var(--tron-red) !important;
+        #raceCanvas {
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: crisp-edges;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
-        .success-glow {
-            box-shadow: 0 0 15px var(--winner-color), inset 0 0 10px var(--winner-color);
-            border-color: var(--winner-color) !important;
-        }
-        .metal-panel {
-            background: linear-gradient(145deg, var(--dark-metal), #000000);
-            border: 2px solid var(--light-metal);
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5), inset 0 0 5px var(--light-metal);
-        }
-        
-        /* WHEEL AND POINTER STYLES */
-        #wheel-wrapper {
+        #titleContainer{
+            display:flex;
+            flex-direction:column;
+            align-items:center;
+            justify-content:center;
+            margin: 18px 0 6px;
+            gap:6px;
             position: relative;
+            z-index: 1200;
+        }
+        #titleContainer.race-active {
+            display: none;
+        }
+        #logo{
+            width: clamp(60px, 12vw, 90px);
+            height:auto;
+            border-radius:12px;
+            box-shadow: 0 0 15px rgba(255,255,255,0.5), 0 0 25px var(--secondary-glow);
+        }
+        h1{
+            font-family:'Orbitron',sans-serif;
+            color: var(--secondary-glow);
+            text-shadow:0 0 15px var(--secondary-glow), 0 0 30px var(--secondary-glow);
+            letter-spacing:4px;
+            margin:0;
+            text-transform:uppercase;
+            font-size: clamp(1.6em, 3.8vw, 2.8em);
+            text-align:center;
+        }
+        #frontPage{
+            max-width:950px;
+            margin:0 auto;
+            padding:20px;
+            background: linear-gradient(135deg, rgba(10,10,10,0.8), rgba(26,26,26,0.9));
+            border-radius:20px;
+            border:2px solid var(--secondary-glow);
+            box-shadow: 0 0 30px rgba(0,234,255,0.3);
+            text-align:center;
+        }
+        #frontPage h2{
+            font-family:'Orbitron',sans-serif;
+            color: var(--secondary-glow);
+            text-shadow:0 0 10px var(--secondary-glow);
+            margin-bottom:20px;
+            letter-spacing:2px;
+            font-size:2em;
+        }
+        .setup-grid{
+            display:grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap:20px;
+            margin-bottom:20px;
+        }
+        .input-card{
+            background: rgba(0,0,0,0.5);
+            border:1px solid var(--neutral-medium);
+            border-radius:12px;
+            padding:15px;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+        }
+        .input-card label{
+            display:block;
+            margin-bottom:8px;
+            color:var(--neutral-light);
+            font-size:0.9em;
+            font-weight:bold;
+        }
+        .input-card input, .input-card textarea{
+            width:100%;
+            background:var(--neutral-dark);
+            color:var(--text-light);
+            border:1px solid var(--secondary-glow);
+            padding:10px;
+            border-radius:6px;
+            font-size:1em;
+            box-sizing:border-box;
+        }
+        .input-card textarea{
+            resize:vertical;
+            min-height:120px;
+        }
+        .action-buttons{
+            display:flex;
+            justify-content:center;
+            gap:15px;
+            margin:20px 0;
+            flex-wrap:wrap;
+        }
+        .race-button{
+            padding: 15px 35px;
+            border:none;
+            border-radius:10px;
+            cursor:pointer;
+            font-weight:bold;
+            font-size:1.1em;
+            transition: all 0.3s;
+            background: linear-gradient(45deg, var(--secondary-glow), #00aaff);
+            color:#111;
+            box-shadow: 0 5px 15px rgba(0,234,255,0.35), 0 0 20px rgba(0,234,255,0.1);
+            text-shadow: 1px 1px 0 rgba(255,255,255,0.2);
+        }
+        .race-button:hover{
+            transform:translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,234,255,0.5), 0 0 30px rgba(0,234,255,0.2);
+        }
+        .race-button.prepare{
+            background: linear-gradient(45deg, var(--neon-red), #ff4081);
+            color: var(--text-light);
+            box-shadow: 0 5px 15px rgba(255, 23, 68, 0.6), 0 0 20px rgba(255, 23, 68, 0.3);
+            padding: 15px 35px;
+            font-size: 1.1em;
+        }
+        .race-button:disabled{ cursor:not-allowed; opacity:0.6; transform:none; box-shadow:none; }
+        #status{
+            padding:12px;
+            background:rgba(0,234,255,0.1);
+            border:1px solid var(--secondary-glow);
+            border-radius:8px;
+            font-family: 'Orbitron', sans-serif;
+            font-size:1.1em;
+            color: var(--primary-glow);
+            text-shadow: 0 0 6px var(--primary-glow);
+            margin-top:15px;
+        }
+        #submittedNames{
+            width:100%;
+            max-width:950px;
+            margin:20px auto;
+            padding:20px;
+            background: linear-gradient(135deg, #1a1a1a, #2a2a2a);
+            border-radius:15px;
+            border:2px solid var(--secondary-glow);
+            box-shadow: 0 0 20px rgba(0,234,255,0.3), inset 0 0 10px rgba(0,0,0,0.5);
+            color:var(--text-light);
+            font-family: 'Orbitron', sans-serif;
+            font-size:1.1em;
+            text-align:center;
+            display:none;
+        }
+        #submittedNames h3{
+            margin:0 0 15px 0;
+            color: var(--secondary-glow);
+            text-shadow: 0 0 10px var(--secondary-glow);
+            letter-spacing:2px;
+            font-size:1.4em;
+            text-transform:uppercase;
+        }
+        #submittedNames ul{
+            list-style:none;
+            padding:0;
+            margin:0;
+            display:flex;
+            flex-wrap:wrap;
+            justify-content:center;
+            gap:10px;
+        }
+        #submittedNames li{
+            background: rgba(0,0,0,0.6);
+            border:1px solid var(--neutral-medium);
+            border-radius:8px;
+            padding:8px 15px;
+            min-width:120px;
+            text-align:center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+            transition: all 0.3s ease;
+            font-size:0.95em;
+            color: var(--racer-name-color);
+        }
+        #submittedNames li:hover{
+            background: rgba(0,234,255,0.1);
+            border-color: var(--secondary-glow);
+            box-shadow: 0 0 15px rgba(0,234,255,0.4);
+            transform: translateY(-2px);
+        }
+        #raceView{
+            width:100%;
+            max-width:1400px;
+            margin:0 auto;
+            display:none;
+            min-width:300px;
+        }
+        #raceView.fullscreen{
+            position:fixed;
+            top:50%;
+            left:50%;
+            transform: translate(-50%, -50%);
+            width:85vw;
+            height:85vh;
+            max-width:none;
+            display:flex;
+            flex-direction:column;
+            align-items:center;
+            justify-content:center;
+            background:var(--bg-dark);
+            z-index:1000;
+            box-shadow: 0 0 50px var(--secondary-glow), inset 0 0 20px rgba(0, 234, 255, 0.1);
+            border-radius: 15px;
+        }
+        #raceControls {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1100;
             display: flex;
             justify-content: center;
             align-items: center;
+            margin: 0;
+            background: none;
+            border: none;
+            padding: 0;
+            width: auto;
+            max-width: none;
+        }
+        .controls.hidden{ display:none; }
+        #leaderboard{
+            display: none;
+        }
+        #leaderboard.fullscreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: linear-gradient(135deg, #0d011a, var(--bg-dark), #010a14);
+            z-index: 1500;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            box-sizing: border-box;
+            overflow-y: auto;
+        }
+        .leaderboard-content {
             width: 100%;
-            height: 100%;
+            max-width: 700px;
+            text-align: center;
+            max-height: 95vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
         }
-        
-        #wheel-container {
-            transition: transform 0s ease-out;
+        .leaderboard-content h3 {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--secondary-glow);
+            font-size: 2.5em;
+            letter-spacing: 3px;
+            text-shadow: 0 0 15px var(--secondary-glow);
         }
-
-        /* Wheel Rim: Enhanced to look more like heavy, dark metal with a strong blue neon ring */
-        #wheel-canvas {
-            border: 10px solid var(--dark-metal); 
-            border-radius: 50%;
-            /* Intense Neon Glow for the Tron Effect, using the primary blue */
-            box-shadow: 0 0 30px var(--tron-blue), 0 0 10px var(--tron-blue);
+        #leaderboardList {
+            padding: 10px;
+            border-radius: 15px;
+            border: 4px solid var(--secondary-glow);
+            box-shadow: 0 0 30px rgba(0, 234, 255, 0.8), inset 0 0 15px rgba(0, 234, 255, 0.4);
+            background: rgba(10, 10, 10, 0.8);
+            margin: 20px 0;
+            width: 100%;
+            box-sizing: border-box;
+            overflow-y: visible;
         }
-
-        /* --- 3. POINTER REALISM ENHANCEMENT (More Angular/Metallic) --- */
-        #pointer {
-            position: absolute;
-            top: -70px; /* Positioned higher to clear the wheel edge */
-            width: 0;
-            height: 0;
-            border-left: 35px solid transparent; 
-            border-right: 35px solid transparent; 
-            /* Shape changed from pure triangle to a metallic chevron/arrow head */
-            border-top: 50px solid var(--tron-blue); 
-            /* A solid, metallic base for the pointer */
-            border-bottom: 20px solid #FFFFFF; 
-            /* Adjust the size and position to center the new shape */
-            filter: drop-shadow(0 0 15px var(--tron-blue)); /* Stronger glow */
-            z-index: 10;
-            left: 50%;
-            transform: translateX(-50%); 
-            transform-origin: 50% 100%; 
-        }
-
-        #pointer-winner-label {
-            position: absolute;
-            top: 2px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 11;
-            padding: 5px 12px;
+        .leaderboard-entry {
+            background: #000000;
+            border: 2px solid var(--neutral-medium);
             border-radius: 8px;
-            font-size: 1rem;
+            padding: 15px 25px;
+            margin: 10px 0;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 1.4em;
+            font-family: 'Orbitron', sans-serif;
+            box-sizing: border-box;
+            transition: all 0.3s ease;
+        }
+        .leaderboard-entry.winner-entry {
+            border-color: var(--secondary-glow);
+            box-shadow: 0 0 25px var(--secondary-glow), inset 0 0 10px var(--secondary-glow);
+            background: linear-gradient(90deg, #111111, rgba(0, 234, 255, 0.1), #111111);
+            color: var(--secondary-glow);
+            transform: scale(1.05);
+            font-size: 1.6em;
+        }
+        .rank-number {
             font-weight: bold;
-            color: var(--dark-metal);
-            background-color: var(--winner-color); /* Success green label */
-            opacity: 0;
-            transition: opacity 0.3s ease-in;
+            margin-right: 15px;
+            flex-basis: 10%;
+            text-align: left;
+            color: var(--text-light);
         }
-
-        .show-winner-label {
-            opacity: 1 !important;
-            box-shadow: 0 0 10px var(--winner-color), 0 0 20px var(--winner-color);
+        .racer-name-leaderboard {
+            flex-basis: 50%;
+            text-align: left;
         }
-
-        /* Pointer Animation */
-        @keyframes pointerBounce {
-            0% { transform: translateX(-50%) rotate(-10deg); }
-            100% { transform: translateX(-50%) rotate(10deg); }
+        .leaderboard-entry.winner-entry .racer-name-leaderboard {
+            text-shadow: 0 0 5px var(--secondary-glow);
+            font-weight: 700;
         }
-        .pointer-bouncing {
-            animation: pointerBounce 0.1s infinite alternate;
+        .time-result {
+            font-family: monospace;
+            color: var(--neutral-light);
+            flex-basis: 30%;
+            text-align: right;
+            font-size: 0.9em;
         }
-
-        /* Elimination Button (Kept Red for danger) */
-        #elimination-button {
-            background-color: var(--tron-red);
-            color: var(--text-neon);
-            box-shadow: 0 0 15px var(--tron-red), 0 0 30px var(--tron-red);
-            transition: all 0.3s;
+        .leaderboard-entry.winner-entry .time-result {
+            color: var(--text-light);
+            font-size: 1em;
+            text-shadow: 0 0 5px var(--secondary-glow);
         }
-        #elimination-button:hover:not(:disabled) {
-            transform: scale(1.02);
-            box-shadow: 0 0 25px var(--tron-red), 0 0 40px var(--tron-red);
+        #postRaceControls {
+            margin-top: 40px;
         }
-        
-        /* Spin button changed to neon blue */
-        #spin-button {
-             background-color: var(--tron-blue) !important;
-             box-shadow: 0 0 15px var(--tron-blue), 0 0 30px var(--tron-blue) !important;
+        #winnerOverlay{
+            position:fixed;
+            top:0;
+            left:0;
+            width:100%;
+            height:100%;
+            background-color: rgba(0,0,0,0.9);
+            color:var(--primary-glow);
+            font-family: 'Orbitron', sans-serif;
+            font-size: 4.5em;
+            display:none;
+            align-items:center;
+            justify-content:center;
+            flex-direction:column;
+            text-shadow: 0 0 25px var(--primary-glow);
+            z-index:2000;
+        }
+        #winnerName{ color: var(--secondary-glow); font-size:1.5em; margin-top:20px; text-transform:uppercase; text-shadow: 0 0 15px var(--secondary-glow); }
+        @media (max-width:700px){
+            .setup-grid { grid-template-columns: 1fr; }
+            .action-buttons { flex-direction:column; align-items:center; }
+            #submittedNames ul { flex-direction:column; align-items:center; }
+            .controls { padding: 12px; gap:10px; }
+            .leaderboard-entry { font-size: 1.1em; padding: 10px 15px; }
+            .rank-number { flex-basis: 15%; }
+            .racer-name-leaderboard { flex-basis: 45%; }
+            .time-result { flex-basis: 30%; font-size: 0.8em; }
         }
     </style>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        'primary-neon': '#00FFFF', /* All primary is neon blue */ 
-                        'secondary-neon': '#00FFFF', /* Secondary is also neon blue */
-                        'dark-bg': '#0A0A0A',
-                        'neutral-glow': '#FFFFFF', /* White as requested */
-                    },
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                    }
-                }
-            }
-        }
-    </script>
 </head>
-<body class="bg-dark-bg min-h-screen p-4 font-sans flex flex-col items-center text-text-neon">
-
-    <h1 class="text-5xl font-extrabold text-primary-neon mt-4 mb-8 text-center neon-text-glow">
-        GLADIATORS DEATH WHEEL
-    </h1>
-
-    <div class="flex flex-col lg:flex-row w-full max-w-7xl gap-8">
-
-        <div class="lg:w-1/3 p-6 rounded-xl shadow-lg h-fit metal-panel">
-            <h2 class="text-3xl font-bold mb-4 text-primary-neon">Control Chamber</h2>
-
-            <label for="names-input" class="block text-sm font-medium text-text-neon/80 mb-1">
-                Contestants (One name per line):
-            </label>
-            <textarea id="names-input" rows="8" class="w-full p-3 border border-primary-neon/50 bg-gray-900 text-text-neon rounded-lg focus:ring-primary-neon focus:border-primary-neon transition duration-150 shadow-inner" placeholder="E.g.,&#10;Kaelen&#10;Maximus&#10;Zeva&#10;Orion&#10;Aura">Alice
-Bob
-Charlie
-Diana
-Eve</textarea>
-
-            <label for="spin-duration" class="block text-sm font-medium text-text-neon/80 mt-4 mb-1">
-                Spin Duration (seconds):
-            </label>
-            <input type="number" id="spin-duration" value="5" min="1" max="60" class="w-full p-3 border border-primary-neon/50 bg-gray-900 text-text-neon rounded-lg focus:ring-primary-neon focus:border-primary-neon transition duration-150 shadow-inner text-center" />
-
-            <button id="spin-button" class="w-full mt-6 py-4 px-4 bg-secondary-neon text-dark-metal font-extrabold rounded-xl shadow-md hover:opacity-90 transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed">
-                THE FATE SPIN
-            </button>
-            
-            <button id="elimination-button" class="w-full mt-4 py-4 px-4 font-extrabold rounded-xl shadow-md disabled:opacity-50 disabled:cursor-not-allowed">
-                INITIATE DEATHMATCH 
-            </button>
-        </div>
-
-        <div class="lg:w-2/3 p-6 rounded-xl shadow-lg flex flex-col items-center metal-panel">
-            <div id="result-box" class="w-full text-center mb-6 h-24 flex flex-col items-center justify-center rounded-lg border-4 border-dashed border-tron-blue/80 bg-dark-metal/50 p-2" style="box-shadow: 0 0 10px var(--tron-blue), inset 0 0 5px var(--tron-blue);">
-                <p class="text-xl font-bold text-tron-blue/90">CURRENT STATUS:</p>
-                <p id="winner-text" class="text-2xl font-extrabold text-tron-blue/90">Awaits the Gladiator's Choice.</p>
+<body>
+    <div id="titleContainer">
+        <img id="logo" src="https://60fb7b08eaf293096e8c.cdn6.editmysite.com/uploads/b/60fb7b08eaf293096e8cb3f63df9e65735b8a1ee75f6d23d21eaed2115dfa2e6/IMG_7388_1701827680.jpeg?width=2400&optimize=medium" alt="Gladiator Collectibles Logo">
+        <h1>GLADIATOR COLLECTIBLES</h1>
+    </div>
+    <div id="frontPage">
+        <h2>Race Setup</h2>
+        <div class="setup-grid">
+            <div class="input-card">
+                <label for="raceTimeSeconds">Target Race Time (seconds):</label>
+                <input type="number" id="raceTimeSeconds" min="10" max="300" value="69">
             </div>
-
-            <div id="wheel-area" class="w-full max-w-lg aspect-square flex justify-center items-center">
-                <div id="wheel-wrapper">
-                    <div id="pointer"></div> 
-                    <div id="pointer-winner-label" class="hidden"></div>
-                    
-                    <div id="wheel-container" style="width: 100%; height: 100%;">
-                        <canvas id="wheel-canvas" class="w-full h-full"></canvas>
-                    </div>
-                </div>
+            <div class="input-card">
+                <label for="raceLengthDisplay">Target Finish Line (px):</label>
+                <input type="number" id="raceLengthDisplay" value="0" readonly title="The calculated finish line distance.">
+            </div>
+            <div class="input-card" style="grid-column: span 2;">
+                <label for="racerNames">Racer Names (one per line):</label>
+                <textarea id="racerNames" rows="5" placeholder="Ash\nMisty\nBrock\nGary\nLance"></textarea>
+            </div>
+        </div>
+        <div class="action-buttons">
+            <button id="submitNamesButton" class="race-button">SUBMIT NAMES</button>
+            <button id="setupStartButton" class="race-button">START RACE</button>
+        </div>
+        <div id="status">Systems nominal. Enter names (one per line), submit, and click 'START RACE' to begin.</div>
+    </div>
+    <div id="submittedNames">
+        <h3>Submitted Racers</h3>
+        <ul id="submittedNamesList"></ul>
+    </div>
+    <div id="raceView">
+        <div id="raceControls" class="controls">
+            <button id="shuffleButton" class="race-button">SHUFFLE POKEMON</button>
+            <button id="raceScreenStartButton" class="race-button prepare">START RACE (GO!)</button>
+        </div>
+        <canvas id="raceCanvas"></canvas>
+    </div>
+    <div id="leaderboard">
+        <div class="leaderboard-content">
+            <div id="leaderboardTitle"></div>
+            <div id="leaderboardList"></div>
+            <div id="postRaceControls" class="controls" style="display:none;">
+                <button onclick="resetRace()" class="race-button" style="background: linear-gradient(45deg, #ff9900, #ff5500);">RETURN TO SETUP</button>
             </div>
         </div>
     </div>
-
-    <script type="module">
-        // Constants
-        const CANVAS_SIZE = 500;
-        const LOGO_URL = 'https://60fb7b08eaf293096e8c.cdn6.editmysite.com/uploads/b/60fb7b08eaf293096e8cb3f63df9e65735b8a1ee75f6d23d21eaed2115dfa2e6/IMG_7388_1701827680.jpeg?width=2400&optimize=medium';
-        const ELIMINATION_SPIN_DURATION = 5; 
-
-        // Distinct, neon colors for the segments (Kept varied colors for wheel segments for visibility/design)
-        const VIBRANT_COLORS = [
-            '#00FFFF', // Cyan
-            '#FF00FF', // Magenta
-            '#39FF14', // Neon Green
-            '#FFFF00', // Neon Yellow
-            '#FF1493', // Deep Pink
-            '#1E90FF', // Dodger Blue
-            '#9370DB', // Medium Purple
-            '#00FA9A', // Medium Spring Green
-            '#FF4500', // Orange Red
-            '#7B68EE', // Medium Slate Blue
-            '#FF6347', // Tomato
-            '#00FF00', // Lime
-            '#D8BFD8', // Thistle
-            '#ADD8E6', // Light Blue
-            '#F08080'  // Light Coral
-        ];
-
-        // DOM Elements
-        const canvas = document.getElementById('wheel-canvas');
+    <div id="winnerOverlay">
+        VICTORY!
+        <span id="winnerName"></span>
+    </div>
+    <script>
+        const canvas = document.getElementById('raceCanvas');
         const ctx = canvas.getContext('2d');
-        const wheelContainer = document.getElementById('wheel-container');
-        const pointer = document.getElementById('pointer'); 
-        const pointerWinnerLabel = document.getElementById('pointer-winner-label'); 
-        const namesInput = document.getElementById('names-input');
-        const spinDurationInput = document.getElementById('spin-duration');
-        const spinButton = document.getElementById('spin-button');
-        const eliminationButton = document.getElementById('elimination-button');
-        const winnerText = document.getElementById('winner-text');
-        const resultBox = document.getElementById('result-box');
-
-        // State
-        let wheelData = [];
-        let logoImage = null;
-        let isSpinning = false;
-        let currentEliminationParticipants = [];
-
-        // Set initial canvas size 
-        canvas.width = CANVAS_SIZE;
-        canvas.height = CANVAS_SIZE;
-
-        /**
-         * Loads the logo image from the provided URL.
-         */
-        function loadLogo() {
-            return new Promise((resolve) => {
-                const img = new Image();
-                img.crossOrigin = "anonymous";
-                img.onload = () => {
-                    logoImage = img;
-                    resolve(true);
-                };
-                img.onerror = () => {
-                    console.error("Failed to load logo image. Using text placeholder.");
-                    resolve(false);
-                };
-                img.src = LOGO_URL;
+        const setupControls = document.getElementById('frontPage');
+        const raceView = document.getElementById('raceView');
+        const raceControls = document.getElementById('raceControls');
+        const postRaceControls = document.getElementById('postRaceControls');
+        const winnerOverlay = document.getElementById('winnerOverlay');
+        const leaderboard = document.getElementById('leaderboard');
+        const submitNamesButton = document.getElementById('submitNamesButton');
+        const setupStartButton = document.getElementById('setupStartButton');
+        const raceScreenStartButton = document.getElementById('raceScreenStartButton');
+        const shuffleButton = document.getElementById('shuffleButton');
+        const statusDisplay = document.getElementById('status');
+        const titleContainer = document.getElementById('titleContainer');
+        let CANVAS_VIEWPORT_WIDTH, CANVAS_VIEWPORT_HEIGHT;
+        const FIXED_RACER_X_ANCHOR_PCT = 0.40;
+       
+        let cameraAnchorX;
+        let trackOffset = 0;
+        let lastFrameTime = 0;
+        const POKEMON_IMAGE_SIZE = 88;
+        const NAME_TAG_FONT_SIZE = 20;
+        const NAME_TAG_PADDING = 8;
+        const GRASS_AREA_HEIGHT = 100;
+        let laneHeight = 100;
+        const START_LINE_X = 50;
+       
+        const BASE_SPEED_PER_SECOND = 80 * 1.25;
+        const BASE_MOMENTUM_FACTOR = 0.95;
+        const SURGE_MULTIPLIER = 1.6;
+        const DEBUFF_MULTIPLIER = 0.6;
+       
+        const RUBBER_BAND_FACTOR = 0.00;
+        const SHORT_BOOST_MULTIPLIER = 1.7;
+        const SHORT_DEBUFF_MULTIPLIER = 0.4;
+        const SHORT_BOOST_INTERVAL = 800;
+        const SHORT_DEBUFF_INTERVAL = 800;
+        const LEAD_SLOWDOWN_CHANCE = 0.3;
+       
+        const VOLATILITY_SWING = 0.3;
+       
+        const CAMERA_SMOOTHING_FACTOR = 0.1;
+        let lastBoostTime = 0;
+        let lastDebuffTime = 0;
+        let activeShortBooster = null;
+        let activeShortDebuffer = null;
+        let shortBoostEndTime = 0;
+        let shortDebuffEndTime = 0;
+        const STAMINA_COST_SURGE = 35;
+        const STAMINA_REGEN_RATE = 2.5;
+        const LEADER_DEBUFF_DURATION = 2500;
+        const LEADER_DEBUFF_MULTIPLIER = 0.3;
+        const LEADER_DEBUFF_COOLDOWN = 2000;
+        const LAST_BOOST_DURATION = 3500;
+        const LAST_BOOST_MULTIPLIER = 2.2;
+        const LAST_BOOST_COOLDOWN = 1000;
+       
+        let TARGET_RACE_TIME_SECONDS = 60;
+        let racers = [];
+        let sceneryLayers = { back: [], mid: [], front: [] };
+        let isRacing = false;
+        let raceFinished = false;
+        let raceStartTime;
+        let animationFrameId;
+        let frameCount = 0;
+        let currentLeaderX = 0;
+       
+        let FIXED_FINISH_LINE_X = 0;
+        let DYNAMIC_FINISH_LINE_X = 0;
+        let RACE_LENGTH = 4500;
+        let IDEAL_SPEED_PER_SECOND = 0;
+        let finishPositions = [];
+        const RACE_STATES = { SETUP: 'SETUP', PREPARING: 'PREPARING', READY: 'READY' };
+        let raceState = RACE_STATES.SETUP;
+        const pokemonData = [];
+        for (let id = 1; id <= 151; id++) {
+            pokemonData.push({
+                id, name: `Poke ${id}`,
+                imageGif: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/${id}.gif`,
+                imagePng: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${id}.png`,
+                sprite: null
             });
         }
-
-        /**
-         * Parses the names input and prepares the wheel data structure.
-         */
-        function prepareWheelData() {
-            const names = namesInput.value
-                .split('\n')
-                .map(name => name.trim())
-                .filter(name => name.length > 0);
-
-            if (names.length === 0) {
-                wheelData = [];
-                drawWheel();
-                return;
-            }
-
-            wheelData = names.map((name, index) => ({
-                name: name,
-                color: VIBRANT_COLORS[index % VIBRANT_COLORS.length],
-            }));
-            
-            drawWheel();
+        pokemonData.forEach(p => {
+            const img = new Image();
+            img.onload = () => { p.sprite = img; };
+            img.onerror = () => {
+                const img2 = new Image();
+                img2.onload = () => { p.sprite = img2; };
+                img2.src = p.imagePng;
+            };
+            img.src = p.imageGif;
+        });
+        const logoImage = new Image();
+        logoImage.src = 'https://60fb7b08eaf293096e8c.cdn6.editmysite.com/uploads/b/60fb7b08eaf293096e8cb3f63df9e65735b8a1ee75f6d23d21eaed2115dfa2e6/IMG_7388_1701827680.jpeg?width=2400&optimize=medium';
+       
+        function getRandomInt(min, max) {
+            min = Math.ceil(min);
+            max = Math.floor(max);
+            return Math.floor(Math.random() * (max - min + 1)) + min;
         }
-
-        /**
-         * Draws the entire wheel on the canvas.
-         */
-        function drawWheel() {
-            const size = canvas.width;
-            const dataToDraw = wheelData;
-
-            if (dataToDraw.length === 0) {
-                ctx.clearRect(0, 0, size, size);
-                winnerText.textContent = "Awaits the Gladiator's Choice.";
-                return;
-            }
-
-            const centerX = size / 2;
-            const centerY = size / 2;
-            const radius = size / 2 - 10;
-
-            const segmentAngle = 2 * Math.PI / dataToDraw.length;
-            let currentAngle = 0;
-
-            ctx.clearRect(0, 0, size, size);
-
-            // 1. Draw Segments and Text
-            dataToDraw.forEach((item) => {
-                const startAngle = currentAngle;
-                const endAngle = currentAngle + segmentAngle;
-
-                // Draw Segment
-                ctx.beginPath();
-                ctx.moveTo(centerX, centerY);
-                ctx.arc(centerX, centerY, radius, startAngle, endAngle);
-                ctx.closePath();
-                ctx.fillStyle = item.color;
-                ctx.fill();
-
-                // Draw Text - Changed to White (#FFFFFF) as requested
-                ctx.save();
-                ctx.translate(centerX, centerY);
-                ctx.rotate(startAngle + segmentAngle / 2);
-
-                ctx.fillStyle = '#FFFFFF'; // WHITE TEXT FOR NAMES
-                ctx.font = `bold ${Math.floor(size * 0.032)}px Inter`; 
-                ctx.textAlign = 'right';
-                ctx.textBaseline = 'middle';
-
-                const textX = radius * 0.9;
-                ctx.fillText(item.name.toUpperCase(), textX, 0);
-
-                ctx.restore();
-                currentAngle = endAngle;
-            });
-
-            // 2. Draw Pegs (Needles) - Enhanced for Realism
-            const numPegs = dataToDraw.length;
-            const pegRadius = radius; 
-            const pegSize = size * 0.015;
-
-            for (let i = 0; i < numPegs; i++) {
-                const angle = (i + 1) * segmentAngle;
-
-                const x = centerX + pegRadius * Math.cos(angle);
-                const y = centerY + pegRadius * Math.sin(angle);
-
-                ctx.save();
-                
-                // Peg Glow (Tron Blue)
-                ctx.beginPath();
-                ctx.arc(x, y, pegSize, 0, 2 * Math.PI);
-                ctx.fillStyle = 'var(--tron-blue)'; // Neon Blue Glow
-                ctx.shadowColor = 'var(--tron-blue)';
-                ctx.shadowBlur = 15;
-                ctx.fill();
-
-                // Peg Core (Metallic look for realism)
-                ctx.beginPath();
-                ctx.arc(x, y, pegSize * 0.6, 0, 2 * Math.PI);
-                ctx.fillStyle = '#AAAAAA'; // Light Gray/Metal Core
-                ctx.shadowBlur = 0; 
-                ctx.fill();
-
-                ctx.restore();
-            }
-            ctx.shadowBlur = 0;
-
-            // 3. Draw Center Hole (Glow Circle) - Enhanced for Realism
-            const logoRadius = radius * 0.25;
-            
-            // Neon border (Changed to Blue)
-            ctx.beginPath();
-            ctx.arc(centerX, centerY, logoRadius + 10, 0, 2 * Math.PI);
-            ctx.fillStyle = 'var(--tron-blue)';
-            ctx.shadowColor = 'var(--tron-blue)';
-            ctx.shadowBlur = 10;
-            ctx.fill();
-
-            // Inner metal circle (Darker metal)
-            ctx.beginPath();
-            ctx.arc(centerX, centerY, logoRadius, 0, 2 * Math.PI);
-            // Use a radial gradient for a more realistic metal hub effect
-            const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, logoRadius);
-            gradient.addColorStop(0, '#666666'); // Lighter center
-            gradient.addColorStop(1, '#1a1a1a'); // Darker edge
-            ctx.fillStyle = gradient;
-            ctx.shadowBlur = 0;
-            ctx.fill();
-            
-            // 4. Draw Logo/Placeholder
-            if (logoImage) {
-                const imgSize = logoRadius * 1.8;
-                ctx.save();
-                ctx.beginPath();
-                ctx.arc(centerX, centerY, logoRadius, 0, Math.PI * 2);
-                ctx.clip(); 
-                ctx.drawImage(logoImage, centerX - imgSize / 2, centerY - imgSize / 2, imgSize, imgSize);
-                ctx.restore();
-            } else {
-                ctx.fillStyle = 'var(--tron-blue)';
-                ctx.font = `bold ${Math.floor(size * 0.04)}px Inter`;
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                ctx.fillText("LOGO", centerX, centerY);
-            }
+       
+        function formatMMSS(secondsFloat) {
+            if (isNaN(secondsFloat) || secondsFloat === null || secondsFloat === Infinity) return "DNF";
+            const total = Math.max(0, secondsFloat);
+            const mins = Math.floor(total / 60);
+            const secs = total % 60;
+            return `${String(mins).padStart(2,'0')}:${String(Math.floor(secs)).padStart(2,'0')}`;
         }
-
-        /**
-         * Initiates a single standard spin.
-         */
-        function spinWheel() {
-            if (isSpinning || wheelData.length === 0) return;
-            isSpinning = true;
-            spinButton.disabled = true;
-            eliminationButton.disabled = true; 
-            namesInput.disabled = true;
-            spinDurationInput.disabled = true;
-
-            winnerText.textContent = "Spinning...";
-            pointer.classList.add('pointer-bouncing'); 
-            pointerWinnerLabel.classList.remove('show-winner-label'); 
-            
-            resultBox.classList.remove('success-glow', 'death-glow');
-            winnerText.classList.add('text-primary-neon/90');
-
-            let duration = parseFloat(spinDurationInput.value) || 5;
-            if (duration < 1 || duration > 60) {
-                spinDurationInput.value = 5;
-                duration = 5;
-            }
-
-            const dataToSpin = wheelData;
-            const numSegments = dataToSpin.length;
-            const segmentAngleDegrees = 360 / numSegments;
-
-            // 1. Get current rotation
-            const currentTransform = wheelContainer.style.transform;
-            let currentRotation = 0;
-            const match = currentTransform.match(/rotate\(([-+]?\d*\.?\d+)/);
-            if (match) {
-                currentRotation = parseFloat(match[1]);
-            }
-
-            // 2. Calculate a random winning index
-            const winningIndex = Math.floor(Math.random() * numSegments);
-            const winnerName = dataToSpin[winningIndex].name;
-
-            // 3. Determine the target rotation angle (in degrees)
-            let targetSegmentMidpoint = winningIndex * segmentAngleDegrees + (segmentAngleDegrees / 2);
-            const pointerAngle = 270; 
-            let landingAngleOffset = pointerAngle - targetSegmentMidpoint;
-
-            // Add small jitter for realism
-            const MAX_JITTER_RANGE = segmentAngleDegrees * 0.4; 
-            const randomJitterOffset = (Math.random() * (2 * MAX_JITTER_RANGE)) - MAX_JITTER_RANGE;
-            landingAngleOffset += randomJitterOffset;
-
-            const normalizedCurrentRotation = currentRotation % 360;
-            let deltaRotation = landingAngleOffset - normalizedCurrentRotation;
-
-            if (deltaRotation < 0) {
-                deltaRotation += 360;
-            }
-
-            const fullRotations = 5;
-            const totalRotation = currentRotation + (fullRotations * 360) + deltaRotation;
-            
-            // Apply the transformation and transition for the spin animation
-            wheelContainer.style.transition = `transform ${duration}s cubic-bezier(0.1, 0.7, 0.4, 1)`;
-            wheelContainer.style.transform = `rotate(${totalRotation}deg)`;
-
-            // 4. Announce winner after the duration
-            setTimeout(() => {
-                pointer.classList.remove('pointer-bouncing'); 
-
-                winnerText.textContent = `WINNER: ${winnerName.toUpperCase()}! 🏆`;
-                
-                pointerWinnerLabel.textContent = winnerName.toUpperCase();
-                pointerWinnerLabel.classList.add('show-winner-label');
-
-                // Switch to success glow state (Neon Green)
-                resultBox.classList.add('success-glow');
-                winnerText.classList.remove('text-primary-neon/90');
-                winnerText.classList.add('text-text-neon');
-
-                isSpinning = false;
-                spinButton.disabled = false;
-                eliminationButton.disabled = false;
-                namesInput.disabled = false;
-                spinDurationInput.disabled = false;
-            }, duration * 1000 + 50);
+       
+        function drawTimer() {
+            // Timer functionality removed
         }
-
-        /**
-         * Recursive function to handle one spin, elimination, and setup for the next.
-         */
-        function eliminationSpinCycle() {
-            if (currentEliminationParticipants.length <= 1) {
-                // Final winner
-                const finalWinner = currentEliminationParticipants[0];
-                winnerText.textContent = `ULTIMATE CHAMPION: ${finalWinner ? finalWinner.name.toUpperCase() : 'NO ONE'} WINS! 👑`;
-                
-                // Final winner glow (Success Green)
-                resultBox.classList.remove('death-glow');
-                resultBox.classList.add('success-glow');
-                winnerText.classList.remove('text-primary-neon/90');
-                winnerText.classList.add('text-text-neon');
-
-                // Reset state and re-enable controls
-                isSpinning = false;
-                spinButton.disabled = false;
-                eliminationButton.disabled = false;
-                namesInput.disabled = false;
-                spinDurationInput.disabled = false;
-                pointerWinnerLabel.classList.remove('show-winner-label');
-                return;
-            }
-
-            // Set state for spinning
-            isSpinning = true;
-            winnerText.textContent = `ELIMINATION ROUND: ${currentEliminationParticipants.length} remain...`;
-            pointer.classList.add('pointer-bouncing'); 
-            pointerWinnerLabel.classList.remove('show-winner-label'); 
-            
-            // Reset visual feedback to elimination state (Red)
-            resultBox.classList.remove('success-glow');
-            winnerText.classList.add('text-primary-neon/90');
-
-            const duration = ELIMINATION_SPIN_DURATION; 
-
-            const dataToSpin = currentEliminationParticipants;
-            const numSegments = dataToSpin.length;
-            const segmentAngleDegrees = 360 / numSegments;
-
-            // 1. Calculate spin and winner
-            const winningIndex = Math.floor(Math.random() * numSegments);
-            const winnerData = dataToSpin[winningIndex];
-
-            // 2. Determine target rotation angle
-            const currentTransform = wheelContainer.style.transform;
-            let currentRotation = 0;
-            const match = currentTransform.match(/rotate\(([-+]?\d*\.?\d+)/);
-            if (match) {
-                currentRotation = parseFloat(match[1]);
-            }
-
-            let targetSegmentMidpoint = winningIndex * segmentAngleDegrees + (segmentAngleDegrees / 2);
-            const pointerAngle = 270; 
-            let landingAngleOffset = pointerAngle - targetSegmentMidpoint;
-
-            const MAX_JITTER_RANGE = segmentAngleDegrees * 0.4; 
-            const randomJitterOffset = (Math.random() * (2 * MAX_JITTER_RANGE)) - MAX_JITTER_RANGE;
-            landingAngleOffset += randomJitterOffset;
-
-            const normalizedCurrentRotation = currentRotation % 360;
-            let deltaRotation = landingAngleOffset - normalizedCurrentRotation;
-
-            if (deltaRotation < 0) {
-                deltaRotation += 360;
-            }
-
-            const fullRotations = 5;
-            const totalRotation = currentRotation + (fullRotations * 360) + deltaRotation;
-            
-            wheelContainer.style.transition = `transform ${duration}s cubic-bezier(0.1, 0.7, 0.4, 1)`;
-            wheelContainer.style.transform = `rotate(${totalRotation}deg)`;
-
-            // 3. Announce result and eliminate
-            setTimeout(() => {
-                pointer.classList.remove('pointer-bouncing'); 
-
-                // Announce who is ELIMINATED
-                winnerText.textContent = `ELIMINATED: ${winnerData.name.toUpperCase()}! 💀`;
-                
-                pointerWinnerLabel.textContent = winnerData.name.toUpperCase();
-                pointerWinnerLabel.classList.add('show-winner-label');
-
-                // Highlight the elimination result (Neon Red)
-                resultBox.classList.add('death-glow'); 
-                winnerText.classList.remove('text-primary-neon/90');
-                winnerText.classList.add('text-text-neon');
-
-                // REMOVE THE ELIMINATED CONTESTANT
-                currentEliminationParticipants.splice(winningIndex, 1);
-                
-                // REDRAW the wheel with the remaining people for the next spin's preparation
-                wheelData = currentEliminationParticipants; 
-                drawWheel(); 
-
-                // After a brief pause, start the next spin cycle
-                setTimeout(eliminationSpinCycle, 2000); 
-            }, duration * 1000 + 50); 
-        }
-
-        /**
-         * Initializes the state for elimination mode.
-         */
-        function startEliminationMode() {
-            if (isSpinning) return;
-
-            const initialNames = namesInput.value
-                .split('\n')
-                .map(name => name.trim())
-                .filter(name => name.length > 0);
-
-            if (initialNames.length < 2) {
-                winnerText.textContent = "Need at least two contestants for Deathmatch!";
-                return;
-            }
-
-            // Disable controls for the duration of the entire sequence
-            spinButton.disabled = true;
-            eliminationButton.disabled = true;
-            namesInput.disabled = true;
-            spinDurationInput.disabled = true;
-
-            // Reset and prepare the participants array for elimination
-            currentEliminationParticipants = initialNames.map((name, index) => ({
-                name: name,
-                color: VIBRANT_COLORS[index % VIBRANT_COLORS.length],
-            }));
-            
-            // Set wheelData to the initial list and draw for the first spin
-            wheelData = currentEliminationParticipants;
-            drawWheel();
-
-            // Start the recursive spin process
-            eliminationSpinCycle();
-        }
-
-
-        // Event Listeners and Initialization
-        document.addEventListener('DOMContentLoaded', async () => {
-            await loadLogo();
-            prepareWheelData();
-
-            namesInput.addEventListener('input', prepareWheelData);
-            spinButton.addEventListener('click', spinWheel);
-            eliminationButton.addEventListener('click', startEliminationMode);
-
-            // Set the winning text to a non-neon color so the neon only shows in the result box when active
-            winnerText.style.color = 'var(--text-neon)';
-
-            const resizeObserver = new ResizeObserver(entries => {
-                for (let entry of entries) {
-                    if (entry.target === document.getElementById('wheel-area')) {
-                        const size = Math.min(entry.contentRect.width, entry.contentRect.height);
-                        if (size > 0) {
-                            const newSize = Math.min(size, 500); 
-                            canvas.width = newSize;
-                            canvas.height = newSize;
-                            drawWheel(); 
-                        }
+        function drawSceneryLayer(layer, parallaxFactor) {
+            const layerOffset = trackOffset * parallaxFactor;
+            layer.forEach(obj => {
+                if (obj.x > layerOffset - 50 && obj.x < layerOffset + canvas.width + 50) {
+                    ctx.save();
+                    ctx.translate(obj.x, obj.y);
+                    if (obj.type === 'tree') {
+                        ctx.scale(obj.scale, obj.scale);
+                        ctx.fillStyle = '#6a3e1a'; ctx.fillRect(0, 0, 12, 24);
+                        ctx.fillStyle = '#005400'; ctx.beginPath(); ctx.arc(6, 0, 18, 0, Math.PI * 2); ctx.fill();
+                    } else if (obj.type === 'house') {
+                        ctx.scale(obj.scale, obj.scale);
+                        ctx.fillStyle = '#8B0000';
+                        ctx.fillRect(0, 0, 50, 40);
+                        ctx.fillStyle = '#555';
+                        ctx.beginPath();
+                        ctx.moveTo(-5, 0); ctx.lineTo(55, 0); ctx.lineTo(25, -25);
+                        ctx.fill();
+                    } else if (obj.type === 'spectator') {
+                        ctx.scale(obj.scale, obj.scale);
+                        ctx.fillStyle = '#008000';
+                        ctx.beginPath();
+                        ctx.arc(0, 0, 10, 0, Math.PI * 2); ctx.fill();
+                        ctx.fillStyle = '#FFDAB9';
+                        ctx.beginPath();
+                        ctx.arc(0, -15, 5, 0, Math.PI * 2); ctx.fill();
                     }
+                    ctx.restore();
                 }
             });
-            resizeObserver.observe(document.getElementById('wheel-area'));
+        }
+       
+        function drawRacer(racer){
+            ctx.save();
+            ctx.translate(racer.x, racer.y);
+            const strideBob = isRacing ? Math.sin(frameCount / 8 + racer.speedPhase) * 4 : 0;
+            ctx.translate(0, strideBob);
+           
+            if (racer.data.sprite && racer.data.sprite.complete) {
+                try { ctx.drawImage(racer.data.sprite, -POKEMON_IMAGE_SIZE/2, -POKEMON_IMAGE_SIZE/2, POKEMON_IMAGE_SIZE, POKEMON_IMAGE_SIZE); } catch(e){}
+            }
+           
+            ctx.imageSmoothingEnabled = false;
+            ctx.font = `bold ${NAME_TAG_FONT_SIZE}px "Bebas Neue", sans-serif`;
+           
+            const nameText = racer.name;
+            const textWidth = ctx.measureText(nameText).width;
+            const tagY = -POKEMON_IMAGE_SIZE/2 - (NAME_TAG_FONT_SIZE + NAME_TAG_PADDING)/2 - 5;
+           
+            ctx.fillStyle = 'rgba(0,0,0,0.7)';
+            ctx.strokeStyle = '#aaaaaa';
+            ctx.lineWidth = 2;
+            ctx.fillRect(-textWidth/2 - NAME_TAG_PADDING, tagY - (NAME_TAG_FONT_SIZE + NAME_TAG_PADDING)/2, textWidth + NAME_TAG_PADDING*2, NAME_TAG_FONT_SIZE + NAME_TAG_PADDING);
+            ctx.strokeRect(-textWidth/2 - NAME_TAG_PADDING, tagY - (NAME_TAG_FONT_SIZE + NAME_TAG_PADDING)/2, textWidth + NAME_TAG_PADDING*2, NAME_TAG_FONT_SIZE + NAME_TAG_PADDING);
+           
+            ctx.fillStyle = '#FFFFFF';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(nameText, 0, tagY);
+           
+            ctx.restore();
+        }
+       
+        function drawStartLine(){ ctx.strokeStyle='white'; ctx.lineWidth=8; ctx.beginPath(); ctx.moveTo(START_LINE_X-10, GRASS_AREA_HEIGHT); ctx.lineTo(START_LINE_X-10, canvas.height-GRASS_AREA_HEIGHT); ctx.stroke(); }
+        function drawFinishLine(){
+            ctx.save();
+            const finishX = DYNAMIC_FINISH_LINE_X;
+            const COLOR_PRIMARY = '#ffffff';
+            const COLOR_SECONDARY = '#000000';
+           
+            const squareSize = 20;
+            const numSquares = Math.ceil((canvas.height - GRASS_AREA_HEIGHT * 2) / squareSize);
+            const lineWidth = 60;
+            const stripeWidth = lineWidth / 2;
+           
+            for (let y = 0; y < numSquares; y++) {
+                ctx.fillStyle = (y) % 2 === 0 ? COLOR_PRIMARY : COLOR_SECONDARY;
+                ctx.fillRect(
+                    finishX - lineWidth / 2,
+                    GRASS_AREA_HEIGHT + y * squareSize,
+                    stripeWidth,
+                    squareSize
+                );
+                ctx.fillStyle = (y) % 2 === 0 ? COLOR_SECONDARY : COLOR_PRIMARY;
+                ctx.fillRect(
+                    finishX - lineWidth / 2 + stripeWidth,
+                    GRASS_AREA_HEIGHT + y * squareSize,
+                    stripeWidth,
+                    squareSize
+                );
+            }
+           
+            const bannerWidth = 300;
+            const bannerHeight = 50;
+            const bannerY = GRASS_AREA_HEIGHT - bannerHeight - 10;
+            ctx.fillStyle = 'rgba(0,0,0,0.9)';
+            ctx.fillRect(finishX - bannerWidth / 2, bannerY, bannerWidth, bannerHeight);
+            ctx.strokeStyle = '#00eaff';
+            ctx.lineWidth = 6;
+            ctx.strokeRect(finishX - bannerWidth / 2, bannerY, bannerWidth, bannerHeight);
+           
+            ctx.font = 'bold 42px Orbitron';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.shadowColor = '#00eaff';
+            ctx.shadowBlur = 15;
+            ctx.fillStyle = '#00eaff';
+            ctx.fillText('FINISH LINE', finishX, bannerY + bannerHeight / 2);
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 3;
+            ctx.strokeText('FINISH LINE', finishX, bannerY + bannerHeight / 2);
+            ctx.shadowBlur = 0;
+            ctx.restore();
+        }
+        function drawBackgroundAndTrack(){
+            const currentTrackLength = RACE_LENGTH;
+            const trackTop = GRASS_AREA_HEIGHT;
+            const trackBottom = canvas.height - GRASS_AREA_HEIGHT;
+            const trackHeight = trackBottom - trackTop;
+            const cornerRadius = 30;
+
+            // Draw grass
+            ctx.fillStyle = '#2b6f2b';
+            ctx.fillRect(0, 0, currentTrackLength, canvas.height);
+
+            // Draw track with rounded corners
+            ctx.beginPath();
+            ctx.moveTo(0, trackTop + cornerRadius);
+            ctx.arcTo(0, trackTop, cornerRadius, trackTop, cornerRadius);
+            ctx.lineTo(currentTrackLength - cornerRadius, trackTop);
+            ctx.arcTo(currentTrackLength, trackTop, currentTrackLength, trackTop + cornerRadius, cornerRadius);
+            ctx.lineTo(currentTrackLength, trackBottom - cornerRadius);
+            ctx.arcTo(currentTrackLength, trackBottom, currentTrackLength - cornerRadius, trackBottom, cornerRadius);
+            ctx.lineTo(cornerRadius, trackBottom);
+            ctx.arcTo(0, trackBottom, 0, trackBottom - cornerRadius, cornerRadius);
+            ctx.closePath();
+
+            // Asphalt texture with gradient
+            const gradient = ctx.createLinearGradient(0, trackTop, 0, trackBottom);
+            gradient.addColorStop(0, '#3a3a3a');
+            gradient.addColorStop(0.5, '#2a2a2a');
+            gradient.addColorStop(1, '#3a3a3a');
+            ctx.fillStyle = gradient;
+            ctx.fill();
+
+            // Add subtle noise for texture
+            ctx.save();
+            ctx.globalAlpha = 0.1;
+            for (let x = 0; x < currentTrackLength; x += 5) {
+                for (let y = trackTop; y < trackBottom; y += 5) {
+                    if (Math.random() < 0.2) {
+                        ctx.fillStyle = Math.random() < 0.5 ? '#333' : '#444';
+                        ctx.fillRect(x, y, 5, 5);
+                    }
+                }
+            }
+            ctx.restore();
+
+            // Draw semi-transparent logos on the track
+            if (logoImage.complete && logoImage.naturalWidth !== 0) {
+                ctx.save();
+                ctx.globalAlpha = 0.3; // Semi-transparent logos
+                const logoWidth = laneHeight * 0.6; // 60% of lane height
+                const logoHeight = logoWidth * (logoImage.height / logoImage.width);
+                const laneCount = Math.max(1, racers.length);
+                const laneHeightActual = trackHeight / laneCount;
+                const logoSpacing = 300; // Space logos every 300px along the track
+                for (let x = START_LINE_X + 100; x < currentTrackLength - 100; x += logoSpacing) {
+                    for (let i = 0; i < laneCount; i++) {
+                        const y = trackTop + i * laneHeightActual + laneHeightActual / 2 - logoHeight / 2;
+                        ctx.drawImage(logoImage, x, y, logoWidth, logoHeight);
+                    }
+                }
+                ctx.restore();
+            }
+
+            // Draw lane markings
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([15, 15]);
+            const laneCount = Math.max(1, racers.length);
+            const laneHeightActual = trackHeight / laneCount;
+            for (let i = 1; i < laneCount; i++) {
+                const y = trackTop + i * laneHeightActual;
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(currentTrackLength, y);
+                ctx.stroke();
+            }
+            ctx.setLineDash([]);
+        }
+        function initScenery() {
+            sceneryLayers = { back: [], mid: [], front: [] };
+            const sceneryItems = [
+                { type: 'tree', x: 200, y: 30, scale: 0.7, layer: 'back' },
+                { type: 'house', x: 400, y: canvas.height - 50, scale: 1.0, layer: 'mid' },
+                { type: 'spectator', x: 600, y: 20, scale: 1.0, layer: 'mid' },
+                { type: 'tree', x: 800, y: canvas.height - 40, scale: 0.7, layer: 'back' },
+                { type: 'house', x: 1000, y: 30, scale: 1.0, layer: 'mid' },
+                { type: 'spectator', x: 1200, y: canvas.height - 30, scale: 1.0, layer: 'mid' },
+                { type: 'tree', x: 1400, y: 25, scale: 0.7, layer: 'back' },
+                { type: 'house', x: 1600, y: canvas.height - 60, scale: 1.0, layer: 'mid' },
+                { type: 'spectator', x: 1800, y: 15, scale: 1.0, layer: 'mid' },
+                { type: 'tree', x: 2000, y: canvas.height - 35, scale: 0.7, layer: 'back' },
+                { type: 'house', x: 2200, y: 40, scale: 1.0, layer: 'mid' },
+                { type: 'spectator', x: 2400, y: canvas.height - 25, scale: 1.0, layer: 'mid' },
+                { type: 'tree', x: 2600, y: 20, scale: 0.7, layer: 'back' },
+                { type: 'house', x: 2800, y: canvas.height - 50, scale: 1.0, layer: 'mid' },
+                { type: 'spectator', x: 3000, y: 30, scale: 1.0, layer: 'mid' },
+                { type: 'tree', x: 3200, y: canvas.height - 40, scale: 0.7, layer: 'back' },
+                { type: 'house', x: 3400, y: 35, scale: 1.0, layer: 'mid' },
+                { type: 'spectator', x: 3600, y: canvas.height - 20, scale: 1.0, layer: 'mid' },
+                { type: 'tree', x: 3800, y: 25, scale: 0.7, layer: 'back' },
+                { type: 'house', x: 4000, y: canvas.height - 55, scale: 1.0, layer: 'mid' }
+            ];
+            sceneryItems.forEach(item => {
+                sceneryLayers[item.layer].push({
+                    type: item.type,
+                    x: item.x,
+                    y: item.y,
+                    scale: item.scale
+                });
+            });
+        }
+        function drawAll(){
+            ctx.clearRect(0,0,canvas.width,canvas.height);
+           
+            ctx.save();
+            ctx.translate(-trackOffset, 0);
+           
+            drawBackgroundAndTrack();
+            drawSceneryLayer(sceneryLayers.back, 0.3);
+            drawSceneryLayer(sceneryLayers.mid, 0.6);
+            drawStartLine();
+            racers.forEach(drawRacer);
+            drawFinishLine();
+           
+            ctx.restore();
+           
+            drawTimer();
+        }
+        function initRacers() {
+            racers = [];
+            const customNamesInput = document.getElementById('racerNames');
+            let customNames = customNamesInput.value.split('\n').map(name => name.trim()).filter(name => name);
+            if (customNames.length === 0) {
+                customNames = customNamesInput.placeholder.split('\n').map(name => name.trim()).filter(name => name);
+            }
+            const shuffledPokemon = [...pokemonData].sort(() => 0.5 - Math.random());
+            const numRacers = Math.min(customNames.length, shuffledPokemon.length);
+            for (let i = 0; i < numRacers; i++) {
+                racers.push({
+                    name: customNames[i],
+                    data: shuffledPokemon[i],
+                    x: START_LINE_X,
+                    y: GRASS_AREA_HEIGHT + i * laneHeight + laneHeight / 2,
+                    baseSpeed: 0,
+                    currentSpeed: 0,
+                    speedPhase: Math.random() * Math.PI * 2,
+                    surgeActive: false,
+                    isDebuffed: false,
+                    lastSurgeTime: 0,
+                    stamina: 100,
+                    headTurn: 0,
+                    isDrafting: false,
+                    isLeadingSince: 0,
+                    isLastSince: 0,
+                    isLeaderDebuffed: false,
+                    debuffEndTime: 0,
+                    isLastBoosted: false,
+                    boostEndTime: 0
+                });
+            }
+        }
+        function reassignPokemons() {
+            if (racers.length === 0) return;
+            const shuffledPokemon = [...pokemonData].sort(() => 0.5 - Math.random());
+            racers.forEach((racer, i) => {
+                racer.data = shuffledPokemon[i];
+            });
+            drawAll();
+        }
+        function updateCanvasSettings() {
+            const isFullscreen = raceView.classList.contains('fullscreen');
+            CANVAS_VIEWPORT_WIDTH = isFullscreen ? Math.min(window.innerWidth * 0.85, 1400) : Math.max(setupControls.clientWidth, 300);
+            CANVAS_VIEWPORT_HEIGHT = isFullscreen ? Math.min(window.innerHeight * 0.85, 800) : Math.max(480, document.documentElement.clientHeight * 0.6);
+           
+            const targetTime = Math.max(10, Math.min(300, parseInt(document.getElementById('raceTimeSeconds').value) || 60));
+            TARGET_RACE_TIME_SECONDS = targetTime;
+           
+            const tempFinishX = BASE_SPEED_PER_SECOND * TARGET_RACE_TIME_SECONDS;
+           
+            FIXED_FINISH_LINE_X = Math.max(2000, Math.round(tempFinishX * 1.5));
+            DYNAMIC_FINISH_LINE_X = FIXED_FINISH_LINE_X;
+            RACE_LENGTH = DYNAMIC_FINISH_LINE_X + 1500;
+            document.getElementById('raceLengthDisplay').value = DYNAMIC_FINISH_LINE_X.toFixed(0);
+            canvas.width = CANVAS_VIEWPORT_WIDTH;
+            canvas.height = CANVAS_VIEWPORT_HEIGHT;
+            laneHeight = (canvas.height - (GRASS_AREA_HEIGHT * 2)) / Math.max(1, racers.length);
+           
+            IDEAL_SPEED_PER_SECOND = (FIXED_FINISH_LINE_X - START_LINE_X) / TARGET_RACE_TIME_SECONDS;
+            cameraAnchorX = CANVAS_VIEWPORT_WIDTH * FIXED_RACER_X_ANCHOR_PCT;
+           
+            if (racers.length > 0) {
+                racers.forEach((racer, index) => {
+                    racer.y = GRASS_AREA_HEIGHT + index * laneHeight + laneHeight / 2;
+                    racer.baseSpeed = IDEAL_SPEED_PER_SECOND * (1.0 - 0.15 + Math.random() * 0.3);
+                });
+            }
+        }
+       
+        function updateRacers(deltaTimeSeconds){
+            if (!raceStartTime) return;
+            const now = performance.now();
+            const elapsedMilliseconds = now - raceStartTime;
+            let elapsedSeconds = elapsedMilliseconds / 1000;
+           
+            const sortedRacers = [...racers].sort((a, b) => b.x - a.x);
+            let leader = sortedRacers[0];
+            let lastRacer = sortedRacers[sortedRacers.length - 1];
+            if (!leader || !lastRacer) return;
+            const currentTime = performance.now();
+            racers.forEach(racer => {
+                if (racer.debuffEndTime > 0 && currentTime > racer.debuffEndTime) {
+                    racer.isLeaderDebuffed = false;
+                    racer.debuffEndTime = 0;
+                }
+                if (racer.boostEndTime > 0 && currentTime > racer.boostEndTime) {
+                    racer.isLastBoosted = false;
+                    racer.boostEndTime = 0;
+                }
+                if (racer === leader) {
+                    if (!racer.isLeaderDebuffed) {
+                        if (racer.isLeadingSince === 0) racer.isLeadingSince = currentTime;
+                        if (currentTime - racer.isLeadingSince > LEADER_DEBUFF_COOLDOWN) {
+                            racer.isLeaderDebuffed = true;
+                            racer.debuffEndTime = currentTime + LEADER_DEBUFF_DURATION;
+                            racer.isLeadingSince = 0;
+                        }
+                    }
+                    racer.isLastSince = 0;
+                } else if (racer.isLeadingSince !== 0 && !racer.isLeaderDebuffed) {
+                    racer.isLeadingSince = 0;
+                }
+                if (racer === lastRacer) {
+                    if (!racer.isLastBoosted) {
+                        if (racer.isLastSince === 0) racer.isLastSince = currentTime;
+                        if (currentTime - racer.isLastSince > LAST_BOOST_COOLDOWN) {
+                            racer.isLastBoosted = true;
+                            racer.boostEndTime = currentTime + LAST_BOOST_DURATION;
+                            racer.isLastSince = 0;
+                        }
+                    }
+                    racer.isLeadingSince = 0;
+                } else if (racer.isLastSince !== 0 && !racer.isLastBoosted) {
+                    racer.isLastSince = 0;
+                }
+            });
+           
+            const packCenterX = racers.reduce((sum, r) => sum + r.x, 0) / racers.length;
+           
+            racers.forEach(racer => {
+                if (racer.stamina < 100) racer.stamina = Math.min(100, racer.stamina + STAMINA_REGEN_RATE * deltaTimeSeconds);
+                const staminaModifier = 0.7 + 0.3 * (racer.stamina / 100);
+               
+                const distanceFromCenter = racer.x - packCenterX;
+                const rubberBandAdjustment = -distanceFromCenter * 0.00;
+               
+                const volatility = 1.0 + (Math.random() * VOLATILITY_SWING * 2 - VOLATILITY_SWING);
+               
+                let naturalSpeed = racer.baseSpeed * BASE_MOMENTUM_FACTOR * staminaModifier + rubberBandAdjustment;
+               
+                naturalSpeed *= volatility;
+               
+                if (racer.surgeActive) naturalSpeed *= SURGE_MULTIPLIER;
+                if (racer.isDebuffed) naturalSpeed *= DEBUFF_MULTIPLIER;
+               
+                if (racer === activeShortBooster) naturalSpeed *= SHORT_BOOST_MULTIPLIER;
+                if (racer === activeShortDebuffer) naturalSpeed *= SHORT_DEBUFF_MULTIPLIER;
+                if (racer.isLeaderDebuffed) naturalSpeed *= LEADER_DEBUFF_MULTIPLIER;
+                if (racer.isLastBoosted) naturalSpeed *= LAST_BOOST_MULTIPLIER;
+               
+                racer.currentSpeed = Math.max(1, naturalSpeed);
+            });
+           
+            let firstFinisher = null;
+            let timeToFinish = Infinity;
+            for (const racer of racers) {
+                racer.nextX = racer.x + racer.currentSpeed * deltaTimeSeconds;
+                if (racer.nextX >= DYNAMIC_FINISH_LINE_X && racer.x < DYNAMIC_FINISH_LINE_X) {
+                    const distToFinish = DYNAMIC_FINISH_LINE_X - racer.x;
+                    const ttF = distToFinish / racer.currentSpeed;
+                    if (ttF < timeToFinish) {
+                        timeToFinish = ttF;
+                        firstFinisher = racer;
+                    }
+                }
+            }
+            if (firstFinisher) {
+                isRacing = false;
+                raceFinished = true;
+                cancelAnimationFrame(animationFrameId);
+               
+                const finalRaceTime = elapsedSeconds + timeToFinish;
+               
+                firstFinisher.x = DYNAMIC_FINISH_LINE_X;
+               
+                captureFinishPositions(finalRaceTime);
+                showWinnerAnimation(firstFinisher.name);
+               
+                requestAnimationFrame(() => {
+                    drawAll();
+                    setTimeout(() => {
+                        winnerOverlay.style.display = 'none';
+                        raceView.style.display = 'none';
+                        titleContainer.classList.remove('race-active');
+                        displayFinalLeaderboard();
+                        leaderboard.style.display = 'flex';
+                        leaderboard.classList.add('fullscreen');
+                        postRaceControls.style.display = 'flex';
+                    }, 3000);
+                });
+                return;
+            }
+           
+            racers.forEach(racer => {
+                racer.x += racer.currentSpeed * deltaTimeSeconds;
+            });
+        }
+        function updateCamera(){
+            if (!isRacing && !raceFinished) { trackOffset = 0; return; };
+           
+            const currentLeaderX = racers.reduce((max, r) => Math.max(max, r.x), 0);
+            const minX = racers.reduce((min, r) => Math.min(min, r.x), currentLeaderX);
+            let desiredOffset = currentLeaderX - cameraAnchorX;
+           
+            const minAllowedOffset = Math.max(0, minX - CANVAS_VIEWPORT_WIDTH * 0.1);
+           
+            desiredOffset = Math.max(minAllowedOffset, desiredOffset);
+            const maxOffset = Math.max(0, RACE_LENGTH - CANVAS_VIEWPORT_WIDTH);
+            desiredOffset = Math.min(desiredOffset, maxOffset);
+           
+            trackOffset += (desiredOffset - trackOffset) * CAMERA_SMOOTHING_FACTOR;
+        }
+        function animate(currentTime){
+            if (!lastFrameTime) lastFrameTime = currentTime;
+            const deltaTimeSeconds = (currentTime - lastFrameTime) / 1000;
+            lastFrameTime = currentTime;
+            frameCount++;
+            if (isRacing) {
+                updateRacers(deltaTimeSeconds);
+            }
+            updateCamera();
+            drawAll();
+            if (!raceFinished) {
+                animationFrameId = requestAnimationFrame(animate);
+            }
+        }
+        function captureFinishPositions(winnerTime){
+            finishPositions = racers.map(r => {
+                let resultTime;
+                if (r.x >= DYNAMIC_FINISH_LINE_X) {
+                    resultTime = winnerTime;
+                } else if (r.currentSpeed > 0) {
+                    const distanceRemaining = DYNAMIC_FINISH_LINE_X - r.x;
+                    const timeRemaining = distanceRemaining / r.currentSpeed;
+                    resultTime = winnerTime + timeRemaining;
+                } else {
+                    resultTime = Infinity;
+                }
+               
+                return { name: r.name, finalX: r.x, currentSpeed: r.currentSpeed, resultTime };
+            });
+            finishPositions.sort((a, b) => {
+                if (a.resultTime === Infinity) return 1;
+                if (b.resultTime === Infinity) return -1;
+                return a.resultTime - b.resultTime;
+            });
+        }
+        function displayFinalLeaderboard(){
+            document.getElementById('leaderboardTitle').textContent = '🏁 FINAL RACE RESULTS 🏆';
+            const listContainer = document.getElementById('leaderboardList');
+            listContainer.innerHTML = finishPositions.map((r, i) => {
+                const rank = i + 1;
+                const isWinner = rank === 1;
+                const rankDisplay = isWinner ? `<span class="trophy">🏆</span> 1.` : `${rank}.`;
+                return `<div class="leaderboard-entry ${isWinner ? 'winner-entry' : ''}">
+                              <span class="rank-number">${rankDisplay}</span>
+                              <strong class="racer-name-leaderboard">${r.name}</strong>
+                              <span class="time-result">${formatMMSS(r.resultTime)}</span>
+                            </div>`;
+            }).join('');
+        }
+        function submitNames(){
+            const customNames = document.getElementById('racerNames').value.split('\n').map(name => name.trim()).filter(Boolean);
+            const submittedNamesDiv = document.getElementById('submittedNames');
+            const submittedNamesList = document.getElementById('submittedNamesList');
+            if (customNames.length === 0) {
+                submittedNamesDiv.style.display = 'none';
+                return;
+            }
+            submittedNamesList.innerHTML = customNames.map((name,i)=>`<li>${i+1}. ${name}</li>`).join('');
+            submittedNamesDiv.style.display = 'block';
+            statusDisplay.textContent = `Submitted ${customNames.length} racer${customNames.length===1?'':'s'}. Ready!`;
+            initRacers();
+            updateCanvasSettings();
+            drawAll();
+        }
+        function handleStartButton(){
+            if (racers.length === 0) {
+                submitNames();
+            }
+           
+            if (racers.length === 0) {
+                statusDisplay.textContent = 'Please enter at least one racer name before starting.';
+                return;
+            }
+           
+            if (raceState === RACE_STATES.SETUP) prepareRace();
+            else if (raceState === RACE_STATES.PREPARING) startRace();
+        }
+        function prepareRace(){
+            raceState = RACE_STATES.PREPARING;
+            setupControls.style.display = 'none'; document.getElementById('submittedNames').style.display = 'none';
+            raceView.style.display = 'flex'; raceControls.style.display = 'flex';
+            raceView.classList.add('fullscreen');
+            titleContainer.classList.add('race-active');
+            initRacers(); updateCanvasSettings(); initScenery(); drawAll();
+            statusDisplay.textContent = 'PREPARE: Click START RACE (GO!).';
+        }
+        function startRace(){
+            raceState = RACE_STATES.READY; isRacing = true; raceFinished = false;
+           
+            lastBoostTime = performance.now();
+            activeShortBooster = null;
+            lastDebuffTime = performance.now();
+            activeShortDebuffer = null;
+           
+            racers.forEach(r => {
+                r.isLeadingSince = 0;
+                r.isLastSince = 0;
+                r.isLeaderDebuffed = false;
+                r.debuffEndTime = 0;
+                r.isLastBoosted = false;
+                r.boostEndTime = 0;
+            });
+            raceStartTime = performance.now();
+            lastFrameTime = performance.now();
+            statusDisplay.textContent = 'GO! RACE HAS BEGUN!';
+            raceControls.style.display = 'none';
+            cancelAnimationFrame(animationFrameId); animationFrameId = requestAnimationFrame(animate);
+        }
+        function resetRace(){
+            raceState = RACE_STATES.SETUP; isRacing = false; raceFinished = false;
+            cancelAnimationFrame(animationFrameId);
+            winnerOverlay.style.display = 'none'; leaderboard.style.display = 'none';
+            leaderboard.classList.remove('fullscreen');
+            setupControls.style.display = 'block'; raceView.style.display = 'none';
+            raceView.classList.remove('fullscreen');
+            titleContainer.classList.remove('race-active');
+            postRaceControls.style.display = 'none';
+            statusDisplay.textContent = 'Systems nominal. Enter names to begin.';
+            initRacers();
+            updateCanvasSettings();
+            drawAll();
+        }
+        function showWinnerAnimation(winnerName){
+            document.getElementById('winnerName').textContent = winnerName + " WINS!";
+            winnerOverlay.style.display = 'flex';
+        }
+        submitNamesButton.addEventListener('click', submitNames);
+        setupStartButton.addEventListener('click', handleStartButton);
+        raceScreenStartButton.addEventListener('click', handleStartButton);
+        shuffleButton.addEventListener('click', reassignPokemons);
+        window.addEventListener('resize', () => {
+            if (raceState !== RACE_STATES.SETUP) {
+                updateCanvasSettings(); initScenery(); drawAll();
+            }
         });
+        initRacers();
+        updateCanvasSettings();
+        drawAll();
     </script>
 </body>
 </html>
