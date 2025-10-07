@@ -25,9 +25,10 @@
             background-size: 25px 25px;
         }
 
-        .neon-text-glow {
-            text-shadow: 0 0 5px var(--text-white), 0 0 10px var(--tron-blue), 0 0 20px var(--tron-blue);
-            color: var(--tron-blue);
+        /* 🎯 UPDATED: Using the neon-title-glow from your index.html */
+        .neon-title-glow {
+            text-shadow: 0 0 5px #fff, 0 0 10px var(--tron-blue), 0 0 20px var(--tron-blue), 0 0 40px var(--tron-blue);
+            color: var(--text-white); /* Ensure the base text color is white before glow */
         }
 
         .metal-panel {
@@ -44,21 +45,20 @@
         }
 
         #pointer {
-            /* REWORKED POINTER FOR ALIGNMENT AND AESTHETICS */
             position: absolute;
-            top: -55px; /* Adjusted to sit just above the wheel's edge */
+            top: -35px; /* Moved closer to the wheel */
             left: 50%;
             transform: translateX(-50%); /* Centered horizontally */
             width: 0;
             height: 0;
-            border-left: 25px solid transparent; /* Width of pointer base */
-            border-right: 25px solid transparent; /* Width of pointer base */
-            border-top: 50px solid var(--text-white); /* White triangle body */
-            z-index: 10; /* Ensure it's above the wheel */
+            border-left: 10px solid transparent; /* MUCH SLIMMER BASE */
+            border-right: 10px solid transparent; /* MUCH SLIMMER BASE */
+            border-top: 40px solid var(--text-white); /* SHORTER AND SLIMMER BODY */
+            z-index: 10;
             
             /* Add intense neon blue glow */
-            filter: drop-shadow(0 0 20px var(--tron-blue));
-            box-shadow: 0 0 15px var(--tron-blue); /* Additional glow */
+            filter: drop-shadow(0 0 18px var(--tron-blue));
+            box-shadow: 0 0 10px var(--tron-blue);
         }
 
         @keyframes pointerBounce {
@@ -121,7 +121,7 @@
 </head>
 <body class="tron-background min-h-screen p-4 font-sans flex flex-col items-center text-text-neon">
 
-    <h1 class="text-5xl font-extrabold mt-4 mb-8 text-center neon-text-glow uppercase">
+    <h1 class="text-5xl font-extrabold mt-4 mb-8 text-center uppercase neon-title-glow">
         Gladiators Death Wheel
     </h1>
     <hr class="w-2/3 border-t-2 border-tron-blue/50 shadow-lg mb-8" style="box-shadow: 0 0 10px var(--tron-blue);">
@@ -381,7 +381,7 @@
             }
         }
 
-        // --- SPIN LOGIC (CONFIRMED TO USE spin-duration INPUT) ---
+        // --- SPIN LOGIC ---
         function spinWheel() {
             if (isSpinning || wheelData.length === 0) return;
             isSpinning = true;
@@ -395,7 +395,6 @@
             pointerWinnerLabel.classList.remove('show-winner-label'); 
             resultBox.classList.remove('success-glow', 'death-glow');
 
-            // 1. READ DURATION INPUT (Confirmed working)
             let duration = parseFloat(spinDurationInput.value) || 5;
 
             const dataToSpin = wheelData;
@@ -424,11 +423,9 @@
             const fullRotations = 5;
             const totalRotation = currentRotation + (fullRotations * 360) + deltaRotation;
             
-            // 2. APPLY DURATION TO TRANSITION
             wheelContainer.style.transition = `transform ${duration}s cubic-bezier(0.1, 0.7, 0.4, 1)`;
             wheelContainer.style.transform = `rotate(${totalRotation}deg)`;
 
-            // 3. ANNOUNCE WINNER AFTER DURATION
             setTimeout(() => {
                 pointer.classList.remove('pointer-bouncing'); 
 
