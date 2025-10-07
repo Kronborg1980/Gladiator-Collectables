@@ -236,27 +236,22 @@
             border-radius: 15px;
         }
         
-        /* CORRECTED CSS FOR CORNER LOGOS (Only visible on fullscreen race screen) */
-        .corner-logo {
-            position: absolute;
-            width: clamp(60px, 10vh, 75px);
-            height: auto;
-            border-radius: 8px;
-            box-shadow: 0 0 12px rgba(255,255,255,0.5), 0 0 20px var(--secondary-glow);
-            z-index: 1200;
-            display: none; /* Hidden by default */
-        }
+        /* NEW: Styles for the corner logos (kept simple) */
+        .corner-logo {
+            position: absolute;
+            width: clamp(60px, 10vh, 75px);
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 0 12px rgba(255,255,255,0.5), 0 0 20px var(--secondary-glow);
+            z-index: 1200;
+        }
 
-        #raceView.fullscreen .corner-logo {
-            display: block; /* Shown only when raceView is fullscreen */
-        }
-        
-        #logo-tl { top: 20px; left: 20px; }
-        #logo-tr { top: 20px; right: 20px; }
-        #logo-bl { bottom: 20px; left: 20px; }
-        #logo-br { bottom: 20px; right: 20px; }
-        /* END CORRECTED CSS */
-        
+        /* NEW: Corner positions */
+        .corner-logo.tl { top: 20px; left: 20px; }
+        .corner-logo.tr { top: 20px; right: 20px; }
+        .corner-logo.bl { bottom: 20px; left: 20px; }
+        .corner-logo.br { bottom: 20px; right: 20px; }
+
         #raceControls {
             position: absolute;
             top: 50%;
@@ -404,7 +399,7 @@
     </style>
 </head>
 <body>
-    <div id="titleContainer">
+        <div id="titleContainer">
         <img id="logo" src="https://60fb7b08eaf293096e8c.cdn6.editmysite.com/uploads/b/60fb7b08eaf293096e8cb3f63df9e65735b8a1ee75f6d23d21eaed2115dfa2e6/IMG_7388_1701827680.jpeg?width=2400&optimize=medium" alt="Gladiator Collectibles Logo">
         <h1>GLADIATOR COLLECTIBLES</h1>
     </div>
@@ -434,12 +429,7 @@
         <h3>Submitted Racers</h3>
         <ul id="submittedNamesList"></ul>
     </div>
-    <div id="raceView">
-                <img class="corner-logo" id="logo-tl" src="https://60fb7b08eaf293096e8c.cdn6.editmysite.com/uploads/b/60fb7b08eaf293096e8cb3f63df9e65735b8a1ee75f6d23d21eaed2115dfa2e6/IMG_7388_1701827680.jpeg?width=2400&optimize=medium" alt="Gladiator Collectibles Logo">
-        <img class="corner-logo" id="logo-tr" src="https://60fb7b08eaf293096e8c.cdn6.editmysite.com/uploads/b/60fb7b08eaf293096e8cb3f63df9e65735b8a1ee75f6d23d21eaed2115dfa2e6/IMG_7388_1701827680.jpeg?width=2400&optimize=medium" alt="Gladiator Collectibles Logo">
-        <img class="corner-logo" id="logo-bl" src="https://60fb7b08eaf293096e8c.cdn6.editmysite.com/uploads/b/60fb7b08eaf293096e8cb3f63df9e65735b8a1ee75f6d23d21eaed2115dfa2e6/IMG_7388_1701827680.jpeg?width=2400&optimize=medium" alt="Gladiator Collectibles Logo">
-        <img class="corner-logo" id="logo-br" src="https://60fb7b08eaf293096e8c.cdn6.editmysite.com/uploads/b/60fb7b08eaf293096e8cb3f63df9e65735b8a1ee75f6d23d21eaed2115dfa2e6/IMG_7388_1701827680.jpeg?width=2400&optimize=medium" alt="Gladiator Collectibles Logo">
-
+        <div id="raceView">
         <div id="raceControls" class="controls">
             <button id="shuffleButton" class="race-button">SHUFFLE POKEMON</button>
             <button id="raceScreenStartButton" class="race-button prepare">START RACE (GO!)</button>
@@ -557,6 +547,28 @@
         const logoImage = new Image();
         logoImage.src = 'https://60fb7b08eaf293096e8c.cdn6.editmysite.com/uploads/b/60fb7b08eaf293096e8cb3f63df9e65735b8a1ee75f6d23d21eaed2115dfa2e6/IMG_7388_1701827680.jpeg?width=2400&optimize=medium';
        
+        // NEW: Function to add corner logos to the race view
+        function addCornerLogos() {
+            // Check if logos already exist to prevent duplicates
+            if (raceView.querySelector('.corner-logo')) return; 
+            
+            const logoUrl = logoImage.src;
+            const positions = ['tl', 'tr', 'bl', 'br'];
+
+            positions.forEach(pos => {
+                const img = document.createElement('img');
+                img.src = logoUrl;
+                img.alt = "Gladiator Collectibles Logo";
+                img.classList.add('corner-logo', pos);
+                raceView.appendChild(img);
+            });
+        }
+
+        // NEW: Function to remove corner logos
+        function removeCornerLogos() {
+            raceView.querySelectorAll('.corner-logo').forEach(logo => logo.remove());
+        }
+
         function getRandomInt(min, max) {
             min = Math.ceil(min);
             max = Math.floor(max);
@@ -920,6 +932,7 @@
                     setTimeout(() => {
                         winnerOverlay.style.display = 'none';
                         raceView.style.display = 'none';
+                        removeCornerLogos(); // Clean up logos when returning to setup
                         displayFinalLeaderboard();
                         leaderboard.style.display = 'flex';
                         leaderboard.classList.add('fullscreen');
@@ -1029,6 +1042,7 @@
         }
         function prepareRace(){
             raceState = RACE_STATES.PREPARING;
+            addCornerLogos(); // Add logos just before going fullscreen
             setupControls.style.display = 'none'; document.getElementById('submittedNames').style.display = 'none';
             raceView.style.display = 'flex'; raceControls.style.display = 'flex';
             raceView.classList.add('fullscreen');
@@ -1064,6 +1078,7 @@
             leaderboard.classList.remove('fullscreen');
             setupControls.style.display = 'block'; raceView.style.display = 'none';
             raceView.classList.remove('fullscreen');
+            removeCornerLogos(); // Clean up logos when returning to setup
             postRaceControls.style.display = 'none';
             statusDisplay.textContent = 'Systems nominal. Enter names to begin.';
             initRacers();
@@ -1080,6 +1095,7 @@
         shuffleButton.addEventListener('click', reassignPokemons);
         window.addEventListener('resize', () => {
             if (raceState !== RACE_STATES.SETUP) {
+                addCornerLogos(); // Re-add on resize in case they were lost or need adjusting
                 updateCanvasSettings(); initScenery(); drawAll();
             }
         });
