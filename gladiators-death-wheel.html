@@ -3,127 +3,119 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gladiators Death Wheel</title>
+    <title>Gladiators Death Wheel - TRON EDITION</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* --- 1. BASE COLORS: ALL NEON BLUE / WHITE NAMES --- */
+        /* --- TRON THEME VARIABLES --- */
         :root {
-            --tron-blue: #00FFFF; /* Primary Neon Color (Used for all general glow/accents) */
-            --tron-magenta: #00FFFF; /* Secondary Neon Color (Changed to Blue) */
-            --tron-red: #FF4500; /* For Death/Elimination (Kept red for danger) */
-            --dark-metal: #1a1a1a;
-            --light-metal: #444444;
-            --text-neon: #FFFFFF; /* Changed to White as requested for names and primary text */
-            --winner-color: #39FF14; /* Success Green (Kept for winner/success for contrast) */
+            --tron-blue: #00FFFF; /* Primary Neon: Cyan/Blue */
+            --tron-red: #FF0055; /* Death/Elimination: Deep Red/Pink */
+            --tron-green: #39FF14; /* Success/Champion: Neon Green */
+            --dark-metal: #101010;
+            --light-metal: #333333;
+            --text-white: #FFFFFF; /* Pure white for contrast */
         }
 
-        /* Utility Styles */
+        /* --- GLOBAL & UTILITY STYLES --- */
+        .tron-background {
+            /* Adds a subtle repeating grid pattern for a high-tech/matrix feel */
+            background-color: #0A0A0A;
+            background-image: linear-gradient(0deg, transparent 95%, rgba(0, 255, 255, 0.05) 100%),
+                              linear-gradient(90deg, transparent 95%, rgba(0, 255, 255, 0.05) 100%);
+            background-size: 25px 25px;
+        }
+
         .neon-text-glow {
-            /* General text glow now uses the primary tron-blue */
-            text-shadow: 0 0 5px #fff, 0 0 10px var(--tron-blue), 0 0 20px var(--tron-blue);
+            text-shadow: 0 0 5px var(--text-white), 0 0 10px var(--tron-blue), 0 0 20px var(--tron-blue);
+            color: var(--tron-blue);
         }
-        .death-glow {
-            box-shadow: 0 0 15px var(--tron-red), inset 0 0 10px var(--tron-red);
-            border-color: var(--tron-red) !important;
-        }
-        .success-glow {
-            box-shadow: 0 0 15px var(--winner-color), inset 0 0 10px var(--winner-color);
-            border-color: var(--winner-color) !important;
-        }
+
         .metal-panel {
             background: linear-gradient(145deg, var(--dark-metal), #000000);
-            border: 2px solid var(--light-metal);
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.5), inset 0 0 5px var(--light-metal);
-        }
-        
-        /* WHEEL AND POINTER STYLES */
-        #wheel-wrapper {
-            position: relative;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            width: 100%;
-            height: 100%;
-        }
-        
-        #wheel-container {
-            transition: transform 0s ease-out;
+            border: 1px solid var(--light-metal);
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.15), inset 0 0 3px var(--light-metal);
         }
 
-        /* Wheel Rim: Enhanced to look more like heavy, dark metal with a strong blue neon ring */
+        /* --- WHEEL & POINTER STYLES --- */
         #wheel-canvas {
-            border: 10px solid var(--dark-metal); 
+            border: 10px solid #222; /* Darker, thicker metal rim */
             border-radius: 50%;
-            /* Intense Neon Glow for the Tron Effect, using the primary blue */
-            box-shadow: 0 0 30px var(--tron-blue), 0 0 10px var(--tron-blue);
+            /* Stronger Blue Neon Glow on the main wheel edge */
+            box-shadow: 0 0 40px var(--tron-blue), 0 0 15px var(--tron-blue);
         }
 
-        /* --- 3. POINTER REALISM ENHANCEMENT (More Angular/Metallic) --- */
         #pointer {
+            /* Redesigned Pointer: Sharp, metallic, and backlit with neon blue */
             position: absolute;
-            top: -70px; /* Positioned higher to clear the wheel edge */
+            top: -65px;
             width: 0;
             height: 0;
-            border-left: 35px solid transparent; 
-            border-right: 35px solid transparent; 
-            /* Shape changed from pure triangle to a metallic chevron/arrow head */
-            border-top: 50px solid var(--tron-blue); 
-            /* A solid, metallic base for the pointer */
-            border-bottom: 20px solid #FFFFFF; 
-            /* Adjust the size and position to center the new shape */
-            filter: drop-shadow(0 0 15px var(--tron-blue)); /* Stronger glow */
+            border-left: 30px solid transparent; 
+            border-right: 30px solid transparent; 
+            border-top: 60px solid var(--light-metal); /* Metallic base */
+            border-bottom: 20px solid transparent;
             z-index: 10;
             left: 50%;
-            transform: translateX(-50%); 
-            transform-origin: 50% 100%; 
-        }
-
-        #pointer-winner-label {
-            position: absolute;
-            top: 2px;
-            left: 50%;
             transform: translateX(-50%);
-            z-index: 11;
-            padding: 5px 12px;
-            border-radius: 8px;
-            font-size: 1rem;
-            font-weight: bold;
-            color: var(--dark-metal);
-            background-color: var(--winner-color); /* Success green label */
-            opacity: 0;
-            transition: opacity 0.3s ease-in;
+            transform-origin: 50% 100%;
+            
+            /* Neon Blue Backlight */
+            box-shadow: 0 0 25px var(--tron-blue);
+            filter: drop-shadow(0 0 5px var(--tron-blue));
+            
+            /* Inner Glow Chevron Tip (Pure White for visual clarity) */
+            content: '';
+            position: absolute;
+            top: -55px;
+            left: -30px; 
+            width: 0;
+            height: 0;
+            border-left: 30px solid transparent; 
+            border-right: 30px solid transparent; 
+            border-top: 55px solid var(--text-white);
+            filter: drop-shadow(0 0 10px var(--tron-blue));
         }
 
-        .show-winner-label {
-            opacity: 1 !important;
-            box-shadow: 0 0 10px var(--winner-color), 0 0 20px var(--winner-color);
-        }
-
-        /* Pointer Animation */
         @keyframes pointerBounce {
-            0% { transform: translateX(-50%) rotate(-10deg); }
-            100% { transform: translateX(-50%) rotate(10deg); }
+            0% { transform: translateX(-50%) rotate(-8deg); }
+            100% { transform: translateX(-50%) rotate(8deg); }
         }
         .pointer-bouncing {
             animation: pointerBounce 0.1s infinite alternate;
         }
 
-        /* Elimination Button (Kept Red for danger) */
-        #elimination-button {
-            background-color: var(--tron-red);
-            color: var(--text-neon);
-            box-shadow: 0 0 15px var(--tron-red), 0 0 30px var(--tron-red);
-            transition: all 0.3s;
-        }
-        #elimination-button:hover:not(:disabled) {
-            transform: scale(1.02);
-            box-shadow: 0 0 25px var(--tron-red), 0 0 40px var(--tron-red);
-        }
-        
-        /* Spin button changed to neon blue */
+        /* --- CONTROL PANEL STYLES --- */
         #spin-button {
-             background-color: var(--tron-blue) !important;
-             box-shadow: 0 0 15px var(--tron-blue), 0 0 30px var(--tron-blue) !important;
+            /* Intense Neon Blue Button */
+            background-color: var(--tron-blue) !important;
+            color: var(--dark-metal) !important;
+            box-shadow: 0 0 20px var(--tron-blue), 0 0 40px var(--tron-blue);
+            transition: all 0.2s;
+        }
+        #spin-button:hover:not(:disabled) {
+            transform: scale(1.03);
+            box-shadow: 0 0 30px var(--tron-blue), 0 0 50px var(--tron-blue);
+        }
+
+        #elimination-button {
+            /* Intense Neon Red Button for Danger */
+            background-color: var(--tron-red) !important;
+            box-shadow: 0 0 20px var(--tron-red), 0 0 40px var(--tron-red);
+        }
+
+        /* --- RESULT BOX STYLES --- */
+        #result-box {
+            border: 4px solid var(--tron-blue);
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.5), inset 0 0 10px rgba(0, 255, 255, 0.5);
+            color: var(--text-white);
+        }
+        .death-glow {
+            border-color: var(--tron-red) !important;
+            box-shadow: 0 0 20px var(--tron-red), inset 0 0 15px var(--tron-red);
+        }
+        .success-glow {
+            border-color: var(--tron-green) !important;
+            box-shadow: 0 0 20px var(--tron-green), inset 0 0 15px var(--tron-green);
         }
     </style>
     <script>
@@ -131,10 +123,10 @@
             theme: {
                 extend: {
                     colors: {
-                        'primary-neon': '#00FFFF', /* All primary is neon blue */ 
-                        'secondary-neon': '#00FFFF', /* Secondary is also neon blue */
+                        'primary-neon': 'var(--tron-blue)',
+                        'secondary-neon': 'var(--tron-red)',
                         'dark-bg': '#0A0A0A',
-                        'neutral-glow': '#FFFFFF', /* White as requested */
+                        'text-neon': 'var(--text-white)',
                     },
                     fontFamily: {
                         sans: ['Inter', 'sans-serif'],
@@ -144,18 +136,19 @@
         }
     </script>
 </head>
-<body class="bg-dark-bg min-h-screen p-4 font-sans flex flex-col items-center text-text-neon">
+<body class="tron-background min-h-screen p-4 font-sans flex flex-col items-center text-text-neon">
 
-    <h1 class="text-5xl font-extrabold text-primary-neon mt-4 mb-8 text-center neon-text-glow">
-        GLADIATORS DEATH WHEEL
+    <h1 class="text-5xl font-extrabold mt-4 mb-8 text-center neon-text-glow uppercase">
+        Gladiators Death Wheel
     </h1>
+    <hr class="w-2/3 border-t-2 border-tron-blue/50 shadow-lg mb-8" style="box-shadow: 0 0 10px var(--tron-blue);">
 
-    <div class="flex flex-col lg:flex-row w-full max-w-7xl gap-8">
+    <div class="flex flex-col lg:flex-row w-full max-w-7xl gap-10">
 
-        <div class="lg:w-1/3 p-6 rounded-xl shadow-lg h-fit metal-panel">
-            <h2 class="text-3xl font-bold mb-4 text-primary-neon">Control Chamber</h2>
+        <div class="lg:w-1/3 p-8 rounded-xl shadow-2xl h-fit metal-panel">
+            <h2 class="text-3xl font-bold mb-6 text-primary-neon border-b border-tron-blue/50 pb-2">Control Chamber</h2>
 
-            <label for="names-input" class="block text-sm font-medium text-text-neon/80 mb-1">
+            <label for="names-input" class="block text-sm font-medium text-text-neon/80 mb-2">
                 Contestants (One name per line):
             </label>
             <textarea id="names-input" rows="8" class="w-full p-3 border border-primary-neon/50 bg-gray-900 text-text-neon rounded-lg focus:ring-primary-neon focus:border-primary-neon transition duration-150 shadow-inner" placeholder="E.g.,&#10;Kaelen&#10;Maximus&#10;Zeva&#10;Orion&#10;Aura">Alice
@@ -164,30 +157,31 @@ Charlie
 Diana
 Eve</textarea>
 
-            <label for="spin-duration" class="block text-sm font-medium text-text-neon/80 mt-4 mb-1">
+            <label for="spin-duration" class="block text-sm font-medium text-text-neon/80 mt-6 mb-2">
                 Spin Duration (seconds):
             </label>
             <input type="number" id="spin-duration" value="5" min="1" max="60" class="w-full p-3 border border-primary-neon/50 bg-gray-900 text-text-neon rounded-lg focus:ring-primary-neon focus:border-primary-neon transition duration-150 shadow-inner text-center" />
 
-            <button id="spin-button" class="w-full mt-6 py-4 px-4 bg-secondary-neon text-dark-metal font-extrabold rounded-xl shadow-md hover:opacity-90 transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed">
+            <button id="spin-button" class="w-full mt-8 py-5 px-4 font-extrabold uppercase rounded-xl shadow-md hover:opacity-95 transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed">
                 THE FATE SPIN
             </button>
             
-            <button id="elimination-button" class="w-full mt-4 py-4 px-4 font-extrabold rounded-xl shadow-md disabled:opacity-50 disabled:cursor-not-allowed">
-                INITIATE DEATHMATCH 
+            <button id="elimination-button" class="w-full mt-4 py-5 px-4 font-extrabold uppercase rounded-xl shadow-md disabled:opacity-50 disabled:cursor-not-allowed">
+                Initiate Deathmatch 
             </button>
         </div>
 
-        <div class="lg:w-2/3 p-6 rounded-xl shadow-lg flex flex-col items-center metal-panel">
-            <div id="result-box" class="w-full text-center mb-6 h-24 flex flex-col items-center justify-center rounded-lg border-4 border-dashed border-tron-blue/80 bg-dark-metal/50 p-2" style="box-shadow: 0 0 10px var(--tron-blue), inset 0 0 5px var(--tron-blue);">
-                <p class="text-xl font-bold text-tron-blue/90">CURRENT STATUS:</p>
-                <p id="winner-text" class="text-2xl font-extrabold text-tron-blue/90">Awaits the Gladiator's Choice.</p>
+        <div class="lg:w-2/3 p-8 rounded-xl shadow-2xl flex flex-col items-center metal-panel">
+            
+            <div id="result-box" class="w-full text-center mb-8 h-28 flex flex-col items-center justify-center rounded-lg bg-dark-metal/50 p-3 transition-all duration-300">
+                <p class="text-xl font-bold text-tron-blue/90 uppercase">Current Status:</p>
+                <p id="winner-text" class="text-3xl font-extrabold text-white">Awaits the Gladiator's Choice.</p>
             </div>
 
             <div id="wheel-area" class="w-full max-w-lg aspect-square flex justify-center items-center">
-                <div id="wheel-wrapper">
+                <div id="wheel-wrapper" class="relative">
                     <div id="pointer"></div> 
-                    <div id="pointer-winner-label" class="hidden"></div>
+                    <div id="pointer-winner-label" class="hidden absolute top-[-10px] left-1/2 -translate-x-1/2 z-20 px-3 py-1 text-xs font-bold rounded-full bg-tron-green text-dark-metal uppercase transition-opacity"></div>
                     
                     <div id="wheel-container" style="width: 100%; height: 100%;">
                         <canvas id="wheel-canvas" class="w-full h-full"></canvas>
@@ -202,8 +196,9 @@ Eve</textarea>
         const CANVAS_SIZE = 500;
         const LOGO_URL = 'https://60fb7b08eaf293096e8c.cdn6.editmysite.com/uploads/b/60fb7b08eaf293096e8cb3f63df9e65735b8a1ee75f6d23d21eaed2115dfa2e6/IMG_7388_1701827680.jpeg?width=2400&optimize=medium';
         const ELIMINATION_SPIN_DURATION = 5; 
+        const TEXT_COLOR = '#FFFFFF'; // Pure white for names
 
-        // Distinct, neon colors for the segments (Kept varied colors for wheel segments for visibility/design)
+        // Distinct, neon colors for the segments (Kept varied colors for visibility)
         const VIBRANT_COLORS = [
             '#00FFFF', // Cyan
             '#FF00FF', // Magenta
@@ -241,13 +236,9 @@ Eve</textarea>
         let isSpinning = false;
         let currentEliminationParticipants = [];
 
-        // Set initial canvas size 
         canvas.width = CANVAS_SIZE;
         canvas.height = CANVAS_SIZE;
 
-        /**
-         * Loads the logo image from the provided URL.
-         */
         function loadLogo() {
             return new Promise((resolve) => {
                 const img = new Image();
@@ -264,9 +255,6 @@ Eve</textarea>
             });
         }
 
-        /**
-         * Parses the names input and prepares the wheel data structure.
-         */
         function prepareWheelData() {
             const names = namesInput.value
                 .split('\n')
@@ -322,13 +310,15 @@ Eve</textarea>
                 ctx.fillStyle = item.color;
                 ctx.fill();
 
-                // Draw Text - Changed to White (#FFFFFF) as requested
+                // Draw Text (White with shadow)
                 ctx.save();
                 ctx.translate(centerX, centerY);
                 ctx.rotate(startAngle + segmentAngle / 2);
 
-                ctx.fillStyle = '#FFFFFF'; // WHITE TEXT FOR NAMES
-                ctx.font = `bold ${Math.floor(size * 0.032)}px Inter`; 
+                ctx.fillStyle = TEXT_COLOR; // PURE WHITE TEXT
+                ctx.shadowColor = 'var(--tron-blue)';
+                ctx.shadowBlur = 4; // Subtle glow for readability
+                ctx.font = `bold ${Math.floor(size * 0.035)}px Inter`; 
                 ctx.textAlign = 'right';
                 ctx.textBaseline = 'middle';
 
@@ -338,11 +328,12 @@ Eve</textarea>
                 ctx.restore();
                 currentAngle = endAngle;
             });
+            ctx.shadowBlur = 0;
 
-            // 2. Draw Pegs (Needles) - Enhanced for Realism
+            // 2. Draw Pegs (Needles) - White Core, Blue Glow
             const numPegs = dataToDraw.length;
             const pegRadius = radius; 
-            const pegSize = size * 0.015;
+            const pegSize = size * 0.012; 
 
             for (let i = 0; i < numPegs; i++) {
                 const angle = (i + 1) * segmentAngle;
@@ -352,18 +343,18 @@ Eve</textarea>
 
                 ctx.save();
                 
-                // Peg Glow (Tron Blue)
+                // Peg Glow
                 ctx.beginPath();
-                ctx.arc(x, y, pegSize, 0, 2 * Math.PI);
-                ctx.fillStyle = 'var(--tron-blue)'; // Neon Blue Glow
+                ctx.arc(x, y, pegSize + 2, 0, 2 * Math.PI);
+                ctx.fillStyle = 'var(--tron-blue)';
                 ctx.shadowColor = 'var(--tron-blue)';
-                ctx.shadowBlur = 15;
+                ctx.shadowBlur = 10;
                 ctx.fill();
 
-                // Peg Core (Metallic look for realism)
+                // Peg Core (White/Metallic)
                 ctx.beginPath();
-                ctx.arc(x, y, pegSize * 0.6, 0, 2 * Math.PI);
-                ctx.fillStyle = '#AAAAAA'; // Light Gray/Metal Core
+                ctx.arc(x, y, pegSize, 0, 2 * Math.PI);
+                ctx.fillStyle = 'var(--text-white)'; 
                 ctx.shadowBlur = 0; 
                 ctx.fill();
 
@@ -371,24 +362,23 @@ Eve</textarea>
             }
             ctx.shadowBlur = 0;
 
-            // 3. Draw Center Hole (Glow Circle) - Enhanced for Realism
+            // 3. Draw Center Hub (Metallic with Neon Ring)
             const logoRadius = radius * 0.25;
             
-            // Neon border (Changed to Blue)
+            // Neon Ring
             ctx.beginPath();
-            ctx.arc(centerX, centerY, logoRadius + 10, 0, 2 * Math.PI);
+            ctx.arc(centerX, centerY, logoRadius + 8, 0, 2 * Math.PI);
             ctx.fillStyle = 'var(--tron-blue)';
             ctx.shadowColor = 'var(--tron-blue)';
-            ctx.shadowBlur = 10;
+            ctx.shadowBlur = 15;
             ctx.fill();
 
-            // Inner metal circle (Darker metal)
+            // Inner Metallic Core
             ctx.beginPath();
             ctx.arc(centerX, centerY, logoRadius, 0, 2 * Math.PI);
-            // Use a radial gradient for a more realistic metal hub effect
             const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, logoRadius);
-            gradient.addColorStop(0, '#666666'); // Lighter center
-            gradient.addColorStop(1, '#1a1a1a'); // Darker edge
+            gradient.addColorStop(0, '#666666'); 
+            gradient.addColorStop(1, '#1a1a1a'); 
             ctx.fillStyle = gradient;
             ctx.shadowBlur = 0;
             ctx.fill();
@@ -403,17 +393,15 @@ Eve</textarea>
                 ctx.drawImage(logoImage, centerX - imgSize / 2, centerY - imgSize / 2, imgSize, imgSize);
                 ctx.restore();
             } else {
-                ctx.fillStyle = 'var(--tron-blue)';
+                ctx.fillStyle = 'var(--text-white)';
                 ctx.font = `bold ${Math.floor(size * 0.04)}px Inter`;
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
-                ctx.fillText("LOGO", centerX, centerY);
+                ctx.fillText("TRON", centerX, centerY);
             }
         }
 
-        /**
-         * Initiates a single standard spin.
-         */
+        // --- SPIN LOGIC (KEPT FUNCTIONALLY THE SAME) ---
         function spinWheel() {
             if (isSpinning || wheelData.length === 0) return;
             isSpinning = true;
@@ -425,57 +413,39 @@ Eve</textarea>
             winnerText.textContent = "Spinning...";
             pointer.classList.add('pointer-bouncing'); 
             pointerWinnerLabel.classList.remove('show-winner-label'); 
-            
             resultBox.classList.remove('success-glow', 'death-glow');
-            winnerText.classList.add('text-primary-neon/90');
 
             let duration = parseFloat(spinDurationInput.value) || 5;
-            if (duration < 1 || duration > 60) {
-                spinDurationInput.value = 5;
-                duration = 5;
-            }
 
             const dataToSpin = wheelData;
             const numSegments = dataToSpin.length;
             const segmentAngleDegrees = 360 / numSegments;
-
-            // 1. Get current rotation
             const currentTransform = wheelContainer.style.transform;
             let currentRotation = 0;
             const match = currentTransform.match(/rotate\(([-+]?\d*\.?\d+)/);
-            if (match) {
-                currentRotation = parseFloat(match[1]);
-            }
+            if (match) currentRotation = parseFloat(match[1]);
 
-            // 2. Calculate a random winning index
             const winningIndex = Math.floor(Math.random() * numSegments);
             const winnerName = dataToSpin[winningIndex].name;
 
-            // 3. Determine the target rotation angle (in degrees)
             let targetSegmentMidpoint = winningIndex * segmentAngleDegrees + (segmentAngleDegrees / 2);
             const pointerAngle = 270; 
             let landingAngleOffset = pointerAngle - targetSegmentMidpoint;
 
-            // Add small jitter for realism
             const MAX_JITTER_RANGE = segmentAngleDegrees * 0.4; 
             const randomJitterOffset = (Math.random() * (2 * MAX_JITTER_RANGE)) - MAX_JITTER_RANGE;
             landingAngleOffset += randomJitterOffset;
 
             const normalizedCurrentRotation = currentRotation % 360;
             let deltaRotation = landingAngleOffset - normalizedCurrentRotation;
-
-            if (deltaRotation < 0) {
-                deltaRotation += 360;
-            }
+            if (deltaRotation < 0) deltaRotation += 360;
 
             const fullRotations = 5;
             const totalRotation = currentRotation + (fullRotations * 360) + deltaRotation;
             
-            // Apply the transformation and transition for the spin animation
             wheelContainer.style.transition = `transform ${duration}s cubic-bezier(0.1, 0.7, 0.4, 1)`;
             wheelContainer.style.transform = `rotate(${totalRotation}deg)`;
 
-            // 4. Announce winner after the duration
             setTimeout(() => {
                 pointer.classList.remove('pointer-bouncing'); 
 
@@ -484,10 +454,7 @@ Eve</textarea>
                 pointerWinnerLabel.textContent = winnerName.toUpperCase();
                 pointerWinnerLabel.classList.add('show-winner-label');
 
-                // Switch to success glow state (Neon Green)
                 resultBox.classList.add('success-glow');
-                winnerText.classList.remove('text-primary-neon/90');
-                winnerText.classList.add('text-text-neon');
 
                 isSpinning = false;
                 spinButton.disabled = false;
@@ -497,22 +464,14 @@ Eve</textarea>
             }, duration * 1000 + 50);
         }
 
-        /**
-         * Recursive function to handle one spin, elimination, and setup for the next.
-         */
         function eliminationSpinCycle() {
             if (currentEliminationParticipants.length <= 1) {
-                // Final winner
                 const finalWinner = currentEliminationParticipants[0];
                 winnerText.textContent = `ULTIMATE CHAMPION: ${finalWinner ? finalWinner.name.toUpperCase() : 'NO ONE'} WINS! 👑`;
                 
-                // Final winner glow (Success Green)
                 resultBox.classList.remove('death-glow');
                 resultBox.classList.add('success-glow');
-                winnerText.classList.remove('text-primary-neon/90');
-                winnerText.classList.add('text-text-neon');
 
-                // Reset state and re-enable controls
                 isSpinning = false;
                 spinButton.disabled = false;
                 eliminationButton.disabled = false;
@@ -522,33 +481,23 @@ Eve</textarea>
                 return;
             }
 
-            // Set state for spinning
             isSpinning = true;
             winnerText.textContent = `ELIMINATION ROUND: ${currentEliminationParticipants.length} remain...`;
             pointer.classList.add('pointer-bouncing'); 
             pointerWinnerLabel.classList.remove('show-winner-label'); 
-            
-            // Reset visual feedback to elimination state (Red)
             resultBox.classList.remove('success-glow');
-            winnerText.classList.add('text-primary-neon/90');
 
             const duration = ELIMINATION_SPIN_DURATION; 
-
             const dataToSpin = currentEliminationParticipants;
             const numSegments = dataToSpin.length;
             const segmentAngleDegrees = 360 / numSegments;
-
-            // 1. Calculate spin and winner
-            const winningIndex = Math.floor(Math.random() * numSegments);
-            const winnerData = dataToSpin[winningIndex];
-
-            // 2. Determine target rotation angle
             const currentTransform = wheelContainer.style.transform;
             let currentRotation = 0;
             const match = currentTransform.match(/rotate\(([-+]?\d*\.?\d+)/);
-            if (match) {
-                currentRotation = parseFloat(match[1]);
-            }
+            if (match) currentRotation = parseFloat(match[1]);
+
+            const winningIndex = Math.floor(Math.random() * numSegments);
+            const winnerData = dataToSpin[winningIndex];
 
             let targetSegmentMidpoint = winningIndex * segmentAngleDegrees + (segmentAngleDegrees / 2);
             const pointerAngle = 270; 
@@ -560,10 +509,7 @@ Eve</textarea>
 
             const normalizedCurrentRotation = currentRotation % 360;
             let deltaRotation = landingAngleOffset - normalizedCurrentRotation;
-
-            if (deltaRotation < 0) {
-                deltaRotation += 360;
-            }
+            if (deltaRotation < 0) deltaRotation += 360;
 
             const fullRotations = 5;
             const totalRotation = currentRotation + (fullRotations * 360) + deltaRotation;
@@ -571,36 +517,24 @@ Eve</textarea>
             wheelContainer.style.transition = `transform ${duration}s cubic-bezier(0.1, 0.7, 0.4, 1)`;
             wheelContainer.style.transform = `rotate(${totalRotation}deg)`;
 
-            // 3. Announce result and eliminate
             setTimeout(() => {
                 pointer.classList.remove('pointer-bouncing'); 
 
-                // Announce who is ELIMINATED
                 winnerText.textContent = `ELIMINATED: ${winnerData.name.toUpperCase()}! 💀`;
                 
                 pointerWinnerLabel.textContent = winnerData.name.toUpperCase();
                 pointerWinnerLabel.classList.add('show-winner-label');
 
-                // Highlight the elimination result (Neon Red)
                 resultBox.classList.add('death-glow'); 
-                winnerText.classList.remove('text-primary-neon/90');
-                winnerText.classList.add('text-text-neon');
 
-                // REMOVE THE ELIMINATED CONTESTANT
                 currentEliminationParticipants.splice(winningIndex, 1);
-                
-                // REDRAW the wheel with the remaining people for the next spin's preparation
                 wheelData = currentEliminationParticipants; 
                 drawWheel(); 
 
-                // After a brief pause, start the next spin cycle
                 setTimeout(eliminationSpinCycle, 2000); 
             }, duration * 1000 + 50); 
         }
 
-        /**
-         * Initializes the state for elimination mode.
-         */
         function startEliminationMode() {
             if (isSpinning) return;
 
@@ -614,23 +548,19 @@ Eve</textarea>
                 return;
             }
 
-            // Disable controls for the duration of the entire sequence
             spinButton.disabled = true;
             eliminationButton.disabled = true;
             namesInput.disabled = true;
             spinDurationInput.disabled = true;
 
-            // Reset and prepare the participants array for elimination
             currentEliminationParticipants = initialNames.map((name, index) => ({
                 name: name,
                 color: VIBRANT_COLORS[index % VIBRANT_COLORS.length],
             }));
             
-            // Set wheelData to the initial list and draw for the first spin
             wheelData = currentEliminationParticipants;
             drawWheel();
 
-            // Start the recursive spin process
             eliminationSpinCycle();
         }
 
@@ -643,9 +573,6 @@ Eve</textarea>
             namesInput.addEventListener('input', prepareWheelData);
             spinButton.addEventListener('click', spinWheel);
             eliminationButton.addEventListener('click', startEliminationMode);
-
-            // Set the winning text to a non-neon color so the neon only shows in the result box when active
-            winnerText.style.color = 'var(--text-neon)';
 
             const resizeObserver = new ResizeObserver(entries => {
                 for (let entry of entries) {
