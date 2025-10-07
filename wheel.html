@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neon Tron Wheel of Fortune</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom CSS for the pointer and wheel container */
+        #wheel-wrapper {
+            /* This is the new relative context for the pointer */
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            height: 100%;
+        }
+        
+        #wheel-container {
+            transition: transform 0s ease-out; /* Initial zero transition */
+        }
+
+        #wheel-canvas {
+            /* Tron/Neon Blue Styling */
+            border: 10px solid #00FFFF; /* Electric Cyan Border */
+            border-radius: 50%;
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.8), 0 0 10px rgba(0, 255, 255, 0.5); /* Neon glow shadow */
+        }
+
+        #pointer {
+            /* VASTLY ENLARGED DOWNWARD-POINTING ARROW (The Picking Thing) */
+            position: absolute;
+            top: -48px; 
+            width: 0;
+            height: 0;
+            border-left: 28px solid transparent; 
+            border-right: 28px solid transparent; 
+            border-top: 50px solid #00FFFF; /* Height of the pointer, pointing down onto the wheel, slightly taller */
+            filter: drop-shadow(0 0 10px rgba(0, 255, 255, 0.9)); 
+            z-index: 10;
+            left: 50%;
+            transform: translateX(-50%); 
+            transform-origin: 50% 100%; 
+        }
+
+        /* New element: Small label right where the pointer is */
+        #pointer-winner-label {
+            position: absolute;
+            top: 2px; /* Positioned just above the wheel */
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 11; /* Above the pointer */
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            color: #0A0A0A; /* Dark text */
+            background-color: #39FF14; /* Neon Green */
+            opacity: 0; /* Hidden by default */
+            transition: opacity 0.3s ease-in;
+        }
+
+        .show-winner-label {
+            opacity: 1 !important;
+            box-shadow: 0 0 10px #39FF14, 0 0 20px #39FF14; /* Neon Green glow */
+        }
+
+        /* KEYFRAMES for the Pointer Bounce Animation */
+        @keyframes pointerBounce {
+            0% {
+                transform: translateX(-50%) rotate(-10deg);
+            }
+            100% {
+                transform: translateX(-50%) rotate(10deg);
+            }
+        }
+
+        /* Class applied during spinning */
+        .pointer-bouncing {
+            animation: pointerBounce 0.1s infinite alternate; /* Fast, repeating bounce */
+        }
+
+        /* Simple text glow for the main title */
+        .neon-text-glow {
+            text-shadow: 0 0 5px #fff, 0 0 10px #00FFFF, 0 0 20px #00FFFF, 0 0 40px #00FFFF;
+        }
+
+        /* Glow for spin button */
+        .neon-button-glow {
+            box-shadow: 0 0 10px #FF00FF, 0 0 20px #FF00FF;
+        }
+        /* Glow for Death Spin button */
+        .death-spin-glow {
+            box-shadow: 0 0 10px #FF4500, 0 0 20px #FF4500; /* Orange Red Neon */
+        }
+
+        /* Input/Box glow */
+        .neon-box-glow {
+            box-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
+        }
+        
+        /* Winner Success Glow State */
+        .winner-glow {
+            background-color: #0A0A0A; /* Dark BG */
+            border-color: #39FF14 !important; /* Neon Green Success */
+            box-shadow: 0 0 10px #39FF14, 0 0 20px #39FF14;
+        }
+    </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary-neon': '#00FFFF',   // Electric Cyan
+                        'secondary-neon': '#FF00FF', // Neon Magenta
+                        'dark-bg': '#0A0A0A',       // Near Black
+                        'neutral-glow': '#FFFFFF',  // White/Glow
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-dark-bg min-h-screen p-4 font-sans flex flex-col items-center text-neutral-glow">
+
+    <h1 class="text-4xl font-extrabold text-primary-neon mt-4 mb-8 text-center neon-text-glow">
+        THE TRON LUCKY SPIN
+    </h1>
+
+    <div class="flex flex-col lg:flex-row w-full max-w-7xl gap-8">
+
+        <!-- Controls Panel -->
+        <div class="lg:w-1/3 p-6 bg-gray-900/50 rounded-xl shadow-lg h-fit border border-primary-neon/50 neon-box-glow">
+            <h2 class="text-2xl font-semibold mb-4 text-primary-neon">Setup & Spin</h2>
+
+            <!-- Name Input -->
+            <label for="names-input" class="block text-sm font-medium text-neutral-glow/80 mb-1">
+                Participants (One name per line):
+            </label>
+            <textarea id="names-input" rows="8" class="w-full p-3 border border-primary-neon/50 bg-gray-900 text-neutral-glow rounded-lg focus:ring-primary-neon focus:border-primary-neon transition duration-150 shadow-inner" placeholder="E.g.,&#10;Alice&#10;Bob&#10;Charlie&#10;Diana">Alice
+Bob
+Charlie
+Diana
+Eve</textarea>
+
+            <!-- Spin Duration Input -->
+            <label for="spin-duration" class="block text-sm font-medium text-neutral-glow/80 mt-4 mb-1">
+                Spin Duration (seconds):
+            </label>
+            <input type="number" id="spin-duration" value="5" min="1" max="60" class="w-full p-3 border border-primary-neon/50 bg-gray-900 text-neutral-glow rounded-lg focus:ring-primary-neon focus:border-primary-neon transition duration-150 shadow-inner text-center" />
+
+            <!-- Standard Spin Button -->
+            <button id="spin-button" class="w-full mt-6 py-3 px-4 bg-secondary-neon text-dark-bg font-bold rounded-xl shadow-md hover:opacity-80 transition duration-300 transform hover:scale-[1.01] disabled:opacity-50 disabled:cursor-not-allowed neon-button-glow">
+                INITIATE SPIN!
+            </button>
+            
+            <!-- Death Spin Button (New Elimination Mode) -->
+            <button id="elimination-button" class="w-full mt-4 py-3 px-4 text-dark-bg font-bold rounded-xl shadow-md hover:opacity-80 transition duration-300 transform hover:scale-[1.01] disabled:opacity-50 disabled:cursor-not-allowed death-spin-glow" style="background-color: #FF4500;">
+                INITIATE DEATH SPIN! 💀
+            </button>
+        </div>
+
+        <!-- Wheel and Result Display -->
+        <div class="lg:w-2/3 p-6 bg-gray-900/50 rounded-xl shadow-lg flex flex-col items-center border border-primary-neon/50 neon-box-glow">
+            <!-- Result Box -->
+            <div id="result-box" class="w-full text-center mb-6 h-20 flex items-center justify-center rounded-lg border-4 border-dashed border-primary-neon/80 bg-dark-bg/50 p-2 neon-box-glow">
+                <p id="winner-text" class="text-xl font-bold text-primary-neon/90">Enter names and click 'Initiate Spin!' to begin.</p>
+            </div>
+
+            <!-- Wheel Area -->
+            <div id="wheel-area" class="w-full max-w-lg aspect-square flex justify-center items-center">
+                <!-- New wrapper to ensure proper relative positioning for the pointer -->
+                <div id="wheel-wrapper">
+                    <!-- The Picker Arrow -->
+                    <div id="pointer"></div> 
+                    <!-- The New Winner Label -->
+                    <div id="pointer-winner-label" class="hidden"></div>
+                    
+                    <div id="wheel-container" style="width: 100%; height: 100%;">
+                        <canvas id="wheel-canvas" class="w-full h-full"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // Constants
+        const CANVAS_SIZE = 500;
+        const LOGO_URL = 'https://60fb7b08eaf293096e8c.cdn6.editmysite.com/uploads/b/60fb7b08eaf293096e8cb3f63df9e65735b8a1ee75f6d23d21eaed2115dfa2e6/IMG_7388_1701827680.jpeg?width=2400&optimize=medium';
+        const ELIMINATION_SPIN_DURATION = 5; // Fixed 5 seconds for death spin mode
+
+        // Distinct, neon colors for the segments (Tron theme)
+        const VIBRANT_COLORS = [
+            '#00FFFF', // Cyan
+            '#FF00FF', // Magenta
+            '#39FF14', // Neon Green
+            '#FFFF00', // Neon Yellow
+            '#FF1493', // Deep Pink
+            '#1E90FF', // Dodger Blue
+            '#9370DB', // Medium Purple
+            '#00FA9A', // Medium Spring Green
+            '#FF4500', // Orange Red
+            '#7B68EE', // Medium Slate Blue
+            '#FF6347', // Tomato
+            '#00FF00', // Lime
+            '#D8BFD8', // Thistle
+            '#ADD8E6', // Light Blue
+            '#F08080'  // Light Coral
+        ];
+
+        // DOM Elements
+        const canvas = document.getElementById('wheel-canvas');
+        const ctx = canvas.getContext('2d');
+        const wheelContainer = document.getElementById('wheel-container');
+        const pointer = document.getElementById('pointer'); // Pointer element (CSS triangle)
+        const pointerWinnerLabel = document.getElementById('pointer-winner-label'); // New winner label element
+        const namesInput = document.getElementById('names-input');
+        const spinDurationInput = document.getElementById('spin-duration');
+        const spinButton = document.getElementById('spin-button');
+        const eliminationButton = document.getElementById('elimination-button'); // NEW
+        const winnerText = document.getElementById('winner-text');
+        const resultBox = document.getElementById('result-box');
+
+        // State
+        let wheelData = [];
+        let logoImage = null;
+        let isSpinning = false;
+        let currentEliminationParticipants = []; // NEW: list used during elimination mode
+
+        // Set initial canvas size (will be adjusted by ResizeObserver)
+        canvas.width = CANVAS_SIZE;
+        canvas.height = CANVAS_SIZE;
+
+        /**
+         * Loads the logo image from the provided URL.
+         */
+        function loadLogo() {
+            return new Promise((resolve) => {
+                const img = new Image();
+                img.crossOrigin = "anonymous";
+                img.onload = () => {
+                    logoImage = img;
+                    resolve(true);
+                };
+                img.onerror = () => {
+                    console.error("Failed to load logo image. Using text placeholder.");
+                    resolve(false);
+                };
+                img.src = LOGO_URL;
+            });
+        }
+
+        /**
+         * Parses the names input and prepares the wheel data structure.
+         * Note: This function is also called by elimination mode to set up the visual state.
+         */
+        function prepareWheelData() {
+            const names = namesInput.value
+                .split('\n')
+                .map(name => name.trim())
+                .filter(name => name.length > 0);
+
+            if (names.length === 0) {
+                wheelData = [];
+                drawWheel(); // Clear the wheel
+                return;
+            }
+
+            // Assign a unique color to each name, cycling through the VIBRANT_COLORS
+            wheelData = names.map((name, index) => ({
+                name: name,
+                color: VIBRANT_COLORS[index % VIBRANT_COLORS.length],
+            }));
+            
+            drawWheel();
+        }
+
+        /**
+         * Draws the entire wheel on the canvas, including segments, text, pegs, and the logo.
+         */
+        function drawWheel() {
+            const size = canvas.width;
+            const dataToDraw = wheelData.length > 0 ? wheelData : currentEliminationParticipants;
+
+            if (dataToDraw.length === 0) {
+                ctx.clearRect(0, 0, size, size);
+                winnerText.textContent = "Please add at least one participant name.";
+                return;
+            }
+
+            const centerX = size / 2;
+            const centerY = size / 2;
+            const radius = size / 2 - 10; // Account for border/shadow
+
+            const segmentAngle = 2 * Math.PI / dataToDraw.length;
+            let currentAngle = 0;
+
+            ctx.clearRect(0, 0, size, size);
+
+            // 1. Draw Segments and Text
+            dataToDraw.forEach((item) => {
+                const startAngle = currentAngle;
+                const endAngle = currentAngle + segmentAngle;
+
+                // Draw Segment
+                ctx.beginPath();
+                ctx.moveTo(centerX, centerY);
+                ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+                ctx.closePath();
+                ctx.fillStyle = item.color;
+                ctx.fill();
+
+                // Draw Text
+                ctx.save();
+                ctx.translate(centerX, centerY);
+                // Rotate to the middle of the segment
+                ctx.rotate(startAngle + segmentAngle / 2);
+
+                // Text properties
+                ctx.fillStyle = '#000000'; // Black text for maximum contrast on bright neon segments
+                ctx.font = `bold ${Math.floor(size * 0.032)}px Inter`; // Responsive font size
+                ctx.textAlign = 'right';
+                ctx.textBaseline = 'middle';
+
+                // Adjust position to fit within the segment
+                const textX = radius * 0.9;
+                ctx.fillText(item.name.toUpperCase(), textX, 0);
+
+                ctx.restore();
+                currentAngle = endAngle;
+            });
+
+            // 2. Draw Pegs (Needles) along the circumference
+            const numPegs = dataToDraw.length;
+            const pegRadius = radius; // Position right on the segment boundary
+            const pegSize = size * 0.012; // Radius of the circular peg (e.g., 6px)
+
+            // Draw pegs at the start of each segment (segment boundaries)
+            for (let i = 0; i < numPegs; i++) {
+                // Angle is the start of the segment
+                const angle = i * segmentAngle;
+
+                // Calculate the position of the peg
+                // Note: Canvas angles start at 3 o'clock (0 radians) and increase clockwise.
+                const x = centerX + pegRadius * Math.cos(angle);
+                const y = centerY + pegRadius * Math.sin(angle);
+
+                ctx.save();
+                
+                // Draw Peg Glow (Cyan)
+                ctx.beginPath();
+                ctx.arc(x, y, pegSize, 0, 2 * Math.PI);
+                ctx.fillStyle = '#FFFFFF'; // White center for brightness
+                ctx.shadowColor = '#00FFFF'; // Electric Cyan Glow
+                ctx.shadowBlur = 15;
+                ctx.fill();
+
+                // Draw Peg Core (Darker center for depth)
+                ctx.beginPath();
+                ctx.arc(x, y, pegSize * 0.5, 0, 2 * Math.PI);
+                ctx.fillStyle = '#0A0A0A'; // Dark Core
+                ctx.shadowBlur = 0; // Reset shadow for core
+                ctx.fill();
+
+                ctx.restore();
+            }
+            ctx.shadowBlur = 0; // Reset shadow globally
+
+            // 3. Draw Center Hole (Glow Circle)
+            const logoRadius = radius * 0.25;
+            // Neon border
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, logoRadius + 10, 0, 2 * Math.PI);
+            ctx.fillStyle = '#FF00FF'; // Neon Magenta circle
+            ctx.shadowColor = '#FF00FF';
+            ctx.shadowBlur = 10;
+            ctx.fill();
+
+            // Inner white circle
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, logoRadius, 0, 2 * Math.PI);
+            ctx.fillStyle = 'white';
+            ctx.shadowBlur = 0; // Reset shadow for inner circle
+            ctx.fill();
+            
+            // 4. Draw Logo/Placeholder
+            if (logoImage) {
+                // Draw the actual image
+                const imgSize = logoRadius * 1.8;
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, logoRadius, 0, Math.PI * 2);
+                ctx.clip(); // Clip everything outside the inner circle
+                ctx.drawImage(logoImage, centerX - imgSize / 2, centerY - imgSize / 2, imgSize, imgSize);
+                ctx.restore();
+            } else {
+                // Draw placeholder text if image failed to load
+                ctx.fillStyle = '#00FFFF';
+                ctx.font = `bold ${Math.floor(size * 0.04)}px Inter`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText("LOGO", centerX, centerY);
+            }
+        }
+
+        /**
+         * Initiates a single standard spin.
+         */
+        function spinWheel() {
+            if (isSpinning || wheelData.length === 0) return;
+            isSpinning = true;
+            spinButton.disabled = true;
+            eliminationButton.disabled = true; // Disable elimination button during standard spin
+            namesInput.disabled = true; // Disable input during spin
+            spinDurationInput.disabled = true; // Disable input during spin
+
+            winnerText.textContent = "Spinning...";
+            pointer.classList.add('pointer-bouncing'); // Start the pointer bounce animation
+            pointerWinnerLabel.classList.remove('show-winner-label'); // Hide winner label during spin
+            
+            // Reset result box to spinning state look
+            resultBox.classList.remove('winner-glow');
+            resultBox.classList.add('bg-dark-bg/50', 'border-primary-neon/80', 'neon-box-glow');
+            winnerText.classList.remove('text-neutral-glow');
+            winnerText.classList.add('text-primary-neon/90');
+
+            let duration = parseFloat(spinDurationInput.value) || 5;
+            if (duration < 1 || duration > 60) {
+                console.warn("Invalid duration, resetting to 5 seconds.");
+                spinDurationInput.value = 5;
+                duration = 5;
+            }
+
+            const dataToSpin = wheelData;
+            const numSegments = dataToSpin.length;
+            const segmentAngleDegrees = 360 / numSegments;
+
+            // 1. Get current rotation
+            const currentTransform = wheelContainer.style.transform;
+            let currentRotation = 0;
+            const match = currentTransform.match(/rotate\(([-+]?\d*\.?\d+)/);
+            if (match) {
+                currentRotation = parseFloat(match[1]);
+            }
+
+            // 2. Calculate a random winning index
+            const winningIndex = Math.floor(Math.random() * numSegments);
+            const winnerName = dataToSpin[winningIndex].name;
+
+            // 3. Determine the target rotation angle (in degrees)
+            let targetSegmentMidpoint = winningIndex * segmentAngleDegrees + (segmentAngleDegrees / 2);
+            const pointerAngle = 270; 
+            let landingAngleOffset = pointerAngle - targetSegmentMidpoint;
+
+            const MAX_JITTER_RANGE = segmentAngleDegrees * 0.4; 
+            const randomJitterOffset = (Math.random() * (2 * MAX_JITTER_RANGE)) - MAX_JITTER_RANGE;
+            landingAngleOffset += randomJitterOffset;
+
+            const normalizedCurrentRotation = currentRotation % 360;
+            let deltaRotation = landingAngleOffset - normalizedCurrentRotation;
+
+            if (deltaRotation < 0) {
+                deltaRotation += 360;
+            }
+
+            const fullRotations = 5;
+            const totalRotation = currentRotation + (fullRotations * 360) + deltaRotation;
+            
+            // Apply the transformation and transition for the spin animation
+            wheelContainer.style.transition = `transform ${duration}s cubic-bezier(0.1, 0.7, 0.4, 1)`;
+            wheelContainer.style.transform = `rotate(${totalRotation}deg)`;
+
+            // 4. Announce winner after the duration
+            setTimeout(() => {
+                pointer.classList.remove('pointer-bouncing'); // Stop the pointer bounce
+
+                // Update the main result box
+                winnerText.textContent = `WINNER: ${winnerName.toUpperCase()}! 🏆`;
+                
+                // Update the *Pointer Label* and show it
+                pointerWinnerLabel.textContent = winnerName.toUpperCase();
+                pointerWinnerLabel.classList.add('show-winner-label');
+
+                // Switch to success glow state (Neon Green)
+                resultBox.classList.remove('bg-dark-bg/50', 'border-primary-neon/80', 'neon-box-glow');
+                resultBox.classList.add('winner-glow');
+                winnerText.classList.remove('text-primary-neon/90');
+                winnerText.classList.add('text-neutral-glow'); // White text stands out on dark success background
+
+                isSpinning = false;
+                spinButton.disabled = false;
+                eliminationButton.disabled = false; // Re-enable elimination button
+                namesInput.disabled = false; // Re-enable input
+                spinDurationInput.disabled = false; // Re-enable input
+            }, duration * 1000 + 50); // Small buffer for transition to complete
+        }
+
+        /**
+         * Recursive function to handle one spin, elimination, and setup for the next.
+         */
+        function eliminationSpinCycle() {
+            if (currentEliminationParticipants.length <= 1) {
+                // Final winner
+                const finalWinner = currentEliminationParticipants[0];
+                winnerText.textContent = `ULTIMATE WINNER: ${finalWinner ? finalWinner.name.toUpperCase() : 'NO ONE'} WINS! 🏆`;
+                
+                // Final winner glow
+                resultBox.classList.remove('bg-dark-bg/50', 'border-primary-neon/80', 'neon-box-glow');
+                resultBox.classList.add('winner-glow');
+                winnerText.classList.remove('text-primary-neon/90');
+                winnerText.classList.add('text-neutral-glow');
+
+                // Reset state and re-enable controls
+                isSpinning = false;
+                spinButton.disabled = false;
+                eliminationButton.disabled = false;
+                namesInput.disabled = false;
+                spinDurationInput.disabled = false;
+                pointerWinnerLabel.classList.remove('show-winner-label');
+                return;
+            }
+
+            // Set state for spinning
+            isSpinning = true;
+            winnerText.textContent = `ELIMINATION ROUND: ${currentEliminationParticipants.length} left...`;
+            pointer.classList.add('pointer-bouncing'); 
+            pointerWinnerLabel.classList.remove('show-winner-label'); 
+            
+            // Reset visual feedback
+            resultBox.classList.remove('winner-glow');
+            resultBox.classList.add('bg-dark-bg/50', 'border-primary-neon/80', 'neon-box-glow');
+            winnerText.classList.remove('text-neutral-glow');
+            winnerText.classList.add('text-primary-neon/90');
+
+            const duration = ELIMINATION_SPIN_DURATION; // Fixed 5 seconds for elimination mode
+
+            const dataToSpin = currentEliminationParticipants;
+            const numSegments = dataToSpin.length;
+            const segmentAngleDegrees = 360 / numSegments;
+
+            // 1. Calculate spin and winner
+            const winningIndex = Math.floor(Math.random() * numSegments);
+            const winnerData = dataToSpin[winningIndex];
+
+            // 2. Determine target rotation angle
+            const currentTransform = wheelContainer.style.transform;
+            let currentRotation = 0;
+            const match = currentTransform.match(/rotate\(([-+]?\d*\.?\d+)/);
+            if (match) {
+                currentRotation = parseFloat(match[1]);
+            }
+
+            let targetSegmentMidpoint = winningIndex * segmentAngleDegrees + (segmentAngleDegrees / 2);
+            const pointerAngle = 270; 
+            let landingAngleOffset = pointerAngle - targetSegmentMidpoint;
+
+            const MAX_JITTER_RANGE = segmentAngleDegrees * 0.4; 
+            const randomJitterOffset = (Math.random() * (2 * MAX_JITTER_RANGE)) - MAX_JITTER_RANGE;
+            landingAngleOffset += randomJitterOffset;
+
+            const normalizedCurrentRotation = currentRotation % 360;
+            let deltaRotation = landingAngleOffset - normalizedCurrentRotation;
+
+            if (deltaRotation < 0) {
+                deltaRotation += 360;
+            }
+
+            const fullRotations = 5;
+            const totalRotation = currentRotation + (fullRotations * 360) + deltaRotation;
+            
+            wheelContainer.style.transition = `transform ${duration}s cubic-bezier(0.1, 0.7, 0.4, 1)`;
+            wheelContainer.style.transform = `rotate(${totalRotation}deg)`;
+
+            // 3. Announce result and eliminate
+            setTimeout(() => {
+                pointer.classList.remove('pointer-bouncing'); 
+
+                // Update the main result box (announced winner is the one being ELIMINATED)
+                winnerText.textContent = `ELIMINATED: ${winnerData.name.toUpperCase()}! 🚫`;
+                
+                // Update the *Pointer Label* pointerWinnerLabel.textContent = winnerData.name.toUpperCase();
+                pointerWinnerLabel.classList.add('show-winner-label');
+
+                // Temporarily highlight the elimination result
+                resultBox.classList.remove('bg-dark-bg/50', 'border-primary-neon/80', 'neon-box-glow');
+                resultBox.classList.add('winner-glow'); 
+
+                // REMOVE THE WINNER FROM THE LIST
+                currentEliminationParticipants.splice(winningIndex, 1);
+                
+                // REDRAW the wheel with the remaining people for the next spin's preparation
+                wheelData = currentEliminationParticipants; // Update global list for drawing
+                drawWheel(); 
+
+                // After a brief pause, start the next spin cycle
+                setTimeout(eliminationSpinCycle, 2000); // 2 second pause before next spin
+            }, duration * 1000 + 50); 
+        }
+
+        /**
+         * Initializes the state for elimination mode.
+         */
+        function startEliminationMode() {
+            if (isSpinning) return;
+
+            // 1. Get initial names
+            const initialNames = namesInput.value
+                .split('\n')
+                .map(name => name.trim())
+                .filter(name => name.length > 0);
+
+            if (initialNames.length < 2) {
+                winnerText.textContent = "Need at least two participants for Elimination Mode!";
+                return;
+            }
+
+            // 2. Disable controls for the duration of the entire sequence
+            spinButton.disabled = true;
+            eliminationButton.disabled = true;
+            namesInput.disabled = true;
+            spinDurationInput.disabled = true;
+
+            // 3. Reset and prepare the participants array for elimination
+            currentEliminationParticipants = initialNames.map((name, index) => ({
+                name: name,
+                color: VIBRANT_COLORS[index % VIBRANT_COLORS.length],
+            }));
+            
+            // Set wheelData to the initial list and draw for the first spin
+            wheelData = currentEliminationParticipants;
+            drawWheel();
+
+            // 4. Start the recursive spin process
+            eliminationSpinCycle();
+        }
+
+
+        // Event Listeners and Initialization
+        document.addEventListener('DOMContentLoaded', async () => {
+            // 1. Initial Setup
+            await loadLogo();
+            prepareWheelData();
+
+            // 2. Event Handlers
+            namesInput.addEventListener('input', prepareWheelData);
+            spinButton.addEventListener('click', spinWheel);
+            eliminationButton.addEventListener('click', startEliminationMode); // NEW
+
+            // 3. Resize Listener (for responsiveness)
+            const resizeObserver = new ResizeObserver(entries => {
+                for (let entry of entries) {
+                    if (entry.target === wheelContainer) {
+                        // Dynamically set canvas size to fill its container
+                        const size = Math.min(entry.contentRect.width, entry.contentRect.height);
+                        if (size > 0) {
+                            // Ensure the canvas maintains a reasonable size, e.g., max 500px
+                            const newSize = Math.min(size, 500); 
+                            canvas.width = newSize;
+                            canvas.height = newSize;
+                            drawWheel(); // Redraw with new size
+                        }
+                    }
+                }
+            });
+            // Observe the wheel container's parent to adjust size responsively
+            resizeObserver.observe(document.getElementById('wheel-area'));
+        });
+    </script>
+</body>
+</html>
