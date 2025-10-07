@@ -707,37 +707,29 @@
             }
             ctx.restore();
 
-            // Draw semi-transparent logos on the track
+            // Draw semi-transparent logos centered on the track
             if (logoImage.complete && logoImage.naturalWidth !== 0) {
                 ctx.save();
                 ctx.globalAlpha = 0.3; // Semi-transparent logos
-                const logoWidth = laneHeight * 0.6; // 60% of lane height
+                const logoWidth = trackHeight * 0.6; // 60% of track height
                 const logoHeight = logoWidth * (logoImage.height / logoImage.width);
-                const laneCount = Math.max(1, racers.length);
-                const laneHeightActual = trackHeight / laneCount;
                 const logoSpacing = 300; // Space logos every 300px along the track
+                const trackCenterY = trackTop + trackHeight / 2 - logoHeight / 2;
                 for (let x = START_LINE_X + 100; x < currentTrackLength - 100; x += logoSpacing) {
-                    for (let i = 0; i < laneCount; i++) {
-                        const y = trackTop + i * laneHeightActual + laneHeightActual / 2 - logoHeight / 2;
-                        ctx.drawImage(logoImage, x, y, logoWidth, logoHeight);
-                    }
+                    ctx.drawImage(logoImage, x, trackCenterY, logoWidth, logoHeight);
                 }
                 ctx.restore();
             }
 
-            // Draw lane markings
+            // Draw single dashed center line
             ctx.strokeStyle = '#ffffff';
             ctx.lineWidth = 2;
             ctx.setLineDash([15, 15]);
-            const laneCount = Math.max(1, racers.length);
-            const laneHeightActual = trackHeight / laneCount;
-            for (let i = 1; i < laneCount; i++) {
-                const y = trackTop + i * laneHeightActual;
-                ctx.beginPath();
-                ctx.moveTo(0, y);
-                ctx.lineTo(currentTrackLength, y);
-                ctx.stroke();
-            }
+            const centerY = trackTop + trackHeight / 2;
+            ctx.beginPath();
+            ctx.moveTo(0, centerY);
+            ctx.lineTo(currentTrackLength, centerY);
+            ctx.stroke();
             ctx.setLineDash([]);
         }
         function initScenery() {
