@@ -18,6 +18,7 @@
 
         /* --- GLOBAL & UTILITY STYLES --- */
         .tron-background {
+            /* Adds a subtle repeating grid pattern for a high-tech/matrix feel */
             background-color: #0A0A0A;
             background-image: linear-gradient(0deg, transparent 95%, rgba(0, 255, 255, 0.05) 100%),
                               linear-gradient(90deg, transparent 95%, rgba(0, 255, 255, 0.05) 100%);
@@ -133,11 +134,7 @@
             <label for="names-input" class="block text-sm font-medium text-text-neon/80 mb-2">
                 Contestants (One name per line):
             </label>
-            <textarea id="names-input" rows="8" class="w-full p-3 border border-primary-neon/50 bg-gray-900 text-text-neon rounded-lg focus:ring-primary-neon focus:border-primary-neon transition duration-150 shadow-inner" placeholder="E.g.,&#10;Kaelen&#10;Maximus&#10;Zeva&#10;Orion&#10;Aura">Alice
-Bob
-Charlie
-Diana
-Eve</textarea>
+            <textarea id="names-input" rows="8" class="w-full p-3 border border-primary-neon/50 bg-gray-900 text-text-neon rounded-lg focus:ring-primary-neon focus:border-primary-neon transition duration-150 shadow-inner" placeholder="E.g.,&#10;Kaelen&#10;Maximus&#10;Zeva&#10;Orion&#10;Aura"></textarea>
 
             <label for="spin-duration" class="block text-sm font-medium text-text-neon/80 mt-6 mb-2">
                 Spin Duration (seconds):
@@ -162,6 +159,7 @@ Eve</textarea>
 
             <div id="wheel-area" class="w-full max-w-lg aspect-square flex justify-center items-center">
                 <div id="wheel-wrapper" class="relative">
+                    
                     <div id="pointer"></div> 
                     <div id="pointer-winner-label" class="hidden absolute top-[-10px] left-1/2 -translate-x-1/2 z-20 px-3 py-1 text-xs font-bold rounded-full bg-tron-green text-dark-metal uppercase transition-opacity"></div>
                     
@@ -383,7 +381,7 @@ Eve</textarea>
             }
         }
 
-        // --- SPIN LOGIC (KEPT FUNCTIONALLY THE SAME) ---
+        // --- SPIN LOGIC (CONFIRMED TO USE spin-duration INPUT) ---
         function spinWheel() {
             if (isSpinning || wheelData.length === 0) return;
             isSpinning = true;
@@ -397,6 +395,7 @@ Eve</textarea>
             pointerWinnerLabel.classList.remove('show-winner-label'); 
             resultBox.classList.remove('success-glow', 'death-glow');
 
+            // 1. READ DURATION INPUT (Confirmed working)
             let duration = parseFloat(spinDurationInput.value) || 5;
 
             const dataToSpin = wheelData;
@@ -425,9 +424,11 @@ Eve</textarea>
             const fullRotations = 5;
             const totalRotation = currentRotation + (fullRotations * 360) + deltaRotation;
             
+            // 2. APPLY DURATION TO TRANSITION
             wheelContainer.style.transition = `transform ${duration}s cubic-bezier(0.1, 0.7, 0.4, 1)`;
             wheelContainer.style.transform = `rotate(${totalRotation}deg)`;
 
+            // 3. ANNOUNCE WINNER AFTER DURATION
             setTimeout(() => {
                 pointer.classList.remove('pointer-bouncing'); 
 
