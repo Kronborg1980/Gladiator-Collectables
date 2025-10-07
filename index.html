@@ -34,6 +34,14 @@
             -webkit-font-smoothing:antialiased;
             -moz-osx-font-smoothing:grayscale;
         }
+        /* ADDED CSS FOR CANVAS TEXT SHARPNESS */
+        #raceCanvas {
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: crisp-edges;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        /* END ADDED CSS */
         #titleContainer{
             display:flex;
             flex-direction:column;
@@ -321,8 +329,8 @@
             color: var(--text-light);
         }
         .racer-name-leaderboard {
-             flex-basis: 50%;
-             text-align: left;
+            flex-basis: 50%;
+            text-align: left;
         }
         .leaderboard-entry.winner-entry .racer-name-leaderboard {
             text-shadow: 0 0 5px var(--secondary-glow);
@@ -441,7 +449,7 @@
         let CANVAS_VIEWPORT_WIDTH, CANVAS_VIEWPORT_HEIGHT;
         // MODIFIED: Increased anchor to 40% for better visual centering
         const FIXED_RACER_X_ANCHOR_PCT = 0.40;
-      
+       
         let cameraAnchorX;
         let trackOffset = 0;
         let lastFrameTime = 0;
@@ -451,12 +459,12 @@
         const GRASS_AREA_HEIGHT = 100;
         let laneHeight = 100;
         const START_LINE_X = 50;
-      
+       
         const BASE_SPEED_PER_SECOND = 80 * 1.25;
         const BASE_MOMENTUM_FACTOR = 0.95;
         const SURGE_MULTIPLIER = 1.6;
         const DEBUFF_MULTIPLIER = 0.6;
-      
+       
         const RUBBER_BAND_FACTOR = 0.00;
         const SHORT_BOOST_MULTIPLIER = 1.7;
         const SHORT_DEBUFF_MULTIPLIER = 0.4;
@@ -482,7 +490,7 @@
         const LAST_BOOST_DURATION = 3500;
         const LAST_BOOST_MULTIPLIER = 2.2;
         const LAST_BOOST_COOLDOWN = 1000;
-      
+       
         let TARGET_RACE_TIME_SECONDS = 60;
         let racers = [];
         let sceneryLayers = { back: [], mid: [], front: [] };
@@ -521,7 +529,7 @@
         });
         const logoImage = new Image();
         logoImage.src = 'https://60fb7b08eaf293096e8c.cdn6.editmysite.com/uploads/b/60fb7b08eaf293096e8cb3f63df9e65735b8a1ee75f6d23d21eaed2115dfa2e6/IMG_7388_1701827680.jpeg?width=2400&optimize=medium';
-      
+       
         function getRandomInt(min, max) {
             min = Math.ceil(min);
             max = Math.floor(max);
@@ -570,39 +578,56 @@
                 }
             });
         }
+        
+        // MODIFIED drawRacer function for sharper text
         function drawRacer(racer){
             ctx.save();
             ctx.translate(racer.x, racer.y);
             const strideBob = isRacing ? Math.sin(frameCount / 8 + racer.speedPhase) * 4 : 0;
             ctx.translate(0, strideBob);
+            
             if (racer.data.sprite && racer.data.sprite.complete) {
                 try { ctx.drawImage(racer.data.sprite, -POKEMON_IMAGE_SIZE/2, -POKEMON_IMAGE_SIZE/2, POKEMON_IMAGE_SIZE, POKEMON_IMAGE_SIZE); } catch(e){}
             }
-            ctx.font = `bold ${NAME_TAG_FONT_SIZE}px Bebas Neue`;
+            
+            // **IMPROVED TEXT RENDERING FOR SHARPNESS**
+            ctx.imageSmoothingEnabled = false; // Prevents the canvas from blurring the sprite/text on transformations
+            ctx.font = `bold ${NAME_TAG_FONT_SIZE}px "Bebas Neue", sans-serif`; // Ensure custom font is used correctly
+            
             const nameText = racer.name;
             const textWidth = ctx.measureText(nameText).width;
             const tagY = -POKEMON_IMAGE_SIZE/2 - (NAME_TAG_FONT_SIZE + NAME_TAG_PADDING)/2 - 5;
+            
+            // Draw name tag background
             ctx.fillStyle = 'rgba(0,0,0,0.7)';
             ctx.strokeStyle = '#aaaaaa';
             ctx.lineWidth = 2;
             ctx.fillRect(-textWidth/2 - NAME_TAG_PADDING, tagY - (NAME_TAG_FONT_SIZE + NAME_TAG_PADDING)/2, textWidth + NAME_TAG_PADDING*2, NAME_TAG_FONT_SIZE + NAME_TAG_PADDING);
             ctx.strokeRect(-textWidth/2 - NAME_TAG_PADDING, tagY - (NAME_TAG_FONT_SIZE + NAME_TAG_PADDING)/2, textWidth + NAME_TAG_PADDING*2, NAME_TAG_FONT_SIZE + NAME_TAG_PADDING);
-            ctx.fillStyle = '#FFFFFF'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(nameText, 0, tagY);
+            
+            // Draw name text
+            ctx.fillStyle = '#FFFFFF'; 
+            ctx.textAlign = 'center'; 
+            ctx.textBaseline = 'middle'; 
+            ctx.fillText(nameText, 0, tagY);
+            
             ctx.restore();
         }
+        // END MODIFIED drawRacer
+        
         function drawStartLine(){ ctx.strokeStyle='white'; ctx.lineWidth=8; ctx.beginPath(); ctx.moveTo(START_LINE_X-10, GRASS_AREA_HEIGHT); ctx.lineTo(START_LINE_X-10, canvas.height-GRASS_AREA_HEIGHT); ctx.stroke(); }
         function drawFinishLine(){
             ctx.save();
             const finishX = DYNAMIC_FINISH_LINE_X;
             const COLOR_PRIMARY = '#ffffff';
             const COLOR_SECONDARY = '#000000';
-          
+           
             // Draw checkered pattern
             const squareSize = 20;
             const numSquares = Math.ceil((canvas.height - GRASS_AREA_HEIGHT * 2) / squareSize);
             const lineWidth = 60;
             const stripeWidth = lineWidth / 2;
-          
+           
             for (let y = 0; y < numSquares; y++) {
                 ctx.fillStyle = (y) % 2 === 0 ? COLOR_PRIMARY : COLOR_SECONDARY;
                 ctx.fillRect(
@@ -619,7 +644,7 @@
                     squareSize
                 );
             }
-          
+           
             // Draw banner above track
             const bannerWidth = 300;
             const bannerHeight = 50;
@@ -727,11 +752,11 @@
             canvas.width = CANVAS_VIEWPORT_WIDTH;
             canvas.height = CANVAS_VIEWPORT_HEIGHT;
             laneHeight = (canvas.height - (GRASS_AREA_HEIGHT * 2)) / Math.max(1, racers.length);
-          
+           
             IDEAL_SPEED_PER_SECOND = (FIXED_FINISH_LINE_X - START_LINE_X) / TARGET_RACE_TIME_SECONDS;
             // MODIFIED: Anchor at 40%
             cameraAnchorX = CANVAS_VIEWPORT_WIDTH * FIXED_RACER_X_ANCHOR_PCT;
-          
+           
             if (racers.length > 0) {
                 racers.forEach((racer, index) => {
                     racer.y = GRASS_AREA_HEIGHT + index * laneHeight + laneHeight / 2;
@@ -761,7 +786,7 @@
             const now = performance.now();
             const elapsedMilliseconds = now - raceStartTime;
             let elapsedSeconds = elapsedMilliseconds / 1000;
-          
+           
             const sortedRacers = [...racers].sort((a, b) => b.x - a.x);
             let leader = sortedRacers[0];
             let lastRacer = sortedRacers[sortedRacers.length - 1];
@@ -794,7 +819,7 @@
                 // --- Last Place Boost Logic ---
                 if (racer === lastRacer) {
                     if (!racer.isLastBoosted) {
-                         if (racer.isLastSince === 0) racer.isLastSince = currentTime;
+                            if (racer.isLastSince === 0) racer.isLastSince = currentTime;
                         if (currentTime - racer.isLastSince > LAST_BOOST_COOLDOWN) {
                             racer.isLastBoosted = true;
                             racer.boostEndTime = currentTime + LAST_BOOST_DURATION;
@@ -806,14 +831,14 @@
                     racer.isLastSince = 0;
                 }
             });
-          
+           
             // 3. Update Racer Speeds with Modifiers
             const packCenterX = racers.reduce((sum, r) => sum + r.x, 0) / racers.length;
-          
+           
             racers.forEach(racer => {
                 if (racer.stamina < 100) racer.stamina = Math.min(100, racer.stamina + STAMINA_REGEN_RATE * deltaTimeSeconds);
                 const staminaModifier = 0.7 + 0.3 * (racer.stamina / 100);
-              
+               
                 const distanceFromCenter = racer.x - packCenterX;
                 // RUBBER BANDING IS REMOVED
                 const rubberBandAdjustment = -distanceFromCenter * 0.00;
@@ -826,7 +851,7 @@
                
                 if (racer.surgeActive) naturalSpeed *= SURGE_MULTIPLIER;
                 if (racer.isDebuffed) naturalSpeed *= DEBUFF_MULTIPLIER;
-              
+               
                 if (racer === activeShortBooster) naturalSpeed *= SHORT_BOOST_MULTIPLIER;
                 if (racer === activeShortDebuffer) naturalSpeed *= SHORT_DEBUFF_MULTIPLIER;
                 if (racer.isLeaderDebuffed) naturalSpeed *= LEADER_DEBUFF_MULTIPLIER;
@@ -835,7 +860,7 @@
                 // NO SYNCHRONIZATION LOGIC APPLIED
                 racer.currentSpeed = Math.max(1, naturalSpeed);
             });
-          
+           
             // 4. Race ends when the FIRST racer crosses the line.
             let firstFinisher = null;
             let timeToFinish = Infinity;
@@ -862,7 +887,7 @@
                
                 captureFinishPositions(finalRaceTime);
                 showWinnerAnimation(firstFinisher.name);
-              
+               
                 requestAnimationFrame(() => {
                     drawAll();
                     setTimeout(() => {
@@ -876,7 +901,7 @@
                 });
                 return;
             }
-          
+           
             // 5. Final Position Update
             racers.forEach(racer => {
                 racer.x += racer.currentSpeed * deltaTimeSeconds;
@@ -884,17 +909,17 @@
         }
         function updateCamera(){
             if (!isRacing && !raceFinished) { trackOffset = 0; return; };
-          
+           
             const currentLeaderX = racers.reduce((max, r) => Math.max(max, r.x), 0);
             const minX = racers.reduce((min, r) => Math.min(min, r.x), currentLeaderX);
             let desiredOffset = currentLeaderX - cameraAnchorX;
-          
+           
             const minAllowedOffset = Math.max(0, minX - CANVAS_VIEWPORT_WIDTH * 0.1);
            
             desiredOffset = Math.max(minAllowedOffset, desiredOffset);
             const maxOffset = Math.max(0, RACE_LENGTH - CANVAS_VIEWPORT_WIDTH);
             desiredOffset = Math.min(desiredOffset, maxOffset);
-          
+           
             trackOffset += (desiredOffset - trackOffset) * CAMERA_SMOOTHING_FACTOR;
         }
         function animate(currentTime){
@@ -941,10 +966,10 @@
                 const isWinner = rank === 1;
                 const rankDisplay = isWinner ? `<span class="trophy">🏆</span> 1.` : `${rank}.`;
                 return `<div class="leaderboard-entry ${isWinner ? 'winner-entry' : ''}">
-                          <span class="rank-number">${rankDisplay}</span>
-                          <strong class="racer-name-leaderboard">${r.name}</strong>
-                          <span class="time-result">${formatMMSS(r.resultTime)}</span>
-                        </div>`;
+                              <span class="rank-number">${rankDisplay}</span>
+                              <strong class="racer-name-leaderboard">${r.name}</strong>
+                              <span class="time-result">${formatMMSS(r.resultTime)}</span>
+                            </div>`;
             }).join('');
         }
         function submitNames(){
@@ -985,12 +1010,12 @@
         }
         function startRace(){
             raceState = RACE_STATES.READY; isRacing = true; raceFinished = false;
-          
+           
             lastBoostTime = performance.now();
             activeShortBooster = null;
             lastDebuffTime = performance.now();
             activeShortDebuffer = null;
-          
+           
             racers.forEach(r => {
                 r.isLeadingSince = 0;
                 r.isLastSince = 0;
