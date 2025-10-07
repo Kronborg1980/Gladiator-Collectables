@@ -34,7 +34,6 @@
             -webkit-font-smoothing:antialiased;
             -moz-osx-font-smoothing:grayscale;
         }
-        body.no-scroll { overflow: hidden; }
         #titleContainer{
             display:flex;
             flex-direction:column;
@@ -42,11 +41,6 @@
             justify-content:center;
             margin: 18px 0 6px;
             gap:6px;
-            position: fixed;
-            top: 10px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 3000;
         }
         #logo{
             width: clamp(60px, 12vw, 90px);
@@ -667,7 +661,7 @@
             ctx.lineWidth = 12;
             ctx.shadowColor = '#00eaff'; 
             ctx.shadowBlur = 30;
-            const borderInset = 5;
+            const borderInset = 20;
             ctx.strokeRect(borderInset, borderInset, canvas.width - 2 * borderInset, canvas.height - 2 * borderInset); 
             ctx.restore();
             
@@ -1011,7 +1005,7 @@
             raceState = RACE_STATES.PREPARING;
             setupControls.style.display = 'none'; document.getElementById('submittedNames').style.display = 'none';
             raceView.style.display = 'flex'; raceControls.style.display = 'flex';
-            raceView.classList.add('fullscreen'); document.body.classList.add('no-scroll');
+            raceView.classList.add('fullscreen');
             initRacers(); updateCanvasSettings(); initScenery(); drawAll();
             statusDisplay.textContent = 'PREPARE: Click START RACE (GO!).';
         }
@@ -1044,7 +1038,7 @@
             winnerOverlay.style.display = 'none'; leaderboard.style.display = 'none';
             leaderboard.classList.remove('fullscreen');
             setupControls.style.display = 'block'; raceView.style.display = 'none';
-            raceView.classList.remove('fullscreen'); document.body.classList.remove('no-scroll');
+            raceView.classList.remove('fullscreen');
             postRaceControls.style.display = 'none';
             statusDisplay.textContent = 'Systems nominal. Enter names to begin.';
             initRacers();
