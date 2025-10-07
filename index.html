@@ -661,7 +661,7 @@
             ctx.lineWidth = 12;
             ctx.shadowColor = '#00eaff'; 
             ctx.shadowBlur = 30;
-            ctx.strokeRect(0, 0, canvas.width, canvas.height); 
+            ctx.strokeRect(GRASS_AREA_HEIGHT / 2, GRASS_AREA_HEIGHT / 2, canvas.width - GRASS_AREA_HEIGHT, canvas.height - GRASS_AREA_HEIGHT); 
             ctx.restore();
             
             ctx.save();
@@ -670,16 +670,6 @@
             drawBackgroundAndTrack();
             drawSceneryLayer(sceneryLayers.back, 0.3);
             drawSceneryLayer(sceneryLayers.mid, 0.6);
-            if (logoImage.complete) {
-                ctx.globalAlpha = 0.05;
-                const logoSize = 150;
-                const logoSpacing = 200;
-                const currentTrackLength = RACE_LENGTH;
-                for (let x = START_LINE_X; x < currentTrackLength; x += logoSpacing) {
-                    ctx.drawImage(logoImage, x - logoSize/2, canvas.height / 2 - logoSize / 2, logoSize, logoSize);
-                }
-                ctx.globalAlpha = 1.0;
-            }
             drawStartLine();
             racers.forEach(drawRacer);
             drawFinishLine();
