@@ -22,6 +22,7 @@
             --racer-name-color: #FFFFFF;
             --prepare-color: #ff5500;
             --surge-color: #ff0044;
+            --neon-red: #ff1744;
         }
         html,body{
             height:100%;
@@ -33,7 +34,6 @@
             -webkit-font-smoothing:antialiased;
             -moz-osx-font-smoothing:grayscale;
         }
-        body.no-scroll { overflow: hidden; }
         #titleContainer{
             display:flex;
             flex-direction:column;
@@ -136,11 +136,11 @@
             box-shadow: 0 8px 25px rgba(0,234,255,0.5), 0 0 30px rgba(0,234,255,0.2);
         }
         .race-button.prepare{
-            background: linear-gradient(45deg, var(--prepare-color), #ff0000);
+            background: linear-gradient(45deg, var(--neon-red), #ff4081);
             color: var(--text-light);
-            box-shadow: 0 5px 15px rgba(255,85,0,0.6);
-            padding: 10px 25px;
-            font-size: 1.0em;
+            box-shadow: 0 5px 15px rgba(255, 23, 68, 0.6), 0 0 20px rgba(255, 23, 68, 0.3);
+            padding: 15px 35px;
+            font-size: 1.1em;
         }
         .race-button:disabled{ cursor:not-allowed; opacity:0.6; transform:none; box-shadow:none; }
         #status{
@@ -213,10 +213,11 @@
         }
         #raceView.fullscreen{
             position:fixed;
-            top:0;
-            left:0;
-            width:100vw;
-            height:100vh;
+            top:50%;
+            left:50%;
+            transform: translate(-50%, -50%);
+            width:80vw;
+            height:80vh;
             max-width:none;
             display:flex;
             flex-direction:column;
@@ -722,8 +723,8 @@
         }
         function updateCanvasSettings() {
             const isFullscreen = raceView.classList.contains('fullscreen');
-            CANVAS_VIEWPORT_WIDTH = isFullscreen ? window.innerWidth : Math.max(setupControls.clientWidth, 300);
-            CANVAS_VIEWPORT_HEIGHT = isFullscreen ? window.innerHeight : Math.max(480, document.documentElement.clientHeight * 0.6);
+            CANVAS_VIEWPORT_WIDTH = isFullscreen ? Math.min(window.innerWidth * 0.8, 1400) : Math.max(setupControls.clientWidth, 300);
+            CANVAS_VIEWPORT_HEIGHT = isFullscreen ? Math.min(window.innerHeight * 0.8, 800) : Math.max(480, document.documentElement.clientHeight * 0.6);
             
             // Race time is now approximate, only used to calculate fixed distance
             const targetTime = Math.max(10, Math.min(300, parseInt(document.getElementById('raceTimeSeconds').value) || 60));
@@ -1005,8 +1006,7 @@
             raceState = RACE_STATES.PREPARING;
             setupControls.style.display = 'none'; document.getElementById('submittedNames').style.display = 'none';
             raceView.style.display = 'flex'; raceControls.style.display = 'flex';
-            try { document.documentElement.requestFullscreen(); } catch(e){}
-            raceView.classList.add('fullscreen'); document.body.classList.add('no-scroll');
+            raceView.classList.add('fullscreen');
             initRacers(); updateCanvasSettings(); initScenery(); drawAll();
             statusDisplay.textContent = 'PREPARE: Click START RACE (GO!).';
         }
@@ -1039,8 +1039,7 @@
             winnerOverlay.style.display = 'none'; leaderboard.style.display = 'none';
             leaderboard.classList.remove('fullscreen');
             setupControls.style.display = 'block'; raceView.style.display = 'none';
-            raceView.classList.remove('fullscreen'); document.body.classList.remove('no-scroll');
-            if (document.fullscreenElement) { try { document.exitFullscreen(); } catch(e){} }
+            raceView.classList.remove('fullscreen');
             postRaceControls.style.display = 'none';
             statusDisplay.textContent = 'Systems nominal. Enter names to begin.';
             initRacers();
