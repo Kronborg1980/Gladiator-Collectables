@@ -36,7 +36,7 @@
         #mainContainer {
             display: flex;
             flex-direction: column;
-            min-height: 100vh;
+            min-height: 100vh; 
             padding: 20px;
             max-width: 1500px;
             margin: 0 auto;
@@ -48,7 +48,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-bottom: 25px; /* Increased margin for better separation */
+            margin-bottom: 25px; 
             gap: 15px;
             position: relative;
             z-index: 1200;
@@ -62,14 +62,13 @@
         #logo {
             width: 90px;
             height: auto;
-            /* Applying blue/cyan drop shadow for meaningful place */
             filter: drop-shadow(0 0 10px var(--primary-glow));
             transition: transform 0.3s ease;
             flex-shrink: 0;
         }
 
         #titleContainer.game-active #logo {
-            display: none; /* Hide in game view */
+            display: none;
         }
 
         h1 {
@@ -81,7 +80,7 @@
             text-transform: uppercase;
             font-size: clamp(2.2em, 5vw, 3.5em);
             text-align: center;
-            outline: 2px solid var(--primary-glow); /* Blue border as requested */
+            outline: 2px solid var(--primary-glow); 
             padding: 5px 20px;
         }
 
@@ -208,7 +207,7 @@
             display: none;
             flex-direction: row;
             width: 100%;
-            flex-grow: 1; /* Allows the game view to occupy the remaining vertical space */
+            flex-grow: 1; 
             gap: 25px;
             height: 0; 
         }
@@ -226,7 +225,7 @@
             box-shadow: var(--shadow-glow);
             overflow-y: auto;
             flex-shrink: 0;
-            height: 100%; /* Important for vertical fit */
+            height: 100%; 
             box-sizing: border-box;
         }
 
@@ -236,7 +235,7 @@
             justify-content: center;
             align-items: center;
             position: relative;
-            height: 100%; /* Important for vertical fit */
+            height: 100%; 
             min-height: 400px;
         }
 
@@ -353,19 +352,19 @@
             #gameView {
                 flex-direction: column;
                 gap: 20px;
-                height: auto; /* Allow game view to scroll when elements are stacked */
+                height: auto; 
             }
 
             #sidePanel {
                 width: 100%;
                 max-width: none;
-                max-height: 50vh; /* Allow controls to be seen without dominating */
+                max-height: 50vh; 
                 height: auto;
             }
 
             #canvasWrapper {
                 min-height: 300px;
-                height: 100vw; /* Attempt to make it full screen width square when stacked */
+                height: 100vw;
             }
         }
     </style>
@@ -532,13 +531,14 @@
             ctx.shadowBlur = 0;
 
             // Draw target visualization
-            if (currentAttack.targetRacer && currentAttack.targetRacer.active && (roundPhase === 1 || (roundPhase === 2 && Date.now() - currentAttack.targetRacer.captureStartTime < BLINK_DURATION))) {
+            // Only show the target X when in the Warning/Attack Phase (Phase 1) and Resolution Phase (Phase 2)
+            if (currentAttack.targetRacer && currentAttack.targetRacer.active && (roundPhase === 1 || roundPhase === 2)) {
                 const r = currentAttack.targetRacer;
                 const xCenter = r.x * TILE_SIZE + TILE_SIZE / 2;
                 const yCenter = r.y * TILE_SIZE + TILE_SIZE / 2;
                 const flash = Math.sin(Date.now() / 100) * 0.5 + 0.5;
 
-                // Laser targeting effect
+                // Laser targeting circle
                 ctx.beginPath();
                 ctx.arc(xCenter, yCenter, TILE_SIZE * 0.5, 0, Math.PI * 2);
                 ctx.strokeStyle = `rgba(255, 0, 0, ${0.8 * flash})`;
@@ -547,14 +547,15 @@
                 ctx.shadowBlur = 15;
                 ctx.stroke();
 
-                // Crosshair
+                // Crosshair X
                 ctx.beginPath();
-                ctx.moveTo(xCenter - TILE_SIZE * 0.6, yCenter);
-                ctx.lineTo(xCenter + TILE_SIZE * 0.6, yCenter);
-                ctx.moveTo(xCenter, yCenter - TILE_SIZE * 0.6);
-                ctx.lineTo(xCenter, yCenter + TILE_SIZE * 0.6);
+                const halfSize = POKEMON_IMAGE_SIZE * 0.5;
+                ctx.moveTo(xCenter - halfSize, yCenter - halfSize);
+                ctx.lineTo(xCenter + halfSize, yCenter + halfSize);
+                ctx.moveTo(xCenter + halfSize, yCenter - halfSize);
+                ctx.lineTo(xCenter - halfSize, yCenter + halfSize);
                 ctx.strokeStyle = `rgba(255, 0, 0, ${0.6 * flash})`;
-                ctx.lineWidth = 2;
+                ctx.lineWidth = 6;
                 ctx.stroke();
                 ctx.shadowBlur = 0;
             }
@@ -584,7 +585,7 @@
                     ctx.stroke();
                 }
 
-                // **Capture Blink Logic:** Only draw the Pokemon if the elimination phase hasn't started OR if the elimination is post-blink (after BLINK_DURATION).
+                // **Capture Blink Logic:** Only draw the Pokemon if NOT in the blink phase.
                 let isCapturing = r.captureAnimation && (Date.now() - r.captureStartTime < CAPTURE_DURATION);
                 let isBlinking = isCapturing && (Date.now() - r.captureStartTime < BLINK_DURATION);
                 
@@ -595,12 +596,13 @@
                     }
                 }
                 
-                // Draw name tag (always visible for active racers)
-                ctx.font = `bold ${TILE_SIZE * 0.28}px 'Roboto Mono', monospace`;
+                // Draw name tag (White with Black Border for visibility)
+                ctx.font = `bold ${TILE_SIZE * 0.28}px 'Bebas Neue', sans-serif`;
                 ctx.textAlign = 'center';
-                ctx.fillStyle = 'var(--text-light)';
-                ctx.strokeStyle = 'var(--bg-dark)';
-                ctx.lineWidth = 4;
+                ctx.fillStyle = 'white';
+                ctx.strokeStyle = 'black';
+                ctx.lineWidth = 6; // Thick border
+                
                 ctx.strokeText(nameText, 0, -TILE_SIZE / 1.8);
                 ctx.fillText(nameText, 0, -TILE_SIZE / 1.8);
 
@@ -623,7 +625,7 @@
                     ctx.shadowColor = 'var(--neon-red)';
                     ctx.shadowBlur = 40;
                     ctx.fill();
-                    playExplosion(); // Play sound immediately on blink
+                    // NOTE: Sound is now played in resolutionPhase to align with the check, but leaving here as a visual indicator.
                 } 
                 // 2. **THE CATCH (Rest of the duration)**
                 else if (animationTime < CAPTURE_DURATION) {
@@ -726,10 +728,11 @@
                 }
 
                 if (captured) {
-                    // Start the capture animation
+                    // Start the capture animation (first frame is the flash/blink)
                     r.captureAnimation = true;
                     r.captureStartTime = Date.now();
                     r.eliminationReason = reason;
+                    playExplosion();
 
                     // Final elimination occurs after the animation finishes
                     setTimeout(() => {
