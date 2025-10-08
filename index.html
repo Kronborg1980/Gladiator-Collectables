@@ -17,10 +17,31 @@
             --text-neon: #E0E0E0;
         }
 
-        /* Background Gradient for Depth */
+        /* Background Gradient for Depth and Centering Logic */
         body {
             background: linear-gradient(135deg, #0d011a, var(--dark-bg), #010a14);
             min-height: 100vh;
+            /* --- CENTERING LOGIC --- */
+            display: flex;
+            justify-content: center; /* Center horizontally */
+            align-items: center;    /* Center vertically */
+            padding: 2rem;          /* Ensure some space around the edge */
+            margin: 0;
+            /* ----------------------- */
+        }
+        
+        /* --- NEW PARENT BORDER PANEL --- */
+        .command-center-panel {
+            max-width: 1200px;
+            width: 100%;
+            padding: 2rem;
+            border-radius: 1.5rem;
+            /* Neon Border/Glow for the Parent Container */
+            border: 4px solid var(--tron-blue);
+            box-shadow: 0 0 25px var(--tron-blue), inset 0 0 25px var(--tron-blue);
+            background-color: rgba(0, 0, 0, 0.6); /* Slightly more opaque background */
+            position: relative;
+            z-index: 10;
         }
 
         /* --- TITLE CONTAINER BORDER STYLES --- */
@@ -32,6 +53,7 @@
             transition: all 0.3s ease;
             display: inline-block;
             background-color: rgba(0, 0, 0, 0.4);
+            margin-bottom: 2rem; /* Added margin for separation */
         }
         .neon-border-container:hover {
             box-shadow: 0 0 30px var(--tron-blue), inset 0 0 30px var(--tron-blue);
@@ -53,15 +75,12 @@
             border-radius: 1rem;
             font-weight: 800;
             text-transform: uppercase;
-            /* Changed text color to white/light neon for contrast against dark, transparent background */
             color: var(--text-neon); 
             transition: all 0.3s ease;
             position: relative;
             overflow: hidden;
             border: 3px solid transparent;
             min-height: 250px;
-            
-            /* --- CRITICAL CHANGE: Set transparent background --- */
             background-color: rgba(0, 0, 0, 0.5); 
         }
 
@@ -82,15 +101,11 @@
         /* --- Button Colors and Hover Effects (Updated for Transparency) --- */
 
         /* Race Button (Tron Blue) */
-        #race-button {
-            /* Now uses transparent base background from .command-button */
-        }
         #race-button::before {
             border-color: var(--tron-blue);
             box-shadow: 0 0 15px var(--tron-blue), inset 0 0 15px var(--tron-blue);
         }
         #race-button:hover {
-            /* Added a subtle color layer on hover for feedback */
             background-color: rgba(0, 255, 255, 0.2); 
         }
         #race-button:hover::before {
@@ -99,15 +114,11 @@
         }
 
         /* Wheel Button (Tron Magenta) */
-        #wheel-button {
-            /* Now uses transparent base background from .command-button */
-        }
         #wheel-button::before {
             border-color: var(--tron-magenta);
             box-shadow: 0 0 15px var(--tron-magenta), inset 0 0 15px var(--tron-magenta);
         }
         #wheel-button:hover {
-            /* Added a subtle color layer on hover for feedback */
             background-color: rgba(255, 0, 255, 0.2);
         }
         #wheel-button:hover::before {
@@ -116,15 +127,11 @@
         }
 
         /* Elimination Button (Tron Red) */
-        #elimination-button {
-            /* Now uses transparent base background from .command-button */
-        }
         #elimination-button::before {
             border-color: var(--tron-red);
             box-shadow: 0 0 15px var(--tron-red), inset 0 0 15px var(--tron-red);
         }
         #elimination-button:hover {
-            /* Added a subtle color layer on hover for feedback */
             background-color: rgba(255, 69, 0, 0.2);
         }
         #elimination-button:hover::before {
@@ -133,15 +140,11 @@
         }
 
         /* New Gladiator Death Arena Button (Tron Green) */
-        #arena-button {
-            /* Now uses transparent base background from .command-button */
-        }
         #arena-button::before {
             border-color: var(--tron-green);
             box-shadow: 0 0 15px var(--tron-green), inset 0 0 15px var(--tron-green);
         }
         #arena-button:hover {
-            /* Added a subtle color layer on hover for feedback */
             background-color: rgba(57, 255, 20, 0.2);
         }
         #arena-button:hover::before {
@@ -163,54 +166,63 @@
             font-size: 1.25rem;
             font-weight: 500;
         }
+
+        /* Footer positioning adjusted for the centered panel */
+        footer {
+            margin-top: 3rem;
+        }
     </style>
 </head>
-<body class="text-text-neon p-8">
+<body class="text-text-neon">
 
-    <header class="text-center mb-12">
-        <div class="neon-border-container mx-auto">
-            <h1 class="text-6xl font-black text-text-neon neon-title-glow">
-                GLADIATORS COMMAND CENTER
-            </h1>
-        </div>
-        <p class="mt-3 text-xl font-light text-primary-neon/80">Select a Trial for the Arena.</p>
-    </header>
+    <div class="command-center-panel">
 
-    <main class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl mx-auto">
-        
-        <a id="race-button" href="race.html" class="command-button">
-            <div class="button-content">
-                <h3>THE SPEED TRIAL</h3>
-                <p>Launch the Gladiator Race</p>
+        <header class="text-center">
+            <div class="neon-border-container mx-auto">
+                <h1 class="text-6xl font-black text-text-neon neon-title-glow">
+                    GLADIATORS COMMAND CENTER
+                </h1>
             </div>
-        </a>
+            <p class="mt-3 text-xl font-light text-primary-neon/80">Select a Trial for the Arena.</p>
+        </header>
 
-        <a id="wheel-button" href="gladiators-death-wheel.html" class="command-button">
-            <div class="button-content">
-                <h3>THE DEATH WHEEL</h3>
-                <p>Launch the Elimination Spin</p>
-            </div>
-        </a>
+        <main class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl mx-auto">
+            
+            <a id="race-button" href="race.html" class="command-button">
+                <div class="button-content">
+                    <h3>THE SPEED TRIAL</h3>
+                    <p>Launch the Gladiator Race</p>
+                </div>
+            </a>
 
-        <a id="elimination-button" href="Elimination.html" class="command-button">
-            <div class="button-content">
-                <h3>GLADIATORS ELIMINATION ARENA</h3>
-                <p>Execute the Final Trial</p>
-            </div>
-        </a>
+            <a id="wheel-button" href="gladiators-death-wheel.html" class="command-button">
+                <div class="button-content">
+                    <h3>THE DEATH WHEEL</h3>
+                    <p>Launch the Elimination Spin</p>
+                </div>
+            </a>
 
-        <a id="arena-button" href="DeathArena.html" class="command-button">
-            <div class="button-content">
-                <h3>GLADIATOR BATTLE CLASH</h3>
-                <p>Initiate the Ultimate Showdown</p>
-            </div>
-        </a>
+            <a id="elimination-button" href="Elimination.html" class="command-button">
+                <div class="button-content">
+                    <h3>GLADIATORS ELIMINATION ARENA</h3>
+                    <p>Execute the Final Trial</p>
+                </div>
+            </a>
 
-    </main>
+            <a id="arena-button" href="DeathArena.html" class="command-button">
+                <div class="button-content">
+                    <h3>GLADIATOR BATTLE CLASH</h3>
+                    <p>Initiate the Ultimate Showdown</p>
+                </div>
+            </a>
 
-    <footer class="text-center mt-12 text-sm text-neutral-glow/50">
-        ARENA SYSTEMS ACTIVE - COMMAND LOG: 2025
-    </footer>
+        </main>
+
+        <footer class="text-center text-sm text-neutral-glow/50">
+            ARENA SYSTEMS ACTIVE - COMMAND LOG: 2025
+        </footer>
+
+    </div>
 
 </body>
 </html>
