@@ -521,8 +521,7 @@
     </style>
 </head>
 <body>
-        <audio id="explosionSound" src="arena_explosion.mp3"></audio>
-
+    
     <div id="mainContainer">
         <div id="titleContainer">
             <h1>GLADIATORS DEATH ARENA: SUDDEN DEATH TOURNAMENT</h1>
@@ -611,7 +610,7 @@
         const shufflePokemonsButton = document.getElementById('shufflePokemonsButton');
         const selectPlayersButton = document.getElementById('selectPlayersButton');
         const roundDisplay = document.getElementById('roundDisplay');
-        const explosionSound = document.getElementById('explosionSound');
+        // const explosionSound = document.getElementById('explosionSound'); // REMOVED: Audio element
         const contenderListUl = document.getElementById('contenderList');
         const tournamentListContainer = document.getElementById('tournamentListContainer');
         const eliminationMessage = document.getElementById('eliminationMessage');
@@ -628,9 +627,7 @@
         const MATCH_SETUP_DELAY_MS = 1500; // Time to view pairing before resolution starts
         const MATCH_SCORE_DISPLAY_MS = 1000; // Time the final scores are visible before elimination
         const MATCH_ELIMINATION_MS = 2000; // Time for explosion/vanish effect
-        // 🌟 FIX: Added the missing constant
-        const MATCH_RESOLUTION_DELAY_MS = 2500; // Time for round announcement pause
-        // 🌟 END FIX
+        const MATCH_RESOLUTION_DELAY_MS = 2500; // Time for round announcement pause (ADDED/CORRECTED from previous step)
 
         let gameActive = false;
         let tournamentRound = 0;
@@ -722,10 +719,10 @@
         }
 
         function playExplosion() {
+            // Replaced original audio function with visual shake only
             document.body.style.animation = 'damage-shake 0.2s 3';
             setTimeout(() => document.body.style.animation = 'none', 600);
-            explosionSound.currentTime = 0;
-            explosionSound.play().catch(e => { /* Audio playback likely blocked by browser, ignoring error */ });
+            // explosionSound.play().catch(e => { /* Audio playback was removed */ });
         }
 
         function updateStatus(message, isError = false) {
@@ -934,7 +931,6 @@
             } else {
                 nextMatchButton.textContent = 'RESOLVE DUEL';
                 nextMatchButton.disabled = false;
-                nextMatchButton.style.display = 'block';
                 nextMatchButton.onclick = resolveDuelScores;
             }
         }
@@ -1030,7 +1026,7 @@
                 p1DuelSlot.classList.add('loser');
             }
             
-            playExplosion();
+            playExplosion(); // This now only performs the body shake/animation.
             
             // Show dramatic result message
             eliminationMessage.innerHTML = `
