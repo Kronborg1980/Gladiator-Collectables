@@ -51,6 +51,10 @@
             50% { opacity: 1; transform: scale(1.1); text-shadow: 0 0 30px var(--neon-green), 0 0 50px var(--neon-green); }
             100% { opacity: 1; transform: scale(1); }
         }
+        @keyframes vanish {
+            0% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(0.5); opacity: 0; }
+        }
         
 
         /* --- CORE LAYOUT --- */
@@ -158,6 +162,36 @@
             resize: vertical;
             box-sizing: border-box;
         }
+        .mode-selector {
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid var(--secondary-glow);
+            border-radius: var(--border-radius);
+            padding: var(--spacing-sm);
+            margin-bottom: var(--spacing-md);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            font-family: 'Orbitron', sans-serif;
+        }
+        .mode-selector label {
+            cursor: pointer;
+            padding: 8px 15px;
+            border-radius: 6px;
+            transition: background-color 0.2s;
+            border: 1px solid transparent;
+        }
+        .mode-selector input[type="radio"] {
+            display: none;
+        }
+        .mode-selector input[type="radio"]:checked + label {
+            background-color: var(--primary-glow);
+            color: var(--bg-dark);
+            font-weight: bold;
+            text-shadow: none;
+            box-shadow: 0 0 8px var(--primary-glow);
+        }
+
 
         /* --- GAME BUTTONS --- */
         .game-button {
@@ -184,6 +218,17 @@
             background: linear-gradient(45deg, var(--neon-red), #ff9900);
             color: var(--text-light);
             box-shadow: 0 0 12px var(--neon-red);
+        }
+        .game-button.manual-advance {
+            background: linear-gradient(45deg, var(--neon-green), #00aaff);
+            color: var(--bg-dark);
+            box-shadow: 0 0 12px var(--neon-green);
+        }
+        .game-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
         }
 
         /* --- GAME SCREEN --- */
@@ -223,11 +268,12 @@
             gap: var(--spacing-md);
             flex-grow: 1;
             margin-bottom: var(--spacing-md);
+            flex-direction: column;
+            align-items: center;
         }
         
         /* --- DUEL ZONE --- */
         #duelZone {
-            /* Flex grow is still used to occupy available vertical space if needed */
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -240,6 +286,8 @@
             box-shadow: 0 0 30px var(--secondary-glow);
             position: relative;
             max-width: 800px; /* Constraint duel zone size on large screens */
+            width: 90%;
+            margin-bottom: var(--spacing-md);
         }
         
         #roundDisplay {
@@ -271,12 +319,6 @@
             text-align: center;
             border: 2px dashed #444;
         }
-        .action-slot h4 {
-            font-family: 'Orbitron', sans-serif;
-            margin: 0 0 5px 0;
-            font-size: 1.2em;
-            text-transform: uppercase;
-        }
         .action-slot.winner {
             border-color: var(--neon-green);
             box-shadow: 0 0 25px var(--neon-green);
@@ -285,6 +327,10 @@
             border-color: var(--neon-red);
             box-shadow: 0 0 15px var(--neon-red);
             opacity: 0.5;
+        }
+        .action-slot.loser-vanish {
+            animation: vanish 0.8s ease-out forwards;
+            pointer-events: none;
         }
         .slot-card-image {
             width: 120px;
@@ -468,6 +514,7 @@
     </style>
 </head>
 <body>
+    <!-- NOTE: Audio source might fail due to browser security restrictions in an iframe, but visual effects remain. -->
     <audio id="explosionSound" src="https://freesound.org/data/previews/171/171671_3025331-lq.mp3"></audio>
 
     <div id="mainContainer">
@@ -478,6 +525,16 @@
         <!-- SETUP SCREEN -->
         <div id="setupScreen">
             <h2>TOURNAMENT REGISTRATION & POKÉMON ASSIGNMENT</h2>
+            
+            <!-- Mode Selector -->
+            <div class="mode-selector">
+                <p>TOURNAMENT MODE:</p>
+                <input type="radio" id="modeAuto" name="gameMode" value="auto" checked>
+                <label for="modeAuto">AUTOMATIC</label>
+                <input type="radio" id="modeManual" name="gameMode" value="manual">
+                <label for="modeManual">MANUAL</label>
+            </div>
+            
             <div class="input-card">
                 <label for="contenderNames">Enter Contender Names (one per line, min 2):</label>
                 <textarea id="contenderNames" rows="5" placeholder=""></textarea>
@@ -500,7 +557,7 @@
 
         <!-- GAME SCREEN -->
         <div id="gameScreen">
-            <!-- Consolidated Status Bar at the top of the game screen (relies on #setupStatus element) -->
+            <!-- Consolidated Status Bar at the top of the game screen -->
             <div id="statusConsole"></div>
 
             <div id="arena">
@@ -536,6 +593,9 @@
                     <!-- Elimination Message -->
                     <h2 id="eliminationMessage" style="color: var(--neon-red); display: none;"></h2>
                 </div>
+                
+                <!-- Manual Control Button -->
+                <button id="nextMatchButton" class="game-button manual-advance" style="display: none;">NEXT BATTLE</button>
             </div>
         </div>
 
@@ -561,26 +621,27 @@
         const tournamentListContainer = document.getElementById('tournamentListContainer');
         const eliminationMessage = document.getElementById('eliminationMessage');
         const matchDetails = document.getElementById('matchDetails');
+        const nextMatchButton = document.getElementById('nextMatchButton'); // Manual control button
 
         // Duel Slot Elements
         const p1DuelSlot = document.getElementById('p1DuelSlot');
         const p2DuelSlot = document.getElementById('p2DuelSlot'); 
         const p1LuckScoreDisplay = document.getElementById('p1LuckScore');
         const p2LuckScoreDisplay = document.getElementById('p2LuckScore');
-        const p1NameDisplay = document.getElementById('player1Name');
-        const p2NameDisplay = document.getElementById('player2Name');
 
         // --- GLOBAL GAME STATE ---
-        const MATCH_DELAY_MS = 2500; 
+        const MATCH_SETUP_DELAY_MS = 1500; // Time to see the pairing before resolution
+        const MATCH_RESOLUTION_DELAY_MS = 3000; // Time to see the result/explosion before next match starts
 
         let gameActive = false;
         let tournamentRound = 0;
         let matchNumber = 0;
+        let gameMode = 'auto'; // 'auto' or 'manual'
 
         // Tournament specific state
         let allContenders = []; 
         let activeContendersQueue = []; 
-        let currentMatch = {}; 
+        let currentMatch = null; 
 
         // --- POKEMON DATA & RULES ---
         const POKEMON_TYPES = ['Fire', 'Water', 'Grass', 'Electric', 'Ground', 'Psychic', 'Normal', 'Flying'];
@@ -613,14 +674,14 @@
             return 0; // Neutral
         }
 
+        // --- SETUP & UTILITY FUNCTIONS ---
 
         function initializePokemonData() {
             POKEMON_SPRITE_DATA = [];
             let powers = [];
             let types = [];
             for(let i = 0; i < ALL_POKEMON_COUNT; i++) {
-                // Power is for tiebreaker only (50-100)
-                powers.push(Math.floor(Math.random() * 50) + 50); 
+                powers.push(Math.floor(Math.random() * 50) + 50); // Power 50-100
                 types.push(POKEMON_TYPES[i % POKEMON_TYPES.length]); 
             }
             powers = shuffleArray(powers);
@@ -642,7 +703,7 @@
         function shufflePokemons() {
             if (gameActive) return;
             initializePokemonData();
-            // If contenders are already registered, re-assign their Pokemon
+            
             if (allContenders.length > 0) {
                 const shuffledPokemonData = shuffleArray([...POKEMON_SPRITE_DATA]);
                 allContenders.forEach((contender, index) => {
@@ -653,7 +714,6 @@
             updateStatus('Pokémon Types and Powers have been SHUFFLED. Ready to start tournament.');
         }
 
-        // --- UTILITY FUNCTIONS ---
         function shuffleArray(array) {
             for (let i = array.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
@@ -676,7 +736,7 @@
             element.style.boxShadow = isError ? '0 0 10px var(--neon-red)' : '0 0 10px var(--secondary-glow)';
         }
 
-        // --- POKEMON AND CARD DISPLAY ---
+        // --- DISPLAY FUNCTIONS ---
 
         function updateDuelSlot(element, contender) {
             const img = element.querySelector('.slot-card-image');
@@ -687,19 +747,18 @@
             element.querySelector('h4').textContent = contender.name;
             
             const info = element.querySelector('.slot-card-info');
-            // Show the generic 'Poke X' name below the contender's name
             info.innerHTML = `
                 <div class="card-type ${contender.pokemon.type}" style="font-size: 1.2em; font-family: 'Bebas Neue', sans-serif;">${contender.pokemon.name}</div>
                 <div class="type-badge ${contender.pokemon.type}">TYPE: ${contender.pokemon.type}</div>
                 <div style="font-size: 0.7em;">PWR: ${contender.pokemon.power}</div>
             `;
-            element.classList.remove('winner', 'loser');
+            element.classList.remove('winner', 'loser', 'loser-vanish');
             element.querySelector('.luck-score').textContent = '---';
         }
 
         function clearDuelSlots() {
             [p1DuelSlot, p2DuelSlot].forEach(slot => {
-                slot.classList.remove('winner', 'loser');
+                slot.classList.remove('winner', 'loser', 'loser-vanish');
                 slot.querySelector('.luck-score').textContent = '---';
             });
             eliminationMessage.style.display = 'none';
@@ -769,6 +828,8 @@
                 return;
             }
 
+            gameMode = document.querySelector('input[name="gameMode"]:checked').value;
+            
             tournamentRound = 0;
             matchNumber = 0;
             
@@ -778,13 +839,17 @@
             gameScreen.style.display = 'flex';
             document.getElementById('titleContainer').classList.add('game-active');
             
-            // Move status content from setup bar to game bar
             statusConsole.innerHTML = setupStatus.innerHTML;
 
             scheduleNextMatch();
         }
         
         function scheduleNextMatch() {
+            // Hide button while checking/setting up
+            nextMatchButton.style.display = 'none'; 
+            nextMatchButton.disabled = true;
+
+            // 1. Check for Tournament End
             const activeCount = allContenders.filter(c => c.active).length;
             if (activeCount === 1) {
                 endTournament(allContenders.find(c => c.active));
@@ -794,39 +859,49 @@
                 return;
             }
 
-            // Check if all matches in the current pairing set are done
+            // 2. Check if the current round queue is empty -> START NEW ROUND
             if (activeContendersQueue.length === 0) {
+                // BUG FIX: The winner list for the new round is simply the current active contenders.
                 let winners = allContenders.filter(c => c.active);
                 
-                // If the number of winners is odd, the first one gets a bye
-                if (winners.length % 2 !== 0 && winners.length > 1) {
-                     winners = shuffleArray(winners);
-                     const byeContender = winners.pop();
-                     winners.unshift(byeContender); 
-                }
-                
                 activeContendersQueue = shuffleArray(winners);
+                
+                // Handle odd number of players (bye)
+                if (activeContendersQueue.length % 2 !== 0 && activeContendersQueue.length > 1) {
+                    // The last person gets the bye and is removed from the queue but remains active
+                    const byeContender = activeContendersQueue.pop(); 
+                    updateStatus(`ADVANCEMENT: ${getRoundName(tournamentRound + 1)}! ${activeContendersQueue.length + 1} gladiators remain. (${byeContender.name} receives a BYE)`);
+                }
+
                 tournamentRound++;
                 matchNumber = 0;
                 
-                // Announce new round prominently
                 roundDisplay.textContent = getRoundName(tournamentRound);
-                updateStatus(`ADVANCEMENT: Starting ${getRoundName(tournamentRound)}! ${activeContendersQueue.length} gladiators remain.`);
-                setTimeout(scheduleNextMatch, MATCH_DELAY_MS * 1.5);
+                
+                // Pause slightly longer for round announcement
+                if (gameMode === 'auto') {
+                    setTimeout(scheduleNextMatch, MATCH_RESOLUTION_DELAY_MS);
+                } else {
+                    nextMatchButton.textContent = 'START NEXT ROUND';
+                    nextMatchButton.disabled = false;
+                    nextMatchButton.style.display = 'block';
+                    nextMatchButton.onclick = scheduleNextMatch;
+                }
                 return;
             }
 
-            // Get next two players
+            // 3. Schedule the match
             const p1 = activeContendersQueue.shift();
             const p2 = activeContendersQueue.shift();
 
-            // Handle the bye scenario (only one player left in the queue)
-            if (!p2 && p1) {
-                 activeContendersQueue.unshift(p1); // Put the bye player back to be checked next time
-                 scheduleNextMatch(); 
-                 return;
+            // FIX: If p2 is null, it means the player p1 had a bye in the previous round and queue is now empty.
+            if (!p2) {
+                // If there's only one player left in the queue, it means they got an implicit bye.
+                // Since the queue is now empty, the next call to scheduleNextMatch will correctly trigger the 'Start New Round' block.
+                updateStatus(`${p1.name} receives a BYE and ADVANCES.`);
+                setTimeout(scheduleNextMatch, MATCH_SETUP_DELAY_MS);
+                return;
             }
-            if (!p1 || !p2) return; // Safety check
 
             matchNumber++;
             gameActive = true;
@@ -835,7 +910,6 @@
 
             // Update UI with match info
             roundDisplay.textContent = `${getRoundName(tournamentRound)} | MATCH ${matchNumber}`;
-            // Update the duel slot headers immediately for visual clarity
             p1DuelSlot.querySelector('h4').textContent = currentMatch.p1.name;
             p2DuelSlot.querySelector('h4').textContent = currentMatch.p2.name;
 
@@ -844,29 +918,35 @@
             
             clearDuelSlots();
             
-            // Simplified status message to avoid visual clutter during the quick match resolution
-            updateStatus(`BATTLE PROTOCOL: ${currentMatch.p1.name} (${currentMatch.p1Pokemon.type}) vs ${currentMatch.p2.name} (${currentMatch.p2Pokemon.type})`);
+            updateStatus(`BATTLE PROTOCOL: ${currentMatch.p1.name} (${currentMatch.p1Pokemon.type}) vs ${currentMatch.p2.name} (${currentMatch.p2Pokemon.type}). RESOLUTION IMMINENT.`);
 
-            setTimeout(resolveDuel, 1500); 
+            // Time to view the pairing before resolution starts
+            if (gameMode === 'auto') {
+                setTimeout(resolveDuel, MATCH_SETUP_DELAY_MS); 
+            } else {
+                nextMatchButton.textContent = 'RESOLVE DUEL';
+                nextMatchButton.disabled = false;
+                nextMatchButton.style.display = 'block';
+                nextMatchButton.onclick = resolveDuel;
+            }
         }
 
 
         function resolveDuel() {
+            // Disable button during auto-resolution
+            nextMatchButton.disabled = true;
+
             // --- CORE BATTLE SCORE MECHANIC (Type Dependent) ---
             
-            // 1. Initial Roll (Luck Factor 1 to 100)
             const p1Roll = Math.floor(Math.random() * 100) + 1;
             const p2Roll = Math.floor(Math.random() * 100) + 1;
 
-            // 2. Type Match-up Adjustments (Attacker vs Defender Type)
             const p1TypeAdj = getTypeAdjustment(currentMatch.p1Pokemon.type, currentMatch.p2Pokemon.type);
             const p2TypeAdj = getTypeAdjustment(currentMatch.p2Pokemon.type, currentMatch.p1Pokemon.type);
             
-            // 3. Power Bonus (Minor Tiebreaker, max +20)
             const p1PowerBonus = Math.round(currentMatch.p1Pokemon.power * 0.2);
             const p2PowerBonus = Math.round(currentMatch.p2Pokemon.power * 0.2);
 
-            // 4. Final Battle Score Calculation
             const p1BattleScore = p1Roll + p1TypeAdj + p1PowerBonus;
             const p2BattleScore = p2Roll + p2TypeAdj + p2PowerBonus;
 
@@ -898,7 +978,6 @@
             p1LuckScoreDisplay.textContent = Math.round(p1BattleScore);
             p2LuckScoreDisplay.textContent = Math.round(p2BattleScore);
             
-            // Generate detailed match stats
             const adjClassP1 = p1TypeAdj > 0 ? 'type-adj' : p1TypeAdj < 0 ? 'type-disadj' : '';
             const adjClassP2 = p2TypeAdj > 0 ? 'type-adj' : p2TypeAdj < 0 ? 'type-disadj' : '';
 
@@ -915,12 +994,16 @@
             matchDetails.innerHTML = detailMsg;
 
 
+            // Apply winner/loser classes
+            let loserSlot;
             if (winnerContender === currentMatch.p1) {
                 p1DuelSlot.classList.add('winner');
-                p2DuelSlot.classList.add('loser');
+                p2DuelSlot.classList.add('loser', 'loser-vanish');
+                loserSlot = p2DuelSlot;
             } else {
                 p2DuelSlot.classList.add('winner');
-                p1DuelSlot.classList.add('loser');
+                p1DuelSlot.classList.add('loser', 'loser-vanish');
+                loserSlot = p1DuelSlot;
             }
             playExplosion();
             
@@ -930,21 +1013,43 @@
                 allContenders[eliminatedIndex].active = false;
             }
             
-            // Show result
-            eliminationMessage.textContent = `${loserContender.name} ELIMINATED! ${winnerContender.name} ADVANCES!`;
+            // Show dramatic result message
+            eliminationMessage.innerHTML = `
+                <span style="color: var(--neon-red); text-shadow: 0 0 10px var(--neon-red); font-weight: bold;">
+                    ${loserContender.name} ELIMINATED!
+                </span> 
+                <span style="color: var(--neon-green); text-shadow: 0 0 10px var(--neon-green);">
+                    ${winnerContender.name} ADVANCES!
+                </span>
+            `;
             eliminationMessage.style.display = 'block';
-            eliminationMessage.style.color = 'var(--neon-green)';
             
-            // --- FIX FOR WINNER ANNOUNCEMENT: Check immediately after elimination ---
-            const remainingContenders = allContenders.filter(c => c.active);
+            // Update the contender list (moves loser to greyed-out state)
             updateContenderList();
             
+            // --- Determine Next Action ---
+            const remainingContenders = allContenders.filter(c => c.active);
+            
             if (remainingContenders.length === 1) {
-                // Schedule endTournament instead of scheduleNextMatch
-                setTimeout(() => endTournament(remainingContenders[0]), MATCH_DELAY_MS);
+                // FINAL WINNER FOUND
+                if (gameMode === 'auto') {
+                    setTimeout(() => endTournament(remainingContenders[0]), MATCH_RESOLUTION_DELAY_MS);
+                } else {
+                    nextMatchButton.textContent = 'CROWN CHAMPION';
+                    nextMatchButton.disabled = false;
+                    nextMatchButton.style.display = 'block';
+                    nextMatchButton.onclick = () => endTournament(remainingContenders[0]);
+                }
             } else {
-                // Schedule the next match automatically
-                setTimeout(scheduleNextMatch, MATCH_DELAY_MS);
+                // CONTINUE TOURNAMENT
+                if (gameMode === 'auto') {
+                    setTimeout(scheduleNextMatch, MATCH_RESOLUTION_DELAY_MS);
+                } else {
+                    nextMatchButton.textContent = 'NEXT BATTLE';
+                    nextMatchButton.disabled = false;
+                    nextMatchButton.style.display = 'block';
+                    nextMatchButton.onclick = scheduleNextMatch;
+                }
             }
         }
 
@@ -953,11 +1058,9 @@
             
             document.getElementById('winnerName').textContent = winner ? winner.name : "DRAW";
             
-            // Clear the game screen elements for a clean overlay display
             gameScreen.style.display = 'none';
             winnerOverlay.style.display = 'flex';
             
-            // Final status update (only relevant if overlay wasn't full screen)
             updateStatus(`TOURNAMENT COMPLETE! ${winner ? winner.name : 'No one'} is the CHAMPION.`);
         }
 
@@ -972,12 +1075,13 @@
             
             allContenders = [];
             activeContendersQueue = [];
-            currentMatch = {};
+            currentMatch = null;
             
             document.getElementById('contenderNames').value = ''; 
             selectPlayersButton.style.display = 'block';
             shufflePokemonsButton.style.display = 'block';
             tournamentListContainer.style.display = 'none';
+            nextMatchButton.style.display = 'none';
             
             initializePokemonData();
             updateStatus('Enter contenders and press SHUFFLE POKÉMONS.');
