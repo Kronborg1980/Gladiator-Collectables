@@ -1,1157 +1,1147 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Gladiators Death Arena: Sudden Death Tournament</title>
-    <!-- Custom Fonts: Orbitron for titles, Bebas Neue for strong text/numbers, Roboto Mono for console text -->
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Bebas+Neue&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
-    <style>
-        /* --- VISUAL CONFIGURATION --- */
-        :root {
-            --primary-glow: #00ffea; /* Cyan neon */
-            --secondary-glow: #ff00ff; /* Magenta neon */
-            --bg-dark: #0a0e1f; /* Deep space blue */
-            --text-light: #f0f0f0; /* Soft white */
-            --neon-red: #ff4500; /* Rusty neon orange-red (Danger) */
-            --neon-green: #00ff85; /* Bright green (Healing/Success) */
-            --grid-color-dark: #1a2333; /* Darker grid */
-            --card-bg: rgba(10, 14, 31, 0.95);
-            --border-radius: 12px;
-            --spacing-sm: 12px;
-            --spacing-md: 24px;
-            --spacing-lg: 32px;
-            --attack-color: #ff00ff; /* Magenta */
-            --defense-color: #00ffea; /* Cyan */
-        }
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Gladiators Death Arena: Sudden Death Tournament</title>
+        <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Bebas+Neue&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* --- VISUAL CONFIGURATION --- */
+        :root {
+            --primary-glow: #00ffea; /* Cyan neon */
+            --secondary-glow: #ff00ff; /* Magenta neon */
+            --bg-dark: #0a0e1f; /* Deep space blue */
+            --text-light: #f0f0f0; /* Soft white */
+            --neon-red: #ff4500; /* Rusty neon orange-red (Danger) */
+            --neon-green: #00ff85; /* Bright green (Healing/Success) */
+            --grid-color-dark: #1a2333; /* Darker grid */
+            --card-bg: rgba(10, 14, 31, 0.95);
+            --border-radius: 12px;
+            --spacing-sm: 12px;
+            --spacing-md: 24px;
+            --spacing-lg: 32px;
+            --attack-color: #ff00ff; /* Magenta */
+            --defense-color: #00ffea; /* Cyan */
+        }
 
-        /* --- KEYFRAME ANIMATIONS --- */
-        @keyframes scanlines { 0% { background-position: 0 0; } 100% { background-position: 0 50em; } }
-        @keyframes flicker {
-            0%, 18%, 22%, 25%, 53%, 57%, 100% { text-shadow: 0 0 15px var(--primary-glow), 0 0 20px var(--primary-glow); }
-            20%, 24%, 55% { text-shadow: none; }
-            58% { text-shadow: 0.5px 0 1px var(--secondary-glow), -0.5px 0 1px var(--neon-red); }
-        }
-        @keyframes pulse-glow {
-            0% { box-shadow: 0 0 10px var(--primary-glow); }
-            50% { box-shadow: 0 0 20px var(--secondary-glow); }
-            100% { box-shadow: 0 0 10px var(--primary-glow); }
-        }
-        @keyframes damage-shake {
-            0%, 100% { transform: translate(0); }
-            25% { transform: translate(-5px, 0); }
-            75% { transform: translate(5px, 0); }
-        }
-        @keyframes score-grow {
-            from { transform: scale(0); opacity: 0; }
-            to { transform: scale(1.1); opacity: 1; }
-        }
-        @keyframes neon-firework {
-            0% { opacity: 0; transform: scale(0.5); }
-            50% { opacity: 1; transform: scale(1.1); text-shadow: 0 0 30px var(--neon-green), 0 0 50px var(--neon-green); }
-            100% { opacity: 1; transform: scale(1); }
-        }
-        @keyframes vanish {
-            0% { transform: scale(1); opacity: 1; }
-            100% { transform: scale(0.5); opacity: 0; }
-        }
-        @keyframes critical-hit {
-            0% { box-shadow: 0 0 15px var(--neon-red), 0 0 30px var(--neon-red); }
-            50% { box-shadow: 0 0 30px var(--neon-red), 0 0 50px var(--neon-red); }
-            100% { box-shadow: 0 0 15px var(--neon-red), 0 0 30px var(--neon-red); }
-        }
-        
+        /* --- KEYFRAME ANIMATIONS --- */
+        @keyframes scanlines { 0% { background-position: 0 0; } 100% { background-position: 0 50em; } }
+        @keyframes flicker {
+            0%, 18%, 22%, 25%, 53%, 57%, 100% { text-shadow: 0 0 15px var(--primary-glow), 0 0 20px var(--primary-glow); }
+            20%, 24%, 55% { text-shadow: none; }
+            58% { text-shadow: 0.5px 0 1px var(--secondary-glow), -0.5px 0 1px var(--neon-red); }
+        }
+        @keyframes pulse-glow {
+            0% { box-shadow: 0 0 10px var(--primary-glow); }
+            50% { box-shadow: 0 0 20px var(--secondary-glow); }
+            100% { box-shadow: 0 0 10px var(--primary-glow); }
+        }
+        @keyframes damage-shake {
+            0%, 100% { transform: translate(0); }
+            25% { transform: translate(-5px, 0); }
+            75% { transform: translate(5px, 0); }
+        }
+        @keyframes score-grow {
+            from { transform: scale(0); opacity: 0; }
+            to { transform: scale(1.1); opacity: 1; }
+        }
+        @keyframes neon-firework {
+            0% { opacity: 0; transform: scale(0.5); }
+            50% { opacity: 1; transform: scale(1.1); text-shadow: 0 0 30px var(--neon-green), 0 0 50px var(--neon-green); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+        @keyframes vanish {
+            0% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(0.5); opacity: 0; }
+        }
+        @keyframes critical-hit {
+            0% { box-shadow: 0 0 15px var(--neon-red), 0 0 30px var(--neon-red); }
+            50% { box-shadow: 0 0 30px var(--neon-red), 0 0 50px var(--neon-red); }
+            100% { box-shadow: 0 0 15px var(--neon-red), 0 0 30px var(--neon-red); }
+        }
+        
 
-        /* --- CORE LAYOUT --- */
-        html, body {
-            height: 100%;
-            margin: 0;
-            padding: 0;
-            background: radial-gradient(circle at center, #0c1426, var(--bg-dark));
-            color: var(--text-light);
-            font-family: 'Roboto Mono', monospace;
-            overflow-x: hidden;
-            overflow-y: auto;
-            position: relative;
-        }
+        /* --- CORE LAYOUT --- */
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            background: radial-gradient(circle at center, #0c1426, var(--bg-dark));
+            color: var(--text-light);
+            font-family: 'Roboto Mono', monospace;
+            overflow-x: hidden;
+            overflow-y: auto;
+            position: relative;
+        }
 
-        body::before {
-            content: '';
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none; z-index: 9999; opacity: 0.08;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.5) 50%), repeating-linear-gradient(transparent, transparent 1px, rgba(0, 0, 0, 0.15) 1px, rgba(0, 0, 0, 0.15) 2px);
-            background-size: 100% 2px, 2px 2px;
-            animation: scanlines 6s linear infinite;
-        }
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 9999; opacity: 0.08;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.5) 50%), repeating-linear-gradient(transparent, transparent 1px, rgba(0, 0, 0, 0.15) 1px, rgba(0, 0, 0, 0.15) 2px);
+            background-size: 100% 2px, 2px 2px;
+            animation: scanlines 6s linear infinite;
+        }
 
-        #mainContainer {
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-            padding: clamp(var(--spacing-sm), 4vw, var(--spacing-md));
-            max-width: 1600px;
-            margin: 0 auto;
-            box-sizing: border-box;
-        }
+        #mainContainer {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            padding: clamp(var(--spacing-sm), 4vw, var(--spacing-md));
+            max-width: 1600px;
+            margin: 0 auto;
+            box-sizing: border-box;
+        }
 
-        /* --- TITLE --- */
-        #titleContainer {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: var(--spacing-md);
-        }
-        h1 {
-            font-family: 'Orbitron', sans-serif;
-            color: var(--primary-glow);
-            animation: flicker 4s linear infinite;
-            letter-spacing: 4px;
-            margin: 0;
-            text-transform: uppercase;
-            font-size: clamp(1.8em, 4vw, 3em);
-            text-align: center;
-            outline: 2px solid var(--primary-glow);
-            padding: 8px 24px;
-            border-radius: var(--border-radius);
-            background: var(--card-bg);
-            z-index: 100;
-        }
+        /* --- TITLE --- */
+        #titleContainer {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: var(--spacing-md);
+        }
+        h1 {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--primary-glow);
+            animation: flicker 4s linear infinite;
+            letter-spacing: 4px;
+            margin: 0;
+            text-transform: uppercase;
+            font-size: clamp(1.8em, 4vw, 3em);
+            text-align: center;
+            outline: 2px solid var(--primary-glow);
+            padding: 8px 24px;
+            border-radius: var(--border-radius);
+            background: var(--card-bg);
+            z-index: 100;
+        }
 
-        /* --- SETUP PAGE --- */
-        #setupScreen {
-            max-width: 900px; /* Wider for list display */
-            width: 90%;
-            margin: var(--spacing-lg) auto;
-            padding: var(--spacing-lg);
-            background: var(--card-bg);
-            border-radius: var(--border-radius);
-            border: 2px solid var(--primary-glow);
-            box-shadow: 0 0 20px var(--primary-glow);
-            text-align: center;
-            animation: pulse-glow 8s ease-in-out infinite;
-        }
-        #setupScreen h2 {
-            font-family: 'Orbitron', sans-serif;
-            color: var(--secondary-glow);
-            text-shadow: 0 0 12px var(--secondary-glow);
-            margin: 0 0 var(--spacing-md);
-            font-size: clamp(1.4em, 3vw, 2.2em);
-        }
-        .input-card {
-            background: rgba(0, 0, 0, 0.6);
-            border: 1px solid var(--primary-glow);
-            border-radius: var(--border-radius);
-            padding: var(--spacing-md);
-            box-shadow: inset 0 0 8px rgba(0, 255, 234, 0.2);
-            text-align: left;
-            margin-bottom: var(--spacing-md);
-        }
-        .input-card label {
-            color: var(--text-light);
-            font-size: 1.1em;
-            font-weight: bold;
-            margin-bottom: var(--spacing-sm);
-            display: block;
-        }
-        .input-card textarea {
-            width: 100%;
-            min-height: 100px;
-            background: var(--bg-dark);
-            color: var(--text-light);
-            border: 1px solid var(--primary-glow);
-            padding: var(--spacing-sm);
-            border-radius: 8px;
-            font-family: 'Roboto Mono', monospace;
-            font-size: 1em;
-            resize: vertical;
-            box-sizing: border-box;
-        }
-        .mode-selector {
-            background: rgba(0, 0, 0, 0.6);
-            border: 1px solid var(--secondary-glow);
-            border-radius: var(--border-radius);
-            padding: var(--spacing-sm);
-            margin-bottom: var(--spacing-md);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 20px;
-            font-family: 'Orbitron', sans-serif;
-        }
-        .mode-selector label {
-            cursor: pointer;
-            padding: 8px 15px;
-            border-radius: 6px;
-            transition: background-color 0.2s;
-            border: 1px solid transparent;
-        }
-        .mode-selector input[type="radio"] {
-            display: none;
-        }
-        .mode-selector input[type="radio"]:checked + label {
-            background-color: var(--primary-glow);
-            color: var(--bg-dark);
-            font-weight: bold;
-            text-shadow: none;
-            box-shadow: 0 0 8px var(--primary-glow);
-        }
-
-
-        /* --- GAME BUTTONS --- */
-        .game-button {
-            padding: 12px 28px;
-            border: none;
-            border-radius: var(--border-radius);
-            cursor: pointer;
-            font-family: 'Orbitron', sans-serif;
-            font-size: 1em;
-            font-weight: bold;
-            text-transform: uppercase;
-            background: linear-gradient(45deg, var(--primary-glow), var(--secondary-glow));
-            color: var(--bg-dark);
-            box-shadow: 0 0 12px rgba(0, 255, 234, 0.3);
-            transition: all 0.3s ease;
-            min-width: 180px;
-        }
-        .game-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 0 20px var(--primary-glow);
-            filter: brightness(1.2);
-        }
-        .game-button.secondary {
-            background: linear-gradient(45deg, var(--neon-red), #ff9900);
-            color: var(--text-light);
-            box-shadow: 0 0 12px var(--neon-red);
-        }
-        .game-button.manual-advance {
-            background: linear-gradient(45deg, var(--neon-green), #00aaff);
-            color: var(--bg-dark);
-            box-shadow: 0 0 12px var(--neon-green);
-        }
-        .game-button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
-
-        /* --- GAME SCREEN --- */
-        #gameScreen {
-            display: none;
-            flex-direction: column;
-            flex-grow: 1;
-            padding-top: var(--spacing-md);
-        }
-        /* Top Status Bar - Now fixed below the title in the game screen */
-        #statusConsole {
-            background: var(--bg-dark);
-            border: 1px solid var(--secondary-glow);
-            padding: 10px;
-            border-radius: 8px;
-            text-align: center;
-            font-size: 1em;
-            color: var(--primary-glow);
-            font-family: 'Orbitron', sans-serif;
-            box-shadow: 0 0 10px var(--secondary-glow);
-            margin-bottom: var(--spacing-md);
-            min-height: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s ease;
-        }
-        /* Status Bar in Setup Screen */
-        #setupStatus {
-            color: var(--primary-glow); 
-            margin-bottom: var(--spacing-md);
-        }
-
-        #arena {
-            display: flex;
-            justify-content: center; /* Center the single duel zone */
-            gap: var(--spacing-md);
-            flex-grow: 1;
-            margin-bottom: var(--spacing-md);
-            flex-direction: column;
-            align-items: center;
-        }
-        
-        /* --- DUEL ZONE --- */
-        #duelZone {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: space-between;
-            min-width: 300px;
-            padding: var(--spacing-md);
-            background: rgba(0, 0, 0, 0.5);
-            border-radius: var(--border-radius);
-            border: 3px solid var(--secondary-glow);
-            box-shadow: 0 0 30px var(--secondary-glow);
-            position: relative;
-            max-width: 800px; /* Constraint duel zone size on large screens */
-            width: 90%;
-            margin-bottom: var(--spacing-md);
-        }
-        
-        #roundDisplay {
-            font-family: 'Bebas Neue', sans-serif;
-            font-size: 3em;
-            color: var(--primary-glow);
-            text-shadow: 0 0 15px var(--primary-glow);
-            margin: var(--spacing-sm) 0;
-            line-height: 1;
-        }
-        #actionSlots {
-            display: flex;
-            gap: var(--spacing-lg);
-            margin: var(--spacing-md) 0;
-            z-index: 10;
-        }
-        .action-slot {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            width: 200px; 
-            height: 250px;
-            border-radius: var(--border-radius);
-            padding: 10px;
-            background: rgba(0, 0, 0, 0.4);
-            box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.1);
-            position: relative;
-            transition: all 0.3s ease;
-            text-align: center;
-            border: 2px dashed #444;
-        }
-        .action-slot.winner {
-            border-color: var(--neon-green);
-            box-shadow: 0 0 25px var(--neon-green);
-        }
-        .action-slot.loser {
-            border-color: var(--neon-red);
-            box-shadow: 0 0 15px var(--neon-red);
-            opacity: 0.5;
-        }
-        .action-slot.loser-vanish {
-            animation: vanish 0.8s ease-out forwards;
-            pointer-events: none;
-        }
-        .action-slot.clash-flash {
-            box-shadow: 0 0 40px var(--primary-glow), 0 0 60px var(--secondary-glow);
-        }
-        .slot-card-image {
-            width: 120px;
-            height: 120px;
-            image-rendering: pixelated;
-        }
-        .slot-card-info {
-            font-size: 0.8em;
-            font-weight: bold;
-            text-shadow: 0 0 5px #000;
-        }
-        .luck-score {
-            font-family: 'Bebas Neue', sans-serif;
-            font-size: 2.5em;
-            color: var(--secondary-glow);
-            text-shadow: 0 0 10px var(--secondary-glow);
-            margin-top: 5px;
-            line-height: 1;
-            animation: score-grow 0.5s ease-out;
-        }
-        
-        /* Match Detail Console */
-        #matchDetails {
-            margin-top: var(--spacing-md);
-            padding: var(--spacing-sm);
-            background: var(--bg-dark);
-            border: 1px solid var(--primary-glow);
-            border-radius: 8px;
-            width: 90%;
-            text-align: left;
-            font-size: 0.9em;
-            box-shadow: 0 0 10px var(--primary-glow);
-            font-family: 'Roboto Mono', monospace;
-        }
-        .score-line {
-            padding: 3px 0;
-            border-bottom: 1px dotted rgba(255, 255, 255, 0.1);
-        }
-        .score-line:last-child { border-bottom: none; }
-        .score-p1 { color: var(--primary-glow); }
-        .score-p2 { color: var(--secondary-glow); }
-        .type-adj-text { color: var(--neon-green); font-weight: bold; }
-        .type-disadj-text { color: var(--neon-red); font-weight: bold; }
+        /* --- SETUP PAGE --- */
+        #setupScreen {
+            max-width: 900px; /* Wider for list display */
+            width: 90%;
+            margin: var(--spacing-lg) auto;
+            padding: var(--spacing-lg);
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            border: 2px solid var(--primary-glow);
+            box-shadow: 0 0 20px var(--primary-glow);
+            text-align: center;
+            animation: pulse-glow 8s ease-in-out infinite;
+        }
+        #setupScreen h2 {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--secondary-glow);
+            text-shadow: 0 0 12px var(--secondary-glow);
+            margin: 0 0 var(--spacing-md);
+            font-size: clamp(1.4em, 3vw, 2.2em);
+        }
+        .input-card {
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid var(--primary-glow);
+            border-radius: var(--border-radius);
+            padding: var(--spacing-md);
+            box-shadow: inset 0 0 8px rgba(0, 255, 234, 0.2);
+            text-align: left;
+            margin-bottom: var(--spacing-md);
+        }
+        .input-card label {
+            color: var(--text-light);
+            font-size: 1.1em;
+            font-weight: bold;
+            margin-bottom: var(--spacing-sm);
+            display: block;
+        }
+        .input-card textarea {
+            width: 100%;
+            min-height: 100px;
+            background: var(--bg-dark);
+            color: var(--text-light);
+            border: 1px solid var(--primary-glow);
+            padding: var(--spacing-sm);
+            border-radius: 8px;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 1em;
+            resize: vertical;
+            box-sizing: border-box;
+        }
+        .mode-selector {
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid var(--secondary-glow);
+            border-radius: var(--border-radius);
+            padding: var(--spacing-sm);
+            margin-bottom: var(--spacing-md);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            font-family: 'Orbitron', sans-serif;
+        }
+        .mode-selector label {
+            cursor: pointer;
+            padding: 8px 15px;
+            border-radius: 6px;
+            transition: background-color 0.2s;
+            border: 1px solid transparent;
+        }
+        .mode-selector input[type="radio"] {
+            display: none;
+        }
+        .mode-selector input[type="radio"]:checked + label {
+            background-color: var(--primary-glow);
+            color: var(--bg-dark);
+            font-weight: bold;
+            text-shadow: none;
+            box-shadow: 0 0 8px var(--primary-glow);
+        }
 
 
-        /* --- TOURNAMENT LIST & POKEMON CARDS (Same on Setup & Game screens) --- */
-        #tournamentListContainer {
-            margin-top: var(--spacing-md);
-            max-height: 200px;
-            overflow-y: auto;
-            border: 1px solid var(--primary-glow);
-            border-radius: var(--border-radius);
-            padding: var(--spacing-sm);
-            background: rgba(0, 0, 0, 0.5);
-            text-align: left;
-        }
-        #tournamentListContainer h4 {
-            font-family: 'Orbitron', sans-serif;
-            color: var(--secondary-glow);
-            margin: 0 0 10px;
-            text-align: center;
-        }
-        #contenderList {
-            list-style: none;
-            padding: 0;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
-            justify-content: center;
-        }
-        .contender-card-item {
-            width: 120px;
-            padding: 5px;
-            background: var(--card-bg);
-            border: 2px solid var(--secondary-glow);
-            border-radius: var(--border-radius);
-            text-align: center;
-            box-shadow: 0 0 8px var(--secondary-glow);
-            transition: all 0.3s;
-        }
-        .contender-card-item.contender-eliminated {
-            border-color: var(--neon-red);
-            box-shadow: 0 0 5px var(--neon-red);
-            opacity: 0.4;
-            text-decoration: line-through;
-        }
-        .contender-card-item h5 {
-            margin: 0 0 5px;
-            font-size: 1em;
-            color: var(--neon-green);
-            font-family: 'Bebas Neue', sans-serif;
-        }
-        .contender-card-item img {
-            width: 60px;
-            height: 60px;
-            image-rendering: pixelated;
-        }
-        .contender-card-item .type-badge {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 0.6em;
-            padding: 2px 4px;
-            border-radius: 4px;
-            margin-top: 5px;
-            display: inline-block;
-            text-transform: uppercase;
-        }
-        .type-badge.Fire { background-color: #ff4500; color: white; }
-        .type-badge.Water { background-color: #00aaff; color: white; }
-        .type-badge.Grass { background-color: #00ff85; color: black; }
-        .type-badge.Electric { background-color: #fffb00; color: black; }
-        .type-badge.Ground { background-color: #964b00; color: white; }
-        .type-badge.Psychic { background-color: #ff00ff; color: white; }
-        .type-badge.Normal { background-color: #aaaaaa; color: black; }
-        .type-badge.Flying { background-color: #b0e0e6; color: black; }
+        /* --- GAME BUTTONS --- */
+        .game-button {
+            padding: 12px 28px;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1em;
+            font-weight: bold;
+            text-transform: uppercase;
+            background: linear-gradient(45deg, var(--primary-glow), var(--secondary-glow));
+            color: var(--bg-dark);
+            box-shadow: 0 0 12px rgba(0, 255, 234, 0.3);
+            transition: all 0.3s ease;
+            min-width: 180px;
+        }
+        .game-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 20px var(--primary-glow);
+            filter: brightness(1.2);
+        }
+        .game-button.secondary {
+            background: linear-gradient(45deg, var(--neon-red), #ff9900);
+            color: var(--text-light);
+            box-shadow: 0 0 12px var(--neon-red);
+        }
+        .game-button.manual-advance {
+            background: linear-gradient(45deg, var(--neon-green), #00aaff);
+            color: var(--bg-dark);
+            box-shadow: 0 0 12px var(--neon-green);
+        }
+        .game-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* --- GAME SCREEN --- */
+        #gameScreen {
+            display: none;
+            flex-direction: column;
+            flex-grow: 1;
+            padding-top: var(--spacing-md);
+        }
+        /* Top Status Bar - Now fixed below the title in the game screen */
+        #statusConsole {
+            background: var(--bg-dark);
+            border: 1px solid var(--secondary-glow);
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            font-size: 1em;
+            color: var(--primary-glow);
+            font-family: 'Orbitron', sans-serif;
+            box-shadow: 0 0 10px var(--secondary-glow);
+            margin-bottom: var(--spacing-md);
+            min-height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+        /* Status Bar in Setup Screen */
+        #setupStatus {
+            color: var(--primary-glow); 
+            margin-bottom: var(--spacing-md);
+        }
+
+        #arena {
+            display: flex;
+            justify-content: center; /* Center the single duel zone */
+            gap: var(--spacing-md);
+            flex-grow: 1;
+            margin-bottom: var(--spacing-md);
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        /* --- DUEL ZONE --- */
+        #duelZone {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            min-width: 300px;
+            padding: var(--spacing-md);
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: var(--border-radius);
+            border: 3px solid var(--secondary-glow);
+            box-shadow: 0 0 30px var(--secondary-glow);
+            position: relative;
+            max-width: 800px; /* Constraint duel zone size on large screens */
+            width: 90%;
+            margin-bottom: var(--spacing-md);
+        }
+        
+        #roundDisplay {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 3em;
+            color: var(--primary-glow);
+            text-shadow: 0 0 15px var(--primary-glow);
+            margin: var(--spacing-sm) 0;
+            line-height: 1;
+        }
+        #actionSlots {
+            display: flex;
+            gap: var(--spacing-lg);
+            margin: var(--spacing-md) 0;
+            z-index: 10;
+        }
+        .action-slot {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 200px; 
+            height: 250px;
+            border-radius: var(--border-radius);
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.4);
+            box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.1);
+            position: relative;
+            transition: all 0.3s ease;
+            text-align: center;
+            border: 2px dashed #444;
+        }
+        .action-slot.winner {
+            border-color: var(--neon-green);
+            box-shadow: 0 0 25px var(--neon-green);
+        }
+        .action-slot.loser {
+            border-color: var(--neon-red);
+            box-shadow: 0 0 15px var(--neon-red);
+            opacity: 0.5;
+        }
+        .action-slot.loser-vanish {
+            animation: vanish 0.8s ease-out forwards;
+            pointer-events: none;
+        }
+        .action-slot.clash-flash {
+            box-shadow: 0 0 40px var(--primary-glow), 0 0 60px var(--secondary-glow);
+        }
+        .slot-card-image {
+            width: 120px;
+            height: 120px;
+            image-rendering: pixelated;
+        }
+        .slot-card-info {
+            font-size: 0.8em;
+            font-weight: bold;
+            text-shadow: 0 0 5px #000;
+        }
+        .luck-score {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2.5em;
+            color: var(--secondary-glow);
+            text-shadow: 0 0 10px var(--secondary-glow);
+            margin-top: 5px;
+            line-height: 1;
+            animation: score-grow 0.5s ease-out;
+        }
+        
+        /* Match Detail Console */
+        #matchDetails {
+            margin-top: var(--spacing-md);
+            padding: var(--spacing-sm);
+            background: var(--bg-dark);
+            border: 1px solid var(--primary-glow);
+            border-radius: 8px;
+            width: 90%;
+            text-align: left;
+            font-size: 0.9em;
+            box-shadow: 0 0 10px var(--primary-glow);
+            font-family: 'Roboto Mono', monospace;
+        }
+        .score-line {
+            padding: 3px 0;
+            border-bottom: 1px dotted rgba(255, 255, 255, 0.1);
+        }
+        .score-line:last-child { border-bottom: none; }
+        .score-p1 { color: var(--primary-glow); }
+        .score-p2 { color: var(--secondary-glow); }
+        .type-adj-text { color: var(--neon-green); font-weight: bold; }
+        .type-disadj-text { color: var(--neon-red); font-weight: bold; }
 
 
-        /* --- WINNER OVERLAY --- */
-        #winnerOverlay {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.95);
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            color: var(--primary-glow);
-            font-family: 'Orbitron', sans-serif;
-            text-shadow: 0 0 10px var(--primary-glow);
-            z-index: 2000;
-            animation: pulse-glow 2s ease-in-out infinite;
-        }
-        #winnerOverlay h2 {
-            font-size: clamp(3em, 8vw, 5em);
-            color: var(--secondary-glow);
-            text-shadow: 0 0 15px var(--secondary-glow), 0 0 25px var(--secondary-glow);
-            margin: 0 0 10px;
-            animation: neon-firework 2s ease-out both;
-        }
-        #winnerName {
-            font-size: clamp(4em, 10vw, 7em);
-            color: var(--neon-green);
-            text-shadow: 0 0 20px var(--neon-green), 0 0 40px var(--neon-green), 0 0 60px var(--neon-green);
-            font-family: 'Bebas Neue', sans-serif;
-            font-weight: bold;
-            letter-spacing: 6px;
-            text-transform: uppercase;
-            animation: neon-firework 2s ease-out 0.5s both;
-        }
+        /* --- TOURNAMENT LIST & POKEMON CARDS (Same on Setup & Game screens) --- */
+        #tournamentListContainer {
+            margin-top: var(--spacing-md);
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid var(--primary-glow);
+            border-radius: var(--border-radius);
+            padding: var(--spacing-sm);
+            background: rgba(0, 0, 0, 0.5);
+            text-align: left;
+        }
+        #tournamentListContainer h4 {
+            font-family: 'Orbitron', sans-serif;
+            color: var(--secondary-glow);
+            margin: 0 0 10px;
+            text-align: center;
+        }
+        #contenderList {
+            list-style: none;
+            padding: 0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+        }
+        .contender-card-item {
+            width: 120px;
+            padding: 5px;
+            background: var(--card-bg);
+            border: 2px solid var(--secondary-glow);
+            border-radius: var(--border-radius);
+            text-align: center;
+            box-shadow: 0 0 8px var(--secondary-glow);
+            transition: all 0.3s;
+        }
+        .contender-card-item.contender-eliminated {
+            border-color: var(--neon-red);
+            box-shadow: 0 0 5px var(--neon-red);
+            opacity: 0.4;
+            text-decoration: line-through;
+        }
+        .contender-card-item h5 {
+            margin: 0 0 5px;
+            font-size: 1em;
+            color: var(--neon-green);
+            font-family: 'Bebas Neue', sans-serif;
+        }
+        .contender-card-item img {
+            width: 60px;
+            height: 60px;
+            image-rendering: pixelated;
+        }
+        .contender-card-item .type-badge {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.6em;
+            padding: 2px 4px;
+            border-radius: 4px;
+            margin-top: 5px;
+            display: inline-block;
+            text-transform: uppercase;
+        }
+        .type-badge.Fire { background-color: #ff4500; color: white; }
+        .type-badge.Water { background-color: #00aaff; color: white; }
+        .type-badge.Grass { background-color: #00ff85; color: black; }
+        .type-badge.Electric { background-color: #fffb00; color: black; }
+        .type-badge.Ground { background-color: #964b00; color: white; }
+        .type-badge.Psychic { background-color: #ff00ff; color: white; }
+        .type-badge.Normal { background-color: #aaaaaa; color: black; }
+        .type-badge.Flying { background-color: #b0e0e6; color: black; }
 
-        /* --- RESPONSIVE ADJUSTMENTS --- */
-        @media (max-width: 1024px) {
-            #arena {
-                flex-direction: column;
-                align-items: center;
-            }
-            .action-slot {
-                width: 150px;
-                height: 200px;
-            }
-            .slot-card-image {
-                width: 90px;
-                height: 90px;
-            }
-        }
-        @media (max-width: 640px) {
-            .action-slot {
-                width: 120px;
-                height: 180px;
-            }
-            .slot-card-image {
-                width: 70px;
-                height: 70px;
-            }
-            .contender-card-item {
-                width: 100px;
-            }
-            #actionSlots {
-                gap: var(--spacing-sm);
-            }
-        }
-    </style>
+
+        /* --- WINNER OVERLAY --- */
+        #winnerOverlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: var(--primary-glow);
+            font-family: 'Orbitron', sans-serif;
+            text-shadow: 0 0 10px var(--primary-glow);
+            z-index: 2000;
+            animation: pulse-glow 2s ease-in-out infinite;
+        }
+        #winnerOverlay h2 {
+            font-size: clamp(3em, 8vw, 5em);
+            color: var(--secondary-glow);
+            text-shadow: 0 0 15px var(--secondary-glow), 0 0 25px var(--secondary-glow);
+            margin: 0 0 10px;
+            animation: neon-firework 2s ease-out both;
+        }
+        #winnerName {
+            font-size: clamp(4em, 10vw, 7em);
+            color: var(--neon-green);
+            text-shadow: 0 0 20px var(--neon-green), 0 0 40px var(--neon-green), 0 0 60px var(--neon-green);
+            font-family: 'Bebas Neue', sans-serif;
+            font-weight: bold;
+            letter-spacing: 6px;
+            text-transform: uppercase;
+            animation: neon-firework 2s ease-out 0.5s both;
+        }
+
+        /* --- RESPONSIVE ADJUSTMENTS --- */
+        @media (max-width: 1024px) {
+            #arena {
+                flex-direction: column;
+                align-items: center;
+            }
+            .action-slot {
+                width: 150px;
+                height: 200px;
+            }
+            .slot-card-image {
+                width: 90px;
+                height: 90px;
+            }
+        }
+        @media (max-width: 640px) {
+            .action-slot {
+                width: 120px;
+                height: 180px;
+            }
+            .slot-card-image {
+                width: 70px;
+                height: 70px;
+            }
+            .contender-card-item {
+                width: 100px;
+            }
+            #actionSlots {
+                gap: var(--spacing-sm);
+            }
+        }
+    </style>
 </head>
 <body>
-    <!-- NOTE: Audio source might fail due to browser security restrictions in an iframe. To ensure sound, upload a file named 'arena_explosion.mp3' to the environment. -->
-    <audio id="explosionSound" src="arena_explosion.mp3"></audio>
-
-    <div id="mainContainer">
-        <div id="titleContainer">
-            <h1>GLADIATORS DEATH ARENA: SUDDEN DEATH TOURNAMENT</h1>
-        </div>
-
-        <!-- SETUP SCREEN -->
-        <div id="setupScreen">
-            <h2>TOURNAMENT REGISTRATION & POKÉMON ASSIGNMENT</h2>
-            
-            <!-- Mode Selector -->
-            <div class="mode-selector">
-                <p>TOURNAMENT MODE:</p>
-                <input type="radio" id="modeAuto" name="gameMode" value="auto" checked>
-                <label for="modeAuto">AUTOMATIC</label>
-                <input type="radio" id="modeManual" name="gameMode" value="manual">
-                <label for="modeManual">MANUAL</label>
-            </div>
-            
-            <div class="input-card">
-                <label for="contenderNames">Enter Contender Names (one per line, min 2):</label>
-                <textarea id="contenderNames" rows="5" placeholder=""></textarea>
-            </div>
-            
-            <div id="tournamentListContainer" style="display: none;">
-                <h4>TOURNAMENT BRACKET</h4>
-                <ul id="contenderList"></ul>
-            </div>
-            
-            <div id="setupStatus" style="color: var(--primary-glow); margin-bottom: var(--spacing-md);">Enter contenders and press SHUFFLE POKÉMONS.</div>
-            
-            <div style="display: flex; gap: var(--spacing-md); justify-content: center;">
-                <button id="shufflePokemonsButton" class="game-button secondary">SHUFFLE POKÉMONS</button>
-                <button id="selectPlayersButton" class="game-button">BEGIN TOURNAMENT</button>
-            </div>
-            
-            <button onclick="resetGame()" class="game-button secondary" style="margin-top: var(--spacing-md);">RESET ARENA</button>
-        </div>
-
-        <!-- GAME SCREEN -->
-        <div id="gameScreen">
-            <!-- Consolidated Status Bar at the top of the game screen -->
-            <div id="statusConsole"></div>
-
-            <div id="arena">
-                <!-- DUEL ZONE (Centered) -->
-                <div id="duelZone">
-                    <div id="roundDisplay">MATCH 1 / ROUND 1</div>
-
-                    <div id="actionSlots">
-                        <!-- P1 Card Slot -->
-                        <div id="p1DuelSlot" class="action-slot">
-                            <h4>CONTENDER 1</h4>
-                            <img class="slot-card-image" src="" alt="P1 Pokemon" style="display: none;">
-                            <div class="slot-card-info"></div>
-                            <div class="luck-score" id="p1LuckScore">---</div>
-                        </div>
-
-                        <h2 style="font-family: 'Orbitron', sans-serif; color: var(--neon-red); text-shadow: 0 0 10px var(--neon-red); margin: 0;">VS</h2>
-
-                        <!-- P2 Card Slot -->
-                        <div id="p2DuelSlot" class="action-slot">
-                            <h4>CONTENDER 2</h4>
-                            <img class="slot-card-image" src="" alt="P2 Pokemon" style="display: none;">
-                            <div class="slot-card-info"></div>
-                            <div class="luck-score" id="p2LuckScore">---</div>
-                        </div>
-                    </div>
-
-                    <!-- Match Detail Console -->
-                    <div id="matchDetails">
-                        Waiting for match resolution...
-                    </div>
-
-                    <!-- Elimination Message -->
-                    <h2 id="eliminationMessage" style="color: var(--neon-red); display: none;"></h2>
-                </div>
-                
-                <!-- Manual Control Button -->
-                <button id="nextMatchButton" class="game-button manual-advance" style="display: none;">NEXT BATTLE</button>
-            </div>
-        </div>
-
-        <!-- WINNER OVERLAY -->
-        <div id="winnerOverlay">
-            <h2>TOURNAMENT CHAMPION EMERGES!</h2>
-            <span id="winnerName"></span>
-            <button onclick="resetGame()" class="game-button" style="margin-top: var(--spacing-lg);">START NEW TOURNAMENT</button>
-        </div>
-    </div>
-
-    <script>
-        const setupScreen = document.getElementById('setupScreen');
-        const gameScreen = document.getElementById('gameScreen');
-        const winnerOverlay = document.getElementById('winnerOverlay');
-        const statusConsole = document.getElementById('statusConsole'); // Now the top bar in game view
-        const setupStatus = document.getElementById('setupStatus'); // Status bar in setup view
-        const shufflePokemonsButton = document.getElementById('shufflePokemonsButton');
-        const selectPlayersButton = document.getElementById('selectPlayersButton');
-        const roundDisplay = document.getElementById('roundDisplay');
-        const explosionSound = document.getElementById('explosionSound');
-        const contenderListUl = document.getElementById('contenderList');
-        const tournamentListContainer = document.getElementById('tournamentListContainer');
-        const eliminationMessage = document.getElementById('eliminationMessage');
-        const matchDetails = document.getElementById('matchDetails');
-        const nextMatchButton = document.getElementById('nextMatchButton'); // Manual control button
-
-        // Duel Slot Elements
-        const p1DuelSlot = document.getElementById('p1DuelSlot');
-        const p2DuelSlot = document.getElementById('p2DuelSlot'); 
-        const p1LuckScoreDisplay = document.getElementById('p1LuckScore');
-        const p2LuckScoreDisplay = document.getElementById('p2LuckScore');
-
-        // --- GLOBAL GAME STATE ---
-        const MATCH_SETUP_DELAY_MS = 1500; // Time to view pairing before resolution starts
-        const MATCH_SCORE_DISPLAY_MS = 1000; // Time the final scores are visible before elimination
-        const MATCH_ELIMINATION_MS = 2000; // Time for explosion/vanish effect
-
-        let gameActive = false;
-        let tournamentRound = 0;
-        let matchNumber = 0;
-        let gameMode = 'auto'; // 'auto' or 'manual'
-
-        // Tournament specific state
-        let allContenders = []; 
-        let activeContendersQueue = []; 
-        let currentMatch = null; 
-
-        // --- POKEMON DATA & RULES ---
-        const POKEMON_TYPES = ['Fire', 'Water', 'Grass', 'Electric', 'Ground', 'Psychic', 'Normal', 'Flying'];
-        const ALL_POKEMON_COUNT = 151;
-        let POKEMON_SPRITE_DATA = []; 
-
-        // Simplified Type Chart
-        const TYPE_CHART = {
-            'Fire': { SE: ['Grass'], NE: ['Fire', 'Water', 'Ground'] },
-            'Water': { SE: ['Fire', 'Ground'], NE: ['Water', 'Grass'] },
-            'Grass': { SE: ['Water', 'Ground'], NE: ['Fire', 'Grass', 'Flying'] },
-            'Electric': { SE: ['Water', 'Flying'], NE: ['Electric', 'Grass', 'Ground'] },
-            'Ground': { SE: ['Electric', 'Fire'], NE: ['Grass', 'Flying'] },
-            'Psychic': { SE: ['Fighting', 'Poison'], NE: ['Psychic'] },
-            'Normal': { SE: [], NE: ['Ground'] },
-            'Flying': { SE: ['Grass', 'Fighting'], NE: ['Electric', 'Flying'] }
-        };
-        
-        // Returns point adjustments based on match-up
-        function getTypeAdjustment(attackingType, defendingType) {
-            const chart = TYPE_CHART[attackingType];
-            if (!chart) return 0; // Neutral
-
-            if (chart.SE.includes(defendingType)) {
-                return 50; // Super Effective: Major Advantage
-            }
-            if (chart.NE.includes(defendingType)) {
-                return -30; // Not Effective: Major Disadvantage
-            }
-            return 0; // Neutral
-        }
-
-        // --- SETUP & UTILITY FUNCTIONS ---
-
-        function initializePokemonData() {
-            POKEMON_SPRITE_DATA = [];
-            let powers = [];
-            let types = [];
-            for(let i = 0; i < ALL_POKEMON_COUNT; i++) {
-                powers.push(Math.floor(Math.random() * 50) + 50); // Power 50-100
-                types.push(POKEMON_TYPES[i % POKEMON_TYPES.length]); 
-            }
-            powers = shuffleArray(powers);
-            types = shuffleArray(types);
-
-            for (let id = 1; id <= ALL_POKEMON_COUNT; id++) {
-                POKEMON_SPRITE_DATA.push({
-                    id: id,
-                    name: `Poke ${id}`,
-                    type: types[id - 1],
-                    power: powers[id - 1],
-                    spriteUrl: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/${id}.gif`,
-                });
-            }
-            POKEMON_SPRITE_DATA = shuffleArray(POKEMON_SPRITE_DATA);
-            updateStatus('Pokémon attributes initialized. Enter contenders.');
-        }
-
-        function shufflePokemons() {
-            if (gameActive) return;
-            initializePokemonData();
-            
-            if (allContenders.length > 0) {
-                const shuffledPokemonData = shuffleArray([...POKEMON_SPRITE_DATA]);
-                allContenders.forEach((contender, index) => {
-                    contender.pokemon = shuffledPokemonData[index % shuffledPokemonData.length];
-                });
-                updateContenderList();
-            }
-            updateStatus('Pokémon Types and Powers have been SHUFFLED. Ready to start tournament.');
-        }
-
-        function shuffleArray(array) {
-            for (let i = array.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [array[i], array[j]] = [array[j], array[i]];
-            }
-            return array;
-        }
-
-        function playExplosion() {
-            document.body.style.animation = 'damage-shake 0.2s 3';
-            setTimeout(() => document.body.style.animation = 'none', 600);
-            explosionSound.currentTime = 0;
-            explosionSound.play().catch(e => { /* Audio playback likely blocked by browser, ignoring error */ });
-        }
-
-        function updateStatus(message, isError = false) {
-            const element = gameScreen.style.display === 'flex' ? statusConsole : setupStatus;
-            element.innerHTML = message;
-            element.style.borderColor = isError ? 'var(--neon-red)' : 'var(--secondary-glow)';
-            element.style.boxShadow = isError ? '0 0 10px var(--neon-red)' : '0 0 10px var(--secondary-glow)';
-        }
-
-        // --- DISPLAY FUNCTIONS ---
-
-        function updateDuelSlot(element, contender) {
-            const img = element.querySelector('.slot-card-image');
-            img.src = contender.pokemon.spriteUrl;
-            img.alt = contender.pokemon.name;
-            img.style.display = 'block';
-
-            element.querySelector('h4').textContent = contender.name;
-            
-            const info = element.querySelector('.slot-card-info');
-            info.innerHTML = `
-                <div class="card-type ${contender.pokemon.type}" style="font-size: 1.2em; font-family: 'Bebas Neue', sans-serif;">${contender.pokemon.name}</div>
-                <div class="type-badge ${contender.pokemon.type}">TYPE: ${contender.pokemon.type}</div>
-                <div style="font-size: 0.7em;">PWR: ${contender.pokemon.power}</div>
-            `;
-            element.classList.remove('winner', 'loser', 'loser-vanish', 'clash-flash');
-            element.querySelector('.luck-score').textContent = '---';
-        }
-
-        function clearDuelSlots() {
-            [p1DuelSlot, p2DuelSlot].forEach(slot => {
-                slot.classList.remove('winner', 'loser', 'loser-vanish', 'clash-flash');
-                slot.querySelector('.luck-score').textContent = '---';
-            });
-            eliminationMessage.style.display = 'none';
-            matchDetails.innerHTML = 'Awaiting next match command...';
-        }
-        
-        function updateContenderList() {
-            const namesInput = document.getElementById('contenderNames').value.split('\n').map(n => n.trim()).filter(n => n);
-            if (allContenders.length === 0 && namesInput.length >= 2) {
-                setupTournament(true); 
-            }
-
-            tournamentListContainer.style.display = 'block';
-            contenderListUl.innerHTML = '';
-
-            allContenders.filter(c => c.active || !c.active).forEach(c => { 
-                const div = document.createElement('div');
-                div.className = `contender-card-item ${c.active ? 'contender-active' : 'contender-eliminated'}`;
-                
-                div.innerHTML = `
-                    <h5>${c.name}</h5>
-                    <img src="${c.pokemon.spriteUrl}" alt="${c.pokemon.name}">
-                    <div class="type-badge ${c.pokemon.type}">${c.pokemon.type}</div>
-                `;
-                contenderListUl.appendChild(div);
-            });
-            
-            setupStatus.textContent = `Total Contenders: ${allContenders.filter(c => c.active).length} active. SHUFFLE or BEGIN.`;
-        }
-
-        // --- TOURNAMENT FLOW ---
-        
-        function setupTournament(isInitialSetup = false) {
-            const namesInput = document.getElementById('contenderNames').value.split('\n').map(n => n.trim()).filter(n => n);
-            if (namesInput.length < 2) {
-                setupStatus.textContent = 'ERROR: Need at least two contender names.';
-                return;
-            }
-
-            if (isInitialSetup || allContenders.length !== namesInput.length) {
-                const shuffledPokemonData = shuffleArray([...POKEMON_SPRITE_DATA]);
-                allContenders = namesInput.map((name, index) => ({
-                    name: name,
-                    pokemon: shuffledPokemonData[index % shuffledPokemonData.length],
-                    active: true
-                }));
-            }
-            
-            activeContendersQueue = allContenders.filter(c => c.active);
-            
-            updateContenderList();
-            updateStatus('Contenders registered. Press BEGIN TOURNAMENT.');
-        }
-
-        function getRoundName(round) {
-            if (round === 0) return "THE GAUNTLET";
-            const active = allContenders.filter(c => c.active).length;
-            if (active <= 2) return "THE FINAL SHOWDOWN";
-            if (active <= 4) return "THE SEMI-FINALS";
-            if (active <= 8) return "THE QUARTER-FINALS";
-            return `ROUND ${round + 1}`;
-        }
-
-        function beginTournament() {
-             if (allContenders.filter(c => c.active).length < 2) {
-                setupStatus.textContent = 'ERROR: Need at least two active contenders to start the tournament.';
-                return;
-            }
-
-            gameMode = document.querySelector('input[name="gameMode"]:checked').value;
-            
-            tournamentRound = 0;
-            matchNumber = 0;
-            
-            activeContendersQueue = shuffleArray(allContenders.filter(c => c.active));
-
-            setupScreen.style.display = 'none';
-            gameScreen.style.display = 'flex';
-            document.getElementById('titleContainer').classList.add('game-active');
-            
-            statusConsole.innerHTML = setupStatus.innerHTML;
-
-            scheduleNextMatch();
-        }
-        
-        function scheduleNextMatch() {
-            // Hide button while checking/setting up
-            nextMatchButton.style.display = 'none'; 
-            nextMatchButton.disabled = true;
-            clearDuelSlots(); // Ensure clean slate before new pairing
-
-            // 1. Check for Tournament End
-            const activeCount = allContenders.filter(c => c.active).length;
-            if (activeCount === 1) {
-                endTournament(allContenders.find(c => c.active));
-                return;
-            } else if (activeCount === 0) {
-                endTournament(null);
-                return;
-            }
-
-            // 2. Check if the current round queue is empty -> START NEW ROUND
-            if (activeContendersQueue.length === 0) {
-                let winners = allContenders.filter(c => c.active);
-                
-                activeContendersQueue = shuffleArray(winners);
-                
-                // Handle odd number of players (bye)
-                if (activeContendersQueue.length % 2 !== 0 && activeContendersQueue.length > 1) {
-                    const byeContender = activeContendersQueue.pop(); 
-                    updateStatus(`ROUND ANNOUNCEMENT: ${getRoundName(tournamentRound + 1)}! ${activeContendersQueue.length + 1} gladiators remain. **${byeContender.name} receives a BYE!**`);
-                } else {
-                     updateStatus(`ROUND ANNOUNCEMENT: ${getRoundName(tournamentRound + 1)}! ${activeContendersQueue.length} gladiators remain.`);
-                }
-
-                tournamentRound++;
-                matchNumber = 0;
-                
-                roundDisplay.textContent = getRoundName(tournamentRound);
-                
-                // Pause slightly longer for round announcement
-                if (gameMode === 'auto') {
-                    setTimeout(scheduleNextMatch, MATCH_RESOLUTION_DELAY_MS);
-                } else {
-                    nextMatchButton.textContent = 'START NEXT ROUND';
-                    nextMatchButton.disabled = false;
-                    nextMatchButton.style.display = 'block';
-                    nextMatchButton.onclick = scheduleNextMatch;
-                }
-                return;
-            }
-
-            // 3. Schedule the match
-            const p1 = activeContendersQueue.shift();
-            const p2 = activeContendersQueue.shift();
-
-            // FIX: If p2 is null, it means the player p1 had a bye in the previous round and queue is now empty.
-            if (!p2) {
-                // If there's only one player left in the queue, it means they got an implicit bye.
-                updateStatus(`${p1.name} receives a BYE and ADVANCES! Preparing new round pairings...`);
-                
-                if (gameMode === 'auto') {
-                    setTimeout(scheduleNextMatch, MATCH_SETUP_DELAY_MS);
-                } else {
-                    nextMatchButton.textContent = 'CONTINUE TOURNAMENT';
-                    nextMatchButton.disabled = false;
-                    nextMatchButton.style.display = 'block';
-                    nextMatchButton.onclick = scheduleNextMatch;
-                }
-                return;
-            }
-
-            matchNumber++;
-            gameActive = true;
-            
-            currentMatch = { p1, p2, p1Pokemon: p1.pokemon, p2Pokemon: p2.pokemon };
-
-            // Update UI with match info
-            roundDisplay.textContent = `${getRoundName(tournamentRound)} | MATCH ${matchNumber}`;
-            p1DuelSlot.querySelector('h4').textContent = currentMatch.p1.name;
-            p2DuelSlot.querySelector('h4').textContent = currentMatch.p2.name;
-
-            updateDuelSlot(p1DuelSlot, currentMatch.p1);
-            updateDuelSlot(p2DuelSlot, currentMatch.p2);
-            
-            p1DuelSlot.classList.add('clash-flash');
-            p2DuelSlot.classList.add('clash-flash');
-            
-            updateStatus(`DUEL INITIATED! ${currentMatch.p1.name} (${currentMatch.p1Pokemon.type}) vs ${currentMatch.p2.name} (${currentMatch.p2Pokemon.type}). Fate is sealed...`);
-
-            // Time to view the pairing before resolution starts
-            if (gameMode === 'auto') {
-                setTimeout(resolveDuelScores, MATCH_SETUP_DELAY_MS); 
-            } else {
-                nextMatchButton.textContent = 'RESOLVE DUEL';
-                nextMatchButton.disabled = false;
-                nextMatchButton.style.display = 'block';
-                nextMatchButton.onclick = resolveDuelScores;
-            }
-        }
-        
-        // --- MULTI-STAGE RESOLUTION ---
-
-        function resolveDuelScores() {
-            // Stage 1: Calculate and display scores
-            nextMatchButton.disabled = true; // Always disable button during auto-stages
-
-            const p1Roll = Math.floor(Math.random() * 100) + 1;
-            const p2Roll = Math.floor(Math.random() * 100) + 1;
-
-            const p1TypeAdj = getTypeAdjustment(currentMatch.p1Pokemon.type, currentMatch.p2Pokemon.type);
-            const p2TypeAdj = getTypeAdjustment(currentMatch.p2Pokemon.type, currentMatch.p1Pokemon.type);
-            
-            const p1PowerBonus = Math.round(currentMatch.p1Pokemon.power * 0.2);
-            const p2PowerBonus = Math.round(currentMatch.p2Pokemon.power * 0.2);
-
-            const p1BattleScore = p1Roll + p1TypeAdj + p1PowerBonus;
-            const p2BattleScore = p2Roll + p2TypeAdj + p2PowerBonus;
-            
-            // Determine winner locally for scoring display
-            let winnerContender, loserContender;
-            if (p1BattleScore > p2BattleScore) {
-                winnerContender = currentMatch.p1;
-                loserContender = currentMatch.p2;
-            } else if (p2BattleScore > p1BattleScore) {
-                winnerContender = currentMatch.p2;
-                loserContender = currentMatch.p1;
-            } else {
-                // Tiebreaker logic (using power then random) remains the same
-                const finalDecider = currentMatch.p1Pokemon.power !== currentMatch.p2Pokemon.power ? 
-                    (currentMatch.p1Pokemon.power > currentMatch.p2Pokemon.power ? currentMatch.p1 : currentMatch.p2) :
-                    (Math.random() > 0.5 ? currentMatch.p1 : currentMatch.p2);
-                winnerContender = finalDecider;
-                loserContender = finalDecider === currentMatch.p1 ? currentMatch.p2 : currentMatch.p1;
-            }
-            
-            currentMatch.p1Score = p1BattleScore;
-            currentMatch.p2Score = p2BattleScore;
-            currentMatch.winner = winnerContender;
-            currentMatch.loser = loserContender;
-            
-            // Prepare informative message
-            const getAdjText = (adj) => {
-                if (adj > 0) return `<span class="type-adj-text">Super Effective (+50)</span>`;
-                if (adj < 0) return `<span class="type-disadj-text">Not Effective (-30)</span>`;
-                return `Neutral (0)`;
-            };
-            
-            const detailMsg = `
-                <div class="score-line score-p1">
-                    <strong>${currentMatch.p1.name} (${currentMatch.p1Pokemon.type})</strong><br>
-                    LUCK ROLL: +${p1Roll} | TYPE: ${getAdjText(p1TypeAdj)} | PWR: +${p1PowerBonus}
-                </div>
-                <div class="score-line score-p2">
-                    <strong>${currentMatch.p2.name} (${currentMatch.p2Pokemon.type})</strong><br>
-                    LUCK ROLL: +${p2Roll} | TYPE: ${getAdjText(p2TypeAdj)} | PWR: +${p2PowerBonus}
-                </div>
-            `;
-            matchDetails.innerHTML = detailMsg;
-
-            updateStatus("SCORES CALCULATED! Standby for the final strike...");
-
-            if (gameMode === 'auto') {
-                setTimeout(resolveDuelClash, MATCH_SCORE_DISPLAY_MS);
-            } else {
-                nextMatchButton.textContent = 'FINAL STRIKE';
-                nextMatchButton.disabled = false;
-                nextMatchButton.onclick = resolveDuelClash;
-            }
-        }
-        
-        function resolveDuelClash() {
-            // Stage 2: Final Clash Animation and Elimination Setup
-            nextMatchButton.disabled = true;
-
-            const { p1Score, p2Score, winner, loser } = currentMatch;
-
-            // Apply final scores and winner/loser styles
-            p1LuckScoreDisplay.textContent = Math.round(p1Score);
-            p2LuckScoreDisplay.textContent = Math.round(p2Score);
-            
-            p1DuelSlot.classList.remove('clash-flash');
-            p2DuelSlot.classList.remove('clash-flash');
-
-            if (winner === currentMatch.p1) {
-                p1DuelSlot.classList.add('winner');
-                p2DuelSlot.classList.add('loser');
-            } else {
-                p2DuelSlot.classList.add('winner');
-                p1DuelSlot.classList.add('loser');
-            }
-            
-            playExplosion();
-            
-            // Show dramatic result message
-            eliminationMessage.innerHTML = `
-                <span style="color: var(--neon-red); text-shadow: 0 0 10px var(--neon-red); font-weight: bold;">
-                    ${loser.name} ELIMINATED!
-                </span> 
-                <span style="color: var(--neon-green); text-shadow: 0 0 10px var(--neon-green);">
-                    ${winner.name} ADVANCES!
-                </span>
-            `;
-            eliminationMessage.style.display = 'block';
-            
-            updateStatus("ELIMINATION CONFIRMED! The arena claims its victim...");
-
-            if (gameMode === 'auto') {
-                setTimeout(resolveDuelFinish, MATCH_ELIMINATION_MS);
-            } else {
-                nextMatchButton.textContent = 'CONTINUE';
-                nextMatchButton.disabled = false;
-                nextMatchButton.onclick = resolveDuelFinish;
-            }
-        }
-
-        function resolveDuelFinish() {
-            // Stage 3: Final state transition and queue next match
-            nextMatchButton.disabled = true;
-
-            const { loser } = currentMatch;
-
-            // Apply visual vanishing effect
-            const loserSlot = loser === currentMatch.p1 ? p1DuelSlot : p2DuelSlot;
-            loserSlot.classList.add('loser-vanish');
-
-            // Eliminate the loser from the global list
-            const eliminatedIndex = allContenders.findIndex(c => c.name === loser.name);
-            if (eliminatedIndex !== -1) {
-                allContenders[eliminatedIndex].active = false;
-            }
-            
-            updateContenderList();
-            
-            // --- Determine Next Action ---
-            const remainingContenders = allContenders.filter(c => c.active);
-            
-            if (remainingContenders.length === 1) {
-                // FINAL WINNER FOUND
-                if (gameMode === 'auto') {
-                    setTimeout(() => endTournament(remainingContenders[0]), MATCH_SETUP_DELAY_MS);
-                } else {
-                    nextMatchButton.textContent = 'CROWN CHAMPION';
-                    nextMatchButton.disabled = false;
-                    nextMatchButton.style.display = 'block';
-                    nextMatchButton.onclick = () => endTournament(remainingContenders[0]);
-                }
-            } else {
-                // CONTINUE TOURNAMENT
-                if (gameMode === 'auto') {
-                    setTimeout(scheduleNextMatch, MATCH_SETUP_DELAY_MS);
-                } else {
-                    nextMatchButton.textContent = 'NEXT BATTLE';
-                    nextMatchButton.disabled = false;
-                    nextMatchButton.style.display = 'block';
-                    nextMatchButton.onclick = scheduleNextMatch;
-                }
-            }
-        }
-
-        function endTournament(winner) {
-            gameActive = false;
-            
-            document.getElementById('winnerName').textContent = winner ? winner.name : "DRAW";
-            
-            gameScreen.style.display = 'none';
-            winnerOverlay.style.display = 'flex';
-            
-            updateStatus(`TOURNAMENT COMPLETE! ${winner ? winner.name : 'No one'} is the CHAMPION.`);
-        }
-
-        function resetGame() {
-            gameActive = false;
-            tournamentRound = 0;
-            matchNumber = 0;
-            setupScreen.style.display = 'block';
-            gameScreen.style.display = 'none';
-            winnerOverlay.style.display = 'none';
-            document.getElementById('titleContainer').classList.remove('game-active');
-            
-            allContenders = [];
-            activeContendersQueue = [];
-            currentMatch = null;
-            
-            document.getElementById('contenderNames').value = ''; 
-            selectPlayersButton.style.display = 'block';
-            shufflePokemonsButton.style.display = 'block';
-            tournamentListContainer.style.display = 'none';
-            nextMatchButton.style.display = 'none';
-            
-            initializePokemonData();
-            updateStatus('Enter contenders and press SHUFFLE POKÉMONS.');
-            clearDuelSlots();
-        }
-
-        // --- EVENT LISTENERS ---
-        selectPlayersButton.addEventListener('click', beginTournament);
-        shufflePokemonsButton.addEventListener('click', shufflePokemons);
-        document.getElementById('contenderNames').addEventListener('input', () => setupTournament(true));
-        
-        // Initial setup
-        initializePokemonData();
-        resetGame();
-
-    </script>
+        <audio id="explosionSound" src="arena_explosion.mp3"></audio>
+
+    <div id="mainContainer">
+        <div id="titleContainer">
+            <h1>GLADIATORS DEATH ARENA: SUDDEN DEATH TOURNAMENT</h1>
+        </div>
+
+                <div id="setupScreen">
+            <h2>TOURNAMENT REGISTRATION & POKÉMON ASSIGNMENT</h2>
+            
+                        <div class="mode-selector">
+                <p>TOURNAMENT MODE:</p>
+                <input type="radio" id="modeAuto" name="gameMode" value="auto" checked>
+                <label for="modeAuto">AUTOMATIC</label>
+                <input type="radio" id="modeManual" name="gameMode" value="manual">
+                <label for="modeManual">MANUAL</label>
+            </div>
+            
+            <div class="input-card">
+                <label for="contenderNames">Enter Contender Names (one per line, min 2):</label>
+                <textarea id="contenderNames" rows="5" placeholder=""></textarea>
+            </div>
+            
+            <div id="tournamentListContainer" style="display: none;">
+                <h4>TOURNAMENT BRACKET</h4>
+                <ul id="contenderList"></ul>
+            </div>
+            
+            <div id="setupStatus" style="color: var(--primary-glow); margin-bottom: var(--spacing-md);">Enter contenders and press SHUFFLE POKÉMONS.</div>
+            
+            <div style="display: flex; gap: var(--spacing-md); justify-content: center;">
+                <button id="shufflePokemonsButton" class="game-button secondary">SHUFFLE POKÉMONS</button>
+                <button id="selectPlayersButton" class="game-button">BEGIN TOURNAMENT</button>
+            </div>
+            
+            <button onclick="resetGame()" class="game-button secondary" style="margin-top: var(--spacing-md);">RESET ARENA</button>
+        </div>
+
+                <div id="gameScreen">
+                        <div id="statusConsole"></div>
+
+            <div id="arena">
+                                <div id="duelZone">
+                    <div id="roundDisplay">MATCH 1 / ROUND 1</div>
+
+                    <div id="actionSlots">
+                                                <div id="p1DuelSlot" class="action-slot">
+                            <h4>CONTENDER 1</h4>
+                            <img class="slot-card-image" src="" alt="P1 Pokemon" style="display: none;">
+                            <div class="slot-card-info"></div>
+                            <div class="luck-score" id="p1LuckScore">---</div>
+                        </div>
+
+                        <h2 style="font-family: 'Orbitron', sans-serif; color: var(--neon-red); text-shadow: 0 0 10px var(--neon-red); margin: 0;">VS</h2>
+
+                                                <div id="p2DuelSlot" class="action-slot">
+                            <h4>CONTENDER 2</h4>
+                            <img class="slot-card-image" src="" alt="P2 Pokemon" style="display: none;">
+                            <div class="slot-card-info"></div>
+                            <div class="luck-score" id="p2LuckScore">---</div>
+                        </div>
+                    </div>
+
+                                        <div id="matchDetails">
+                        Waiting for match resolution...
+                    </div>
+
+                                        <h2 id="eliminationMessage" style="color: var(--neon-red); display: none;"></h2>
+                </div>
+                
+                                <button id="nextMatchButton" class="game-button manual-advance" style="display: none;">NEXT BATTLE</button>
+            </div>
+        </div>
+
+                <div id="winnerOverlay">
+            <h2>TOURNAMENT CHAMPION EMERGES!</h2>
+            <span id="winnerName"></span>
+            <button onclick="resetGame()" class="game-button" style="margin-top: var(--spacing-lg);">START NEW TOURNAMENT</button>
+        </div>
+    </div>
+
+    <script>
+        const setupScreen = document.getElementById('setupScreen');
+        const gameScreen = document.getElementById('gameScreen');
+        const winnerOverlay = document.getElementById('winnerOverlay');
+        const statusConsole = document.getElementById('statusConsole'); // Now the top bar in game view
+        const setupStatus = document.getElementById('setupStatus'); // Status bar in setup view
+        const shufflePokemonsButton = document.getElementById('shufflePokemonsButton');
+        const selectPlayersButton = document.getElementById('selectPlayersButton');
+        const roundDisplay = document.getElementById('roundDisplay');
+        const explosionSound = document.getElementById('explosionSound');
+        const contenderListUl = document.getElementById('contenderList');
+        const tournamentListContainer = document.getElementById('tournamentListContainer');
+        const eliminationMessage = document.getElementById('eliminationMessage');
+        const matchDetails = document.getElementById('matchDetails');
+        const nextMatchButton = document.getElementById('nextMatchButton'); // Manual control button
+
+        // Duel Slot Elements
+        const p1DuelSlot = document.getElementById('p1DuelSlot');
+        const p2DuelSlot = document.getElementById('p2DuelSlot'); 
+        const p1LuckScoreDisplay = document.getElementById('p1LuckScore');
+        const p2LuckScoreDisplay = document.getElementById('p2LuckScore');
+
+        // --- GLOBAL GAME STATE ---
+        const MATCH_SETUP_DELAY_MS = 1500; // Time to view pairing before resolution starts
+        const MATCH_SCORE_DISPLAY_MS = 1000; // Time the final scores are visible before elimination
+        const MATCH_ELIMINATION_MS = 2000; // Time for explosion/vanish effect
+        // 🌟 FIX: Added the missing constant
+        const MATCH_RESOLUTION_DELAY_MS = 2500; // Time for round announcement pause
+        // 🌟 END FIX
+
+        let gameActive = false;
+        let tournamentRound = 0;
+        let matchNumber = 0;
+        let gameMode = 'auto'; // 'auto' or 'manual'
+
+        // Tournament specific state
+        let allContenders = []; 
+        let activeContendersQueue = []; 
+        let currentMatch = null; 
+
+        // --- POKEMON DATA & RULES ---
+        const POKEMON_TYPES = ['Fire', 'Water', 'Grass', 'Electric', 'Ground', 'Psychic', 'Normal', 'Flying'];
+        const ALL_POKEMON_COUNT = 151;
+        let POKEMON_SPRITE_DATA = []; 
+
+        // Simplified Type Chart
+        const TYPE_CHART = {
+            'Fire': { SE: ['Grass'], NE: ['Fire', 'Water', 'Ground'] },
+            'Water': { SE: ['Fire', 'Ground'], NE: ['Water', 'Grass'] },
+            'Grass': { SE: ['Water', 'Ground'], NE: ['Fire', 'Grass', 'Flying'] },
+            'Electric': { SE: ['Water', 'Flying'], NE: ['Electric', 'Grass', 'Ground'] },
+            'Ground': { SE: ['Electric', 'Fire'], NE: ['Grass', 'Flying'] },
+            'Psychic': { SE: ['Fighting', 'Poison'], NE: ['Psychic'] },
+            'Normal': { SE: [], NE: ['Ground'] },
+            'Flying': { SE: ['Grass', 'Fighting'], NE: ['Electric', 'Flying'] }
+        };
+        
+        // Returns point adjustments based on match-up
+        function getTypeAdjustment(attackingType, defendingType) {
+            const chart = TYPE_CHART[attackingType];
+            if (!chart) return 0; // Neutral
+
+            if (chart.SE.includes(defendingType)) {
+                return 50; // Super Effective: Major Advantage
+            }
+            if (chart.NE.includes(defendingType)) {
+                return -30; // Not Effective: Major Disadvantage
+            }
+            return 0; // Neutral
+        }
+
+        // --- SETUP & UTILITY FUNCTIONS ---
+
+        function initializePokemonData() {
+            POKEMON_SPRITE_DATA = [];
+            let powers = [];
+            let types = [];
+            for(let i = 0; i < ALL_POKEMON_COUNT; i++) {
+                powers.push(Math.floor(Math.random() * 50) + 50); // Power 50-100
+                types.push(POKEMON_TYPES[i % POKEMON_TYPES.length]); 
+            }
+            powers = shuffleArray(powers);
+            types = shuffleArray(types);
+
+            for (let id = 1; id <= ALL_POKEMON_COUNT; id++) {
+                POKEMON_SPRITE_DATA.push({
+                    id: id,
+                    name: `Poke ${id}`,
+                    type: types[id - 1],
+                    power: powers[id - 1],
+                    spriteUrl: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/versions/generation-v/black-white/animated/${id}.gif`,
+                });
+            }
+            POKEMON_SPRITE_DATA = shuffleArray(POKEMON_SPRITE_DATA);
+            updateStatus('Pokémon attributes initialized. Enter contenders.');
+        }
+
+        function shufflePokemons() {
+            if (gameActive) return;
+            initializePokemonData();
+            
+            if (allContenders.length > 0) {
+                const shuffledPokemonData = shuffleArray([...POKEMON_SPRITE_DATA]);
+                allContenders.forEach((contender, index) => {
+                    contender.pokemon = shuffledPokemonData[index % shuffledPokemonData.length];
+                });
+                updateContenderList();
+            }
+            updateStatus('Pokémon Types and Powers have been SHUFFLED. Ready to start tournament.');
+        }
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function playExplosion() {
+            document.body.style.animation = 'damage-shake 0.2s 3';
+            setTimeout(() => document.body.style.animation = 'none', 600);
+            explosionSound.currentTime = 0;
+            explosionSound.play().catch(e => { /* Audio playback likely blocked by browser, ignoring error */ });
+        }
+
+        function updateStatus(message, isError = false) {
+            const element = gameScreen.style.display === 'flex' ? statusConsole : setupStatus;
+            element.innerHTML = message;
+            element.style.borderColor = isError ? 'var(--neon-red)' : 'var(--secondary-glow)';
+            element.style.boxShadow = isError ? '0 0 10px var(--neon-red)' : '0 0 10px var(--secondary-glow)';
+        }
+
+        // --- DISPLAY FUNCTIONS ---
+
+        function updateDuelSlot(element, contender) {
+            const img = element.querySelector('.slot-card-image');
+            img.src = contender.pokemon.spriteUrl;
+            img.alt = contender.pokemon.name;
+            img.style.display = 'block';
+
+            element.querySelector('h4').textContent = contender.name;
+            
+            const info = element.querySelector('.slot-card-info');
+            info.innerHTML = `
+                <div class="card-type ${contender.pokemon.type}" style="font-size: 1.2em; font-family: 'Bebas Neue', sans-serif;">${contender.pokemon.name}</div>
+                <div class="type-badge ${contender.pokemon.type}">TYPE: ${contender.pokemon.type}</div>
+                <div style="font-size: 0.7em;">PWR: ${contender.pokemon.power}</div>
+            `;
+            element.classList.remove('winner', 'loser', 'loser-vanish', 'clash-flash');
+            element.querySelector('.luck-score').textContent = '---';
+        }
+
+        function clearDuelSlots() {
+            [p1DuelSlot, p2DuelSlot].forEach(slot => {
+                slot.classList.remove('winner', 'loser', 'loser-vanish', 'clash-flash');
+                slot.querySelector('.luck-score').textContent = '---';
+            });
+            eliminationMessage.style.display = 'none';
+            matchDetails.innerHTML = 'Awaiting next match command...';
+        }
+        
+        function updateContenderList() {
+            const namesInput = document.getElementById('contenderNames').value.split('\n').map(n => n.trim()).filter(n => n);
+            if (allContenders.length === 0 && namesInput.length >= 2) {
+                setupTournament(true); 
+            }
+
+            tournamentListContainer.style.display = 'block';
+            contenderListUl.innerHTML = '';
+
+            allContenders.filter(c => c.active || !c.active).forEach(c => { 
+                const div = document.createElement('div');
+                div.className = `contender-card-item ${c.active ? 'contender-active' : 'contender-eliminated'}`;
+                
+                div.innerHTML = `
+                    <h5>${c.name}</h5>
+                    <img src="${c.pokemon.spriteUrl}" alt="${c.pokemon.name}">
+                    <div class="type-badge ${c.pokemon.type}">${c.pokemon.type}</div>
+                `;
+                contenderListUl.appendChild(div);
+            });
+            
+            setupStatus.textContent = `Total Contenders: ${allContenders.filter(c => c.active).length} active. SHUFFLE or BEGIN.`;
+        }
+
+        // --- TOURNAMENT FLOW ---
+        
+        function setupTournament(isInitialSetup = false) {
+            const namesInput = document.getElementById('contenderNames').value.split('\n').map(n => n.trim()).filter(n => n);
+            if (namesInput.length < 2) {
+                setupStatus.textContent = 'ERROR: Need at least two contender names.';
+                return;
+            }
+
+            if (isInitialSetup || allContenders.length !== namesInput.length) {
+                const shuffledPokemonData = shuffleArray([...POKEMON_SPRITE_DATA]);
+                allContenders = namesInput.map((name, index) => ({
+                    name: name,
+                    pokemon: shuffledPokemonData[index % shuffledPokemonData.length],
+                    active: true
+                }));
+            }
+            
+            activeContendersQueue = allContenders.filter(c => c.active);
+            
+            updateContenderList();
+            updateStatus('Contenders registered. Press BEGIN TOURNAMENT.');
+        }
+
+        function getRoundName(round) {
+            if (round === 0) return "THE GAUNTLET";
+            const active = allContenders.filter(c => c.active).length;
+            if (active <= 2) return "THE FINAL SHOWDOWN";
+            if (active <= 4) return "THE SEMI-FINALS";
+            if (active <= 8) return "THE QUARTER-FINALS";
+            return `ROUND ${round + 1}`;
+        }
+
+        function beginTournament() {
+             if (allContenders.filter(c => c.active).length < 2) {
+                setupStatus.textContent = 'ERROR: Need at least two active contenders to start the tournament.';
+                return;
+            }
+
+            gameMode = document.querySelector('input[name="gameMode"]:checked').value;
+            
+            tournamentRound = 0;
+            matchNumber = 0;
+            
+            activeContendersQueue = shuffleArray(allContenders.filter(c => c.active));
+
+            setupScreen.style.display = 'none';
+            gameScreen.style.display = 'flex';
+            document.getElementById('titleContainer').classList.add('game-active');
+            
+            statusConsole.innerHTML = setupStatus.innerHTML;
+
+            scheduleNextMatch();
+        }
+        
+        function scheduleNextMatch() {
+            // Hide button while checking/setting up
+            nextMatchButton.style.display = 'none'; 
+            nextMatchButton.disabled = true;
+            clearDuelSlots(); // Ensure clean slate before new pairing
+
+            // 1. Check for Tournament End
+            const activeCount = allContenders.filter(c => c.active).length;
+            if (activeCount === 1) {
+                endTournament(allContenders.find(c => c.active));
+                return;
+            } else if (activeCount === 0) {
+                endTournament(null);
+                return;
+            }
+
+            // 2. Check if the current round queue is empty -> START NEW ROUND
+            if (activeContendersQueue.length === 0) {
+                let winners = allContenders.filter(c => c.active);
+                
+                activeContendersQueue = shuffleArray(winners);
+                
+                // Handle odd number of players (bye)
+                if (activeContendersQueue.length % 2 !== 0 && activeContendersQueue.length > 1) {
+                    const byeContender = activeContendersQueue.pop(); 
+                    updateStatus(`ROUND ANNOUNCEMENT: ${getRoundName(tournamentRound + 1)}! ${activeContendersQueue.length + 1} gladiators remain. **${byeContender.name} receives a BYE!**`);
+                } else {
+                     updateStatus(`ROUND ANNOUNCEMENT: ${getRoundName(tournamentRound + 1)}! ${activeContendersQueue.length} gladiators remain.`);
+                }
+
+                tournamentRound++;
+                matchNumber = 0;
+                
+                roundDisplay.textContent = getRoundName(tournamentRound);
+                
+                // Pause slightly longer for round announcement
+                if (gameMode === 'auto') {
+                    setTimeout(scheduleNextMatch, MATCH_RESOLUTION_DELAY_MS);
+                } else {
+                    nextMatchButton.textContent = 'START NEXT ROUND';
+                    nextMatchButton.disabled = false;
+                    nextMatchButton.style.display = 'block';
+                    nextMatchButton.onclick = scheduleNextMatch;
+                }
+                return;
+            }
+
+            // 3. Schedule the match
+            const p1 = activeContendersQueue.shift();
+            const p2 = activeContendersQueue.shift();
+
+            // FIX: If p2 is null, it means the player p1 had a bye in the previous round and queue is now empty.
+            if (!p2) {
+                // If there's only one player left in the queue, it means they got an implicit bye.
+                updateStatus(`${p1.name} receives a BYE and ADVANCES! Preparing new round pairings...`);
+                
+                if (gameMode === 'auto') {
+                    setTimeout(scheduleNextMatch, MATCH_SETUP_DELAY_MS);
+                } else {
+                    nextMatchButton.textContent = 'CONTINUE TOURNAMENT';
+                    nextMatchButton.disabled = false;
+                    nextMatchButton.style.display = 'block';
+                    nextMatchButton.onclick = scheduleNextMatch;
+                }
+                return;
+            }
+
+            matchNumber++;
+            gameActive = true;
+            
+            currentMatch = { p1, p2, p1Pokemon: p1.pokemon, p2Pokemon: p2.pokemon };
+
+            // Update UI with match info
+            roundDisplay.textContent = `${getRoundName(tournamentRound)} | MATCH ${matchNumber}`;
+            p1DuelSlot.querySelector('h4').textContent = currentMatch.p1.name;
+            p2DuelSlot.querySelector('h4').textContent = currentMatch.p2.name;
+
+            updateDuelSlot(p1DuelSlot, currentMatch.p1);
+            updateDuelSlot(p2DuelSlot, currentMatch.p2);
+            
+            p1DuelSlot.classList.add('clash-flash');
+            p2DuelSlot.classList.add('clash-flash');
+            
+            updateStatus(`DUEL INITIATED! ${currentMatch.p1.name} (${currentMatch.p1Pokemon.type}) vs ${currentMatch.p2.name} (${currentMatch.p2Pokemon.type}). Fate is sealed...`);
+
+            // Time to view the pairing before resolution starts
+            if (gameMode === 'auto') {
+                setTimeout(resolveDuelScores, MATCH_SETUP_DELAY_MS); 
+            } else {
+                nextMatchButton.textContent = 'RESOLVE DUEL';
+                nextMatchButton.disabled = false;
+                nextMatchButton.style.display = 'block';
+                nextMatchButton.onclick = resolveDuelScores;
+            }
+        }
+        
+        // --- MULTI-STAGE RESOLUTION ---
+
+        function resolveDuelScores() {
+            // Stage 1: Calculate and display scores
+            nextMatchButton.disabled = true; // Always disable button during auto-stages
+
+            const p1Roll = Math.floor(Math.random() * 100) + 1;
+            const p2Roll = Math.floor(Math.random() * 100) + 1;
+
+            const p1TypeAdj = getTypeAdjustment(currentMatch.p1Pokemon.type, currentMatch.p2Pokemon.type);
+            const p2TypeAdj = getTypeAdjustment(currentMatch.p2Pokemon.type, currentMatch.p1Pokemon.type);
+            
+            const p1PowerBonus = Math.round(currentMatch.p1Pokemon.power * 0.2);
+            const p2PowerBonus = Math.round(currentMatch.p2Pokemon.power * 0.2);
+
+            const p1BattleScore = p1Roll + p1TypeAdj + p1PowerBonus;
+            const p2BattleScore = p2Roll + p2TypeAdj + p2PowerBonus;
+            
+            // Determine winner locally for scoring display
+            let winnerContender, loserContender;
+            if (p1BattleScore > p2BattleScore) {
+                winnerContender = currentMatch.p1;
+                loserContender = currentMatch.p2;
+            } else if (p2BattleScore > p1BattleScore) {
+                winnerContender = currentMatch.p2;
+                loserContender = currentMatch.p1;
+            } else {
+                // Tiebreaker logic (using power then random) remains the same
+                const finalDecider = currentMatch.p1Pokemon.power !== currentMatch.p2Pokemon.power ? 
+                    (currentMatch.p1Pokemon.power > currentMatch.p2Pokemon.power ? currentMatch.p1 : currentMatch.p2) :
+                    (Math.random() > 0.5 ? currentMatch.p1 : currentMatch.p2);
+                winnerContender = finalDecider;
+                loserContender = finalDecider === currentMatch.p1 ? currentMatch.p2 : currentMatch.p1;
+            }
+            
+            currentMatch.p1Score = p1BattleScore;
+            currentMatch.p2Score = p2BattleScore;
+            currentMatch.winner = winnerContender;
+            currentMatch.loser = loserContender;
+            
+            // Prepare informative message
+            const getAdjText = (adj) => {
+                if (adj > 0) return `<span class="type-adj-text">Super Effective (+50)</span>`;
+                if (adj < 0) return `<span class="type-disadj-text">Not Effective (-30)</span>`;
+                return `Neutral (0)`;
+            };
+            
+            const detailMsg = `
+                <div class="score-line score-p1">
+                    <strong>${currentMatch.p1.name} (${currentMatch.p1Pokemon.type})</strong><br>
+                    LUCK ROLL: +${p1Roll} | TYPE: ${getAdjText(p1TypeAdj)} | PWR: +${p1PowerBonus}
+                </div>
+                <div class="score-line score-p2">
+                    <strong>${currentMatch.p2.name} (${currentMatch.p2Pokemon.type})</strong><br>
+                    LUCK ROLL: +${p2Roll} | TYPE: ${getAdjText(p2TypeAdj)} | PWR: +${p2PowerBonus}
+                </div>
+            `;
+            matchDetails.innerHTML = detailMsg;
+
+            updateStatus("SCORES CALCULATED! Standby for the final strike...");
+
+            if (gameMode === 'auto') {
+                setTimeout(resolveDuelClash, MATCH_SCORE_DISPLAY_MS);
+            } else {
+                nextMatchButton.textContent = 'FINAL STRIKE';
+                nextMatchButton.disabled = false;
+                nextMatchButton.onclick = resolveDuelClash;
+            }
+        }
+        
+        function resolveDuelClash() {
+            // Stage 2: Final Clash Animation and Elimination Setup
+            nextMatchButton.disabled = true;
+
+            const { p1Score, p2Score, winner, loser } = currentMatch;
+
+            // Apply final scores and winner/loser styles
+            p1LuckScoreDisplay.textContent = Math.round(p1Score);
+            p2LuckScoreDisplay.textContent = Math.round(p2Score);
+            
+            p1DuelSlot.classList.remove('clash-flash');
+            p2DuelSlot.classList.remove('clash-flash');
+
+            if (winner === currentMatch.p1) {
+                p1DuelSlot.classList.add('winner');
+                p2DuelSlot.classList.add('loser');
+            } else {
+                p2DuelSlot.classList.add('winner');
+                p1DuelSlot.classList.add('loser');
+            }
+            
+            playExplosion();
+            
+            // Show dramatic result message
+            eliminationMessage.innerHTML = `
+                <span style="color: var(--neon-red); text-shadow: 0 0 10px var(--neon-red); font-weight: bold;">
+                    ${loser.name} ELIMINATED!
+                </span> 
+                <span style="color: var(--neon-green); text-shadow: 0 0 10px var(--neon-green);">
+                    ${winner.name} ADVANCES!
+                </span>
+            `;
+            eliminationMessage.style.display = 'block';
+            
+            updateStatus("ELIMINATION CONFIRMED! The arena claims its victim...");
+
+            if (gameMode === 'auto') {
+                setTimeout(resolveDuelFinish, MATCH_ELIMINATION_MS);
+            } else {
+                nextMatchButton.textContent = 'CONTINUE';
+                nextMatchButton.disabled = false;
+                nextMatchButton.onclick = resolveDuelFinish;
+            }
+        }
+
+        function resolveDuelFinish() {
+            // Stage 3: Final state transition and queue next match
+            nextMatchButton.disabled = true;
+
+            const { loser } = currentMatch;
+
+            // Apply visual vanishing effect
+            const loserSlot = loser === currentMatch.p1 ? p1DuelSlot : p2DuelSlot;
+            loserSlot.classList.add('loser-vanish');
+
+            // Eliminate the loser from the global list
+            const eliminatedIndex = allContenders.findIndex(c => c.name === loser.name);
+            if (eliminatedIndex !== -1) {
+                allContenders[eliminatedIndex].active = false;
+            }
+            
+            updateContenderList();
+            
+            // --- Determine Next Action ---
+            const remainingContenders = allContenders.filter(c => c.active);
+            
+            if (remainingContenders.length === 1) {
+                // FINAL WINNER FOUND
+                if (gameMode === 'auto') {
+                    setTimeout(() => endTournament(remainingContenders[0]), MATCH_SETUP_DELAY_MS);
+                } else {
+                    nextMatchButton.textContent = 'CROWN CHAMPION';
+                    nextMatchButton.disabled = false;
+                    nextMatchButton.style.display = 'block';
+                    nextMatchButton.onclick = () => endTournament(remainingContenders[0]);
+                }
+            } else {
+                // CONTINUE TOURNAMENT
+                if (gameMode === 'auto') {
+                    setTimeout(scheduleNextMatch, MATCH_SETUP_DELAY_MS);
+                } else {
+                    nextMatchButton.textContent = 'NEXT BATTLE';
+                    nextMatchButton.disabled = false;
+                    nextMatchButton.style.display = 'block';
+                    nextMatchButton.onclick = scheduleNextMatch;
+                }
+            }
+        }
+
+        function endTournament(winner) {
+            gameActive = false;
+            
+            document.getElementById('winnerName').textContent = winner ? winner.name : "DRAW";
+            
+            gameScreen.style.display = 'none';
+            winnerOverlay.style.display = 'flex';
+            
+            updateStatus(`TOURNAMENT COMPLETE! ${winner ? winner.name : 'No one'} is the CHAMPION.`);
+        }
+
+        function resetGame() {
+            gameActive = false;
+            tournamentRound = 0;
+            matchNumber = 0;
+            setupScreen.style.display = 'block';
+            gameScreen.style.display = 'none';
+            winnerOverlay.style.display = 'none';
+            document.getElementById('titleContainer').classList.remove('game-active');
+            
+            allContenders = [];
+            activeContendersQueue = [];
+            currentMatch = null;
+            
+            document.getElementById('contenderNames').value = ''; 
+            selectPlayersButton.style.display = 'block';
+            shufflePokemonsButton.style.display = 'block';
+            tournamentListContainer.style.display = 'none';
+            nextMatchButton.style.display = 'none';
+            
+            initializePokemonData();
+            updateStatus('Enter contenders and press SHUFFLE POKÉMONS.');
+            clearDuelSlots();
+        }
+
+        // --- EVENT LISTENERS ---
+        selectPlayersButton.addEventListener('click', beginTournament);
+        shufflePokemonsButton.addEventListener('click', shufflePokemons);
+        document.getElementById('contenderNames').addEventListener('input', () => setupTournament(true));
+        
+        // Initial setup
+        initializePokemonData();
+        resetGame();
+
+    </script>
 </body>
 </html>
