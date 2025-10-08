@@ -154,6 +154,7 @@
             border-radius: 12px;
             padding: 20px;
             box-shadow: inset 0 0 10px rgba(0, 255, 234, 0.3);
+            text-align: left; /* Alignment for input labels */
         }
 
         .input-card label {
@@ -185,6 +186,50 @@
             box-shadow: 0 0 10px var(--secondary-glow);
         }
         
+        .range-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            align-items: center;
+            padding-top: 5px;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px dashed var(--secondary-glow);
+        }
+
+        .range-container label {
+            text-align: center;
+            margin-bottom: 0;
+            font-size: 1em;
+            color: var(--secondary-glow);
+            font-family: 'Orbitron', sans-serif;
+            text-shadow: 0 0 5px var(--secondary-glow);
+        }
+
+        .range-container input[type="range"] {
+            width: 95%;
+            -webkit-appearance: none;
+            height: 10px;
+            background: var(--grid-color-dark);
+            border-radius: 5px;
+            outline: none;
+            opacity: 0.9;
+            transition: opacity .2s;
+            box-shadow: 0 0 5px var(--secondary-glow);
+        }
+
+        .range-container input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--primary-glow);
+            cursor: pointer;
+            box-shadow: 0 0 10px var(--primary-glow);
+        }
+
         .action-buttons {
              display: flex; 
              gap: 15px; 
@@ -458,6 +503,11 @@
                     <div id="status" style="margin-top: 15px;">Initializing Battle...</div>
                 </div>
                 <div id="gameControls" style="display: flex; flex-direction: column; gap: 15px; flex-grow: 1; justify-content: flex-end;">
+                    
+                    <div class="range-container">
+                        <label for="eliminationTimer">MOVE PHASE TIMER: <span id="timerValueDisplay">3s</span></label>
+                        <input type="range" id="eliminationTimer" min="1000" max="10000" value="3000" step="1000">
+                    </div>
                     <button id="shuffleButton" class="game-button">SHUFFLE POKÉMON</button>
                     <button id="startGameButton" class="game-button">LAUNCH BATTLE</button>
                     <button onclick="resetGame()" class="game-button prepare-secondary">RESET ARENA</button>
@@ -497,9 +547,16 @@
         const scoreDisplay = document.getElementById('scoreDisplay');
         const explosionSound = document.getElementById('explosionSound');
 
+        // NEW TIMER ELEMENTS
+        const eliminationTimerInput = document.getElementById('eliminationTimer');
+        const timerValueDisplay = document.getElementById('timerValueDisplay');
+        
         const GRID_SIZE = 10;
         let TILE_SIZE = canvas.width / GRID_SIZE;
         let POKEMON_IMAGE_SIZE = TILE_SIZE * 0.85;
+        
+        // Timer variable controlled by the new slider (in milliseconds)
+        let ELIMINATION_TIMER_MS = parseInt(eliminationTimerInput.value); 
         
         // Duration of the blink effect
         const BLINK_DURATION = 100; // milliseconds for the flash
@@ -512,7 +569,9 @@
         let gameScore = 0;
         let gameLoopInterval;
         let roundPhase = 0; // 0: Move, 1: Warning/Attack, 2: Resolution
-        const PHASE_TIMINGS = [3000, 1500, 1200];
+        
+        // Use a function for PHASE_TIMINGS to dynamically update the first value
+        const getPhaseTimings = () => [ELIMINATION_TIMER_MS, 1500, 1200]; 
 
         const POKEBALL_URL = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png';
         const POKEBALL_IMAGE = new Image();
@@ -588,6 +647,7 @@
                 const yCenter = r.y * TILE_SIZE + TILE_SIZE / 2;
                 
                 // Control blink rate: Phase 1 is 1500ms. Blink cycle is 500ms (250ms ON, 250ms OFF). 
+                const PHASE_TIMINGS = getPhaseTimings();
                 const timeElapsedInPhase1 = Date.now() - r.roundStartTime - PHASE_TIMINGS[0];
                 let flash = 0;
                 
@@ -725,6 +785,8 @@
             roundPhase = 0;
             gameScore += 100; // Score for surviving a round
             
+            const PHASE_TIMINGS = getPhaseTimings(); // Get current phase timings
+            
             // Set round start time for blink logic
             racers.forEach(r => {
                 r.targetX = r.x;
@@ -745,7 +807,8 @@
 
             updateGameInfo();
             attackStatus.textContent = '';
-            statusDisplay.textContent = `ROUND ${roundNumber} - MOVE PHASE: ${PHASE_TIMINGS[0] / 1000}s to evade!`;
+            // Use the dynamic ELIMINATION_TIMER_MS value for the status message
+            statusDisplay.textContent = `ROUND ${roundNumber} - MOVE PHASE: ${ELIMINATION_TIMER_MS / 1000}s to evade!`;
 
             setTimeout(attackPhase, PHASE_TIMINGS[0]);
             drawGame();
@@ -753,6 +816,7 @@
 
         function attackPhase() {
             roundPhase = 1;
+            const PHASE_TIMINGS = getPhaseTimings();
             const targetName = currentAttack.targetRacer ? currentAttack.targetRacer.name : 'N/A';
             attackStatus.textContent = `⚠ ${targetName} TARGETED!`;
             statusDisplay.textContent = `ROUND ${roundNumber} - ${ATTACK_PATTERNS[currentAttack.name].name} DEPLOYING!`;
@@ -763,6 +827,7 @@
 
         function resolutionPhase() {
             roundPhase = 2;
+            const PHASE_TIMINGS = getPhaseTimings();
             attackStatus.textContent = '';
             const r = currentAttack.targetRacer;
 
@@ -1001,6 +1066,17 @@
             }
             drawGame();
         }
+        
+        // --- NEW TIMER CONTROL LOGIC ---
+        eliminationTimerInput.addEventListener('input', (event) => {
+            ELIMINATION_TIMER_MS = parseInt(event.target.value);
+            // Display the value in seconds
+            timerValueDisplay.textContent = `${ELIMINATION_TIMER_MS / 1000}s`; 
+        });
+        // --- END NEW TIMER CONTROL LOGIC ---
+
+        // Initial update of the display to match the default value
+        timerValueDisplay.textContent = `${ELIMINATION_TIMER_MS / 1000}s`; 
 
         submitNamesButton.addEventListener('click', submitNames);
         setupStartButton.addEventListener('click', prepareGame);
