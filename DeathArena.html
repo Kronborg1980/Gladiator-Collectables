@@ -514,8 +514,8 @@
     </style>
 </head>
 <body>
-    <!-- NOTE: Audio source might fail due to browser security restrictions in an iframe, but visual effects remain. -->
-    <audio id="explosionSound" src="https://freesound.org/data/previews/171/171671_3025331-lq.mp3"></audio>
+    <!-- NOTE: Audio source might fail due to browser security restrictions in an iframe. To ensure sound, upload a file named 'arena_explosion.mp3' to the environment. -->
+    <audio id="explosionSound" src="arena_explosion.mp3"></audio>
 
     <div id="mainContainer">
         <div id="titleContainer">
@@ -726,7 +726,8 @@
             document.body.style.animation = 'damage-shake 0.2s 3';
             setTimeout(() => document.body.style.animation = 'none', 600);
             explosionSound.currentTime = 0;
-            explosionSound.play().catch(e => console.error("Audio playback failed:", e));
+            // Catching the error here prevents the console spam, but the sound issue requires the file upload.
+            explosionSound.play().catch(e => { /* Audio playback likely blocked by browser, ignoring error */ });
         }
 
         function updateStatus(message, isError = false) {
@@ -861,7 +862,7 @@
 
             // 2. Check if the current round queue is empty -> START NEW ROUND
             if (activeContendersQueue.length === 0) {
-                // BUG FIX: The winner list for the new round is simply the current active contenders.
+                // The winner list for the new round is simply the current active contenders.
                 let winners = allContenders.filter(c => c.active);
                 
                 activeContendersQueue = shuffleArray(winners);
@@ -899,7 +900,15 @@
                 // If there's only one player left in the queue, it means they got an implicit bye.
                 // Since the queue is now empty, the next call to scheduleNextMatch will correctly trigger the 'Start New Round' block.
                 updateStatus(`${p1.name} receives a BYE and ADVANCES.`);
-                setTimeout(scheduleNextMatch, MATCH_SETUP_DELAY_MS);
+                // BUG FIX: Ensure next action is scheduled correctly in auto mode for bye case
+                if (gameMode === 'auto') {
+                    setTimeout(scheduleNextMatch, MATCH_SETUP_DELAY_MS);
+                } else {
+                    nextMatchButton.textContent = 'CONTINUE TOURNAMENT';
+                    nextMatchButton.disabled = false;
+                    nextMatchButton.style.display = 'block';
+                    nextMatchButton.onclick = scheduleNextMatch;
+                }
                 return;
             }
 
