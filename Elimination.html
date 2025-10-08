@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -12,24 +13,32 @@
             --secondary-glow: #ff00ff; /* Magenta neon */
             --bg-dark: #0a0e1f; /* Deep space blue */
             --text-light: #f0f0f0; /* Soft white */
-            --neon-red: #ff1744; /* Hot red */
+            --neon-red: #ff4500; /* Rusty neon orange-red */
             --neon-green: #00ff85; /* Bright green */
             --grid-color-dark: #1a2333; /* Darker grid */
             --status-bg-color: rgba(0, 255, 234, 0.1);
             --status-border-color: rgba(0, 255, 234, 0.5);
             --holo-blue: rgba(0, 255, 234, 0.3);
             --shadow-glow: 0 0 15px rgba(0, 255, 234, 0.5);
+            --card-bg: rgba(10, 14, 31, 0.95);
+            --border-radius: 12px;
+            --spacing-sm: 12px;
+            --spacing-md: 24px;
+            --spacing-lg: 32px;
         }
-
-        /* --- KEYFRAME ANIMATIONS (Modern Effects) --- */
+        /* --- KEYFRAME ANIMATIONS --- */
         @keyframes scanlines {
             0% { background-position: 0 0; }
             100% { background-position: 0 50em; }
         }
         @keyframes flicker {
-            0%, 18%, 22%, 25%, 53%, 57%, 100% { text-shadow: var(--shadow-glow), 0 0 20px var(--primary-glow); }
+            0%, 18%, 22%, 25%, 53%, 57%, 100% {
+                text-shadow: var(--shadow-glow), 0 0 20px var(--primary-glow);
+            }
             20%, 24%, 55% { text-shadow: none; }
-            58% { text-shadow: 0.5px 0 1px var(--secondary-glow), -0.5px 0 1px var(--neon-red); }
+            58% {
+                text-shadow: 0.5px 0 1px var(--secondary-glow), -0.5px 0 1px var(--neon-red);
+            }
         }
         @keyframes canvas-flicker {
             0%, 100% { box-shadow: var(--shadow-glow); }
@@ -40,8 +49,42 @@
             50% { transform: scale(1.01); opacity: 1; }
             100% { transform: scale(1); opacity: 0.8; }
         }
-
-        /* --- CORE LAYOUT & SCALING FIXES --- */
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+        @keyframes reveal {
+            0% { opacity: 0; transform: scale(0.8); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+        @keyframes fanfare {
+            0% { transform: scale(0) rotate(0deg); opacity: 0; }
+            50% { transform: scale(1.2) rotate(180deg); opacity: 1; }
+            100% { transform: scale(1) rotate(360deg); opacity: 1; }
+        }
+        @keyframes neon-glow {
+            0%, 100% { text-shadow: 0 0 5px var(--primary-glow), 0 0 10px var(--primary-glow), 0 0 15px var(--primary-glow), 0 0 20px var(--primary-glow); }
+            50% { text-shadow: 0 0 10px var(--primary-glow), 0 0 20px var(--primary-glow), 0 0 30px var(--primary-glow), 0 0 40px var(--primary-glow); }
+        }
+        @keyframes confetti {
+            0% { transform: translateY(100vh) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(-100px) rotate(720deg); opacity: 0; }
+        }
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            background: var(--primary-glow);
+            pointer-events: none;
+            z-index: 3000;
+            animation: confetti 3s linear infinite;
+        }
+        /* --- CORE LAYOUT --- */
         html, body {
             height: 100%;
             margin: 0;
@@ -51,9 +94,12 @@
             font-family: 'Roboto Mono', monospace;
             overflow-x: hidden;
             overflow-y: auto;
-            position: relative; /* Needed for scanlines */
+            position: relative;
         }
-        /* Scanline and Noise Overlay */
+        body.shake {
+            animation: shake 0.5s ease-in-out;
+        }
+        /* Scanline Overlay */
         body::before {
             content: '';
             position: fixed;
@@ -63,259 +109,258 @@
             height: 100%;
             pointer-events: none;
             z-index: 9999;
-            opacity: 0.1;
-            background: 
-                /* Scanlines */
+            opacity: 0.08;
+            background:
                 linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.5) 50%),
-                /* Noise */
-                repeating-linear-gradient(transparent, transparent 1px, rgba(0, 0, 0, 0.2) 1px, rgba(0, 0, 0, 0.2) 2px);
+                repeating-linear-gradient(transparent, transparent 1px, rgba(0, 0, 0, 0.15) 1px, rgba(0, 0, 0, 0.15) 2px);
             background-size: 100% 2px, 2px 2px;
             animation: scanlines 6s linear infinite;
         }
-
         #mainContainer {
             display: flex;
             flex-direction: column;
-            min-height: 100vh; 
-            padding: 20px;
-            max-width: 1500px;
+            min-height: 100vh;
+            padding: clamp(var(--spacing-sm), 4vw, var(--spacing-md));
+            max-width: 1400px;
             margin: 0 auto;
             box-sizing: border-box;
+            animation: slideIn 0.8s ease-out;
         }
-
         /* --- TITLE --- */
         #titleContainer {
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-bottom: 25px; 
-            gap: 15px;
+            margin-bottom: clamp(var(--spacing-sm), 3vw, var(--spacing-lg));
+            gap: var(--spacing-sm);
             position: relative;
             z-index: 1200;
         }
-
         #titleContainer.game-active {
             justify-content: flex-start;
-            margin-bottom: 10px;
+            margin-bottom: var(--spacing-sm);
         }
-
         h1 {
             font-family: 'Orbitron', sans-serif;
             color: var(--primary-glow);
-            /* Apply flicker animation */
             animation: flicker 4s linear infinite;
-            letter-spacing: 5px;
+            letter-spacing: 4px;
             margin: 0;
             text-transform: uppercase;
-            font-size: clamp(2.2em, 5vw, 3.5em);
+            font-size: clamp(1.8em, 4vw, 3em);
             text-align: center;
-            outline: 2px solid var(--primary-glow); 
-            padding: 5px 20px;
+            outline: 2px solid var(--primary-glow);
+            padding: 8px 24px;
+            border-radius: var(--border-radius);
+            background: var(--card-bg);
         }
-
         #titleContainer.game-active h1 {
-            font-size: clamp(1.6em, 3vw, 2.4em);
-            letter-spacing: 3px;
+            font-size: clamp(1.2em, 2.5vw, 2em);
+            letter-spacing: 2px;
         }
-
-        /* --- SETUP PAGE (FRONT PAGE) --- */
+        /* --- SETUP PAGE --- */
         #frontPage {
-            max-width: 900px;
+            max-width: 800px;
             width: 100%;
-            margin: 0 auto 30px;
-            padding: 30px;
-            background: rgba(10, 14, 31, 0.9);
-            border-radius: 20px;
-            border: 3px solid var(--primary-glow);
+            margin: 0 auto clamp(var(--spacing-md), 5vw, var(--spacing-lg)) auto;
+            padding: clamp(20px, 5vw, var(--spacing-lg));
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            border: 2px solid var(--primary-glow);
             box-shadow: var(--shadow-glow);
             text-align: center;
-            animation: pulse 10s ease-in-out infinite; /* Subtle pulse effect */
+            animation: pulse 8s ease-in-out infinite;
         }
-
         #frontPage h2 {
             font-family: 'Orbitron', sans-serif;
             color: var(--secondary-glow);
-            text-shadow: 0 0 10px var(--secondary-glow);
-            margin: 0 0 20px;
-            font-size: 2em;
+            text-shadow: 0 0 12px var(--secondary-glow);
+            margin: 0 0 var(--spacing-md);
+            font-size: clamp(1.4em, 3vw, 2.2em);
         }
-
         .setup-grid {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            max-width: 500px;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: var(--spacing-md);
+            max-width: 600px;
             margin: 0 auto;
         }
-
         .input-card {
-            background: rgba(0, 0, 0, 0.7);
-            border: 2px solid var(--primary-glow);
-            border-radius: 12px;
-            padding: 20px;
-            box-shadow: inset 0 0 10px rgba(0, 255, 234, 0.3);
-            text-align: left; /* Alignment for input labels */
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid var(--primary-glow);
+            border-radius: var(--border-radius);
+            padding: var(--spacing-md);
+            box-shadow: inset 0 0 8px rgba(0, 255, 234, 0.2);
+            text-align: left;
+            transition: all 0.3s ease;
         }
-
+        .input-card:hover {
+            box-shadow: inset 0 0 12px rgba(0, 255, 234, 0.4);
+        }
         .input-card label {
             color: var(--text-light);
-            font-size: 1.2em;
+            font-size: 1.1em;
             font-weight: bold;
-            margin-bottom: 10px;
+            margin-bottom: var(--spacing-sm);
             display: block;
         }
-
         .input-card textarea {
             width: 100%;
-            min-height: 120px;
+            min-height: 140px;
             background: var(--bg-dark);
             color: var(--text-light);
-            border: 2px solid var(--primary-glow);
-            padding: 12px;
+            border: 1px solid var(--primary-glow);
+            padding: var(--spacing-sm);
             border-radius: 8px;
             font-family: 'Roboto Mono', monospace;
             font-size: 1em;
-            resize: none;
+            resize: vertical;
             box-sizing: border-box;
-            transition: border-color 0.3s ease;
+            transition: all 0.3s ease;
         }
-
         .input-card textarea:focus {
             outline: none;
             border-color: var(--secondary-glow);
-            box-shadow: 0 0 10px var(--secondary-glow);
+            box-shadow: 0 0 12px var(--secondary-glow);
         }
-        
         .range-container {
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: var(--spacing-sm);
             align-items: center;
-            padding-top: 5px;
-            background: rgba(0, 0, 0, 0.4);
-            padding: 15px;
+            padding: var(--spacing-md);
+            background: rgba(0, 0, 0, 0.5);
             border-radius: 8px;
             border: 1px dashed var(--secondary-glow);
         }
-
         .range-container label {
-            text-align: center;
-            margin-bottom: 0;
-            font-size: 1em;
+            font-size: 0.95em;
             color: var(--secondary-glow);
             font-family: 'Orbitron', sans-serif;
-            text-shadow: 0 0 5px var(--secondary-glow);
+            text-shadow: 0 0 4px var(--secondary-glow);
         }
-
         .range-container input[type="range"] {
-            width: 95%;
+            width: 100%;
             -webkit-appearance: none;
             appearance: none;
-            height: 10px;
+            height: 8px;
             background: var(--grid-color-dark);
-            border-radius: 5px;
+            border-radius: 4px;
             outline: none;
-            opacity: 0.9;
-            transition: opacity .2s;
-            box-shadow: 0 0 5px var(--secondary-glow);
+            box-shadow: 0 0 4px var(--secondary-glow);
         }
-
         .range-container input[type="range"]::-webkit-slider-thumb {
             -webkit-appearance: none;
             appearance: none;
-            width: 20px;
-            height: 20px;
+            width: 18px;
+            height: 18px;
             border-radius: 50%;
             background: var(--primary-glow);
             cursor: pointer;
-            box-shadow: 0 0 10px var(--primary-glow);
+            box-shadow: 0 0 8px var(--primary-glow);
         }
-
         .action-buttons {
-             display: flex; 
-             gap: 15px; 
-             justify-content: center; 
-             margin-top: 25px;
-             flex-wrap: wrap;
+            display: flex;
+            gap: var(--spacing-md);
+            justify-content: center;
+            margin-top: var(--spacing-lg);
+            flex-wrap: wrap;
         }
-
         .game-button {
-            padding: 15px 35px;
+            padding: 12px 28px;
             border: none;
-            border-radius: 10px;
+            border-radius: var(--border-radius);
             cursor: pointer;
             font-family: 'Orbitron', sans-serif;
-            font-size: 1.2em;
+            font-size: 1em;
+            font-weight: bold;
             text-transform: uppercase;
             background: linear-gradient(45deg, var(--primary-glow), var(--secondary-glow));
             color: var(--bg-dark);
-            box-shadow: var(--shadow-glow);
+            box-shadow: 0 0 12px rgba(0, 255, 234, 0.3);
             transition: all 0.3s ease;
+            min-width: 160px;
         }
-
         .game-button:hover {
-            transform: translateY(-3px) scale(1.05);
+            transform: translateY(-2px);
             box-shadow: 0 0 20px var(--primary-glow);
-            filter: brightness(1.3);
+            filter: brightness(1.2);
         }
-        
         .game-button.prepare-secondary {
             background: linear-gradient(45deg, #ff5500, #ff9900);
             color: var(--text-light);
-            box-shadow: 0 0 15px #ff9900;
+            box-shadow: 0 0 12px #ff9900;
         }
-
-        /* --- STATUS DISPLAY --- */
+        /* --- STATUS --- */
         #status {
-            padding: 15px;
+            padding: var(--spacing-sm);
             background: var(--status-bg-color);
-            border: 2px solid var(--status-border-color);
-            border-radius: 10px;
+            border: 1px solid var(--status-border-color);
+            border-radius: 8px;
             font-family: 'Roboto Mono', monospace;
-            font-size: 1.1em;
+            font-size: 1em;
             color: var(--text-light);
-            text-shadow: 0 0 5px var(--primary-glow);
-            margin-top: 20px;
+            text-shadow: 0 0 4px var(--primary-glow);
+            margin-top: var(--spacing-md);
+            text-align: center;
         }
-
-        /* --- GAME VIEW (DEATH ARENA) --- */
+        /* --- GAME VIEW --- */
         #gameView {
             display: none;
             flex-direction: row;
             width: 100%;
-            flex-grow: 1; 
-            gap: 25px;
-            height: 0; 
+            flex-grow: 1;
+            gap: clamp(var(--spacing-sm), 3vw, var(--spacing-lg));
+            min-height: 500px;
+            height: calc(100vh - 200px);
         }
-
         #sidePanel {
             display: flex;
             flex-direction: column;
-            min-width: 300px;
-            width: 30%;
-            max-width: 400px;
-            padding: 25px;
-            background: rgba(10, 14, 31, 0.85);
-            border-radius: 15px;
-            border: 2px solid var(--primary-glow);
+            min-width: 280px;
+            width: clamp(280px, 28%, 360px);
+            padding: var(--spacing-md);
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            border: 1px solid var(--primary-glow);
             box-shadow: var(--shadow-glow);
             overflow-y: auto;
             flex-shrink: 0;
-            height: 100%; 
+            height: 100%;
             box-sizing: border-box;
         }
-
         #canvasWrapper {
             flex-grow: 1;
             display: flex;
             justify-content: center;
             align-items: center;
             position: relative;
-            height: 100%; 
+            height: 100%;
             min-height: 400px;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            max-height: 100vh;
         }
-
-        /* Holographic Frame Effect around Canvas */
+        #arenaCover {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            display: flex;
+            z-index: 12;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: var(--primary-glow);
+            font-family: 'Orbitron', sans-serif;
+            font-size: clamp(1.2em, 4vw, 2.5em);
+            text-shadow: var(--shadow-glow);
+            text-align: center;
+            padding: 20px;
+            animation: flicker 3s linear infinite;
+        }
         #canvasWrapper::before {
             content: '';
             position: absolute;
@@ -323,92 +368,104 @@
             left: 0;
             width: 100%;
             height: 100%;
-            border: 8px solid rgba(0, 255, 234, 0.1);
-            border-radius: 20px;
+            border: 4px dashed rgba(0, 255, 234, 0.2);
+            border-radius: var(--border-radius);
             pointer-events: none;
             box-sizing: border-box;
-            opacity: 0.5;
+            animation: pulse 3s ease-in-out infinite;
             z-index: 10;
-            /* Thin dashed border for technical look */
-            border-style: dashed;
-            animation: pulse 4s ease-in-out infinite;
         }
-
         #gameCanvas {
             max-width: 100%;
             max-height: 100%;
             aspect-ratio: 1 / 1;
-            border: 4px solid var(--primary-glow);
+            border: 2px solid var(--primary-glow);
             box-shadow: var(--shadow-glow);
             background: var(--grid-color-dark);
             z-index: 11;
             position: relative;
-            animation: canvas-flicker 5s ease-in-out infinite;
+            animation: canvas-flicker 4s ease-in-out infinite;
+            image-rendering: pixelated; /* Crisp pixel art for sprites */
+            width: 100%;
+            height: 100%;
         }
-
-        /* Info Panel & List */
+        /* --- INFO PANEL --- */
         #infoPanel {
-            background: rgba(0, 0, 0, 0.6);
-            padding: 20px;
-            border-radius: 12px;
+            background: rgba(0, 0, 0, 0.5);
+            padding: var(--spacing-md);
+            border-radius: var(--border-radius);
             border: 1px solid var(--primary-glow);
-            margin-bottom: 20px;
+            margin-bottom: var(--spacing-md);
         }
-
         #infoPanel h4 {
             color: var(--secondary-glow);
-            margin: 0 0 10px;
-            font-size: 1.4em;
+            margin: 0 0 var(--spacing-sm);
+            font-size: 1.2em;
             font-family: 'Orbitron', sans-serif;
-            text-shadow: 0 0 8px var(--secondary-glow);
+            text-shadow: 0 0 6px var(--secondary-glow);
+            text-align: center;
         }
-
         #currentRacersList {
             list-style: none;
             padding: 0;
-            margin: 10px 0 0;
-            max-height: 200px;
+            margin: var(--spacing-sm) 0 0;
+            max-height: 180px;
             overflow-y: auto;
             border-top: 1px solid var(--primary-glow);
-            padding-top: 10px;
+            padding-top: var(--spacing-sm);
         }
-
         #currentRacersList li {
-            padding: 8px 0;
-            font-size: 1em;
+            padding: var(--spacing-sm) 0;
+            font-size: 0.95em;
             color: var(--text-light);
             font-family: 'Roboto Mono', monospace;
+            border-bottom: 1px solid rgba(0, 255, 234, 0.1);
         }
-
+        #currentRacersList li:last-child {
+            border-bottom: none;
+        }
         .eliminated-racer {
             color: var(--neon-red);
             text-decoration: line-through;
-            opacity: 0.7;
+            opacity: 0.8;
         }
-
         .eliminated-racer:before {
-            content: "💀";
+            content: "??";
             margin-right: 8px;
         }
-
         #attackStatus {
-            font-size: 2em;
-            color: var(--neon-red);
-            text-shadow: 0 0 15px var(--neon-red);
-            margin: 10px 0;
+            font-size: clamp(1.2em, 4vw, 2.5em);
+            color: var(--primary-glow);
+            text-shadow: var(--shadow-glow);
+            margin: var(--spacing-sm) 0;
             text-align: center;
             font-family: 'Orbitron', sans-serif;
+            padding: 20px;
+            animation: flicker 3s linear infinite;
         }
-
-        #scoreDisplay {
-            font-size: 1.2em;
-            color: var(--neon-green);
-            text-shadow: 0 0 8px var(--neon-green);
-            margin: 10px 0;
+        #attackStatus.dodged {
+            color: var(--primary-glow);
+            text-shadow: 0 0 10px var(--primary-glow), 0 0 20px var(--primary-glow);
+            animation: neon-glow 1s ease-in-out infinite;
+        }
+        .battle-key {
+            margin-top: var(--spacing-md);
+            font-size: 0.85em;
             text-align: center;
-            font-family: 'Orbitron', sans-serif;
+            border-top: 1px solid var(--primary-glow);
+            padding-top: var(--spacing-sm);
         }
-
+        .battle-key span {
+            margin: 0 var(--spacing-sm);
+        }
+        #gameControls {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-md);
+            flex-grow: 1;
+            justify-content: flex-end;
+            margin-top: auto;
+        }
         /* --- WINNER OVERLAY --- */
         #winnerOverlay {
             display: none;
@@ -417,7 +474,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.9);
+            background: rgba(0, 0, 0, 0.95);
             flex-direction: column;
             justify-content: center;
             align-items: center;
@@ -425,44 +482,140 @@
             font-family: 'Orbitron', sans-serif;
             text-shadow: var(--shadow-glow);
             z-index: 2000;
+            animation: pulse 2s ease-in-out infinite;
         }
-
+        #winnerOverlay h1.logo {
+            font-size: clamp(2.5em, 6vw, 4em);
+            margin: var(--spacing-sm) 0;
+            color: var(--primary-glow);
+            text-shadow: 0 0 20px var(--primary-glow), 0 0 30px var(--primary-glow);
+            animation: neon-glow 2s ease-in-out infinite alternate, fanfare 2s ease-out;
+            letter-spacing: 6px;
+            outline: 3px solid var(--primary-glow);
+            padding: 10px 30px;
+            border-radius: var(--border-radius);
+            background: rgba(0, 0, 0, 0.5);
+        }
         #winnerOverlay h2 {
-            font-size: 3em;
-            margin: 10px 0;
+            font-size: clamp(2.5em, 6vw, 4em);
+            margin: var(--spacing-sm) 0;
             color: var(--secondary-glow);
+            animation: fanfare 2s ease-out 0.5s both;
         }
-
         #winnerName {
-            font-size: 2.5em;
+            font-size: clamp(3em, 8vw, 5em);
             color: var(--neon-green);
-            text-shadow: 0 0 15px var(--neon-green);
+            text-shadow: 0 0 20px var(--neon-green), 0 0 30px var(--neon-green);
+            margin: var(--spacing-sm) 0;
+            animation: neon-glow 1.5s ease-in-out infinite alternate, fanfare 2s ease-out 1s both;
+            font-family: 'Bebas Neue', sans-serif;
+            font-weight: bold;
+            letter-spacing: 4px;
+            text-transform: uppercase;
         }
-
-        /* --- RESPONSIVE LAYOUT --- */
+        /* --- ELIMINATION POPUP --- */
+        #eliminationPopup {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            justify-content: center;
+            align-items: center;
+            z-index: 2001;
+            font-family: 'Orbitron', sans-serif;
+        }
+        #eliminationPopup .popup-content {
+            background: var(--bg-dark);
+            padding: var(--spacing-lg);
+            border-radius: var(--border-radius);
+            border: 2px solid var(--neon-red);
+            box-shadow: 0 0 20px var(--neon-red);
+            text-align: center;
+            animation: shake 0.5s ease-in-out;
+        }
+        #eliminationPopup h3 {
+            color: var(--neon-red);
+            text-shadow: 0 0 10px var(--neon-red);
+            margin: 0 0 var(--spacing-sm);
+            font-size: clamp(1.5em, 4vw, 2.5em);
+        }
+        #eliminationPopup.survival .popup-content {
+            border: 2px solid var(--primary-glow);
+            box-shadow: 0 0 20px var(--primary-glow);
+        }
+        #eliminationPopup.survival h3 {
+            color: var(--primary-glow);
+            text-shadow: 0 0 10px var(--primary-glow);
+        }
+        #eliminationPopup p {
+            color: var(--text-light);
+            margin: 0;
+            font-size: 1.2em;
+        }
+        /* --- RESPONSIVE --- */
+        @media (max-width: 1024px) {
+            #gameView {
+                height: calc(100vh - 150px);
+            }
+        }
         @media (max-width: 768px) {
+            #mainContainer {
+                padding: var(--spacing-sm);
+            }
             #titleContainer.game-active {
                 flex-direction: column;
                 text-align: center;
-                margin-bottom: 20px;
+                margin-bottom: var(--spacing-md);
             }
-
             #gameView {
                 flex-direction: column;
-                gap: 20px;
-                height: auto; 
+                gap: var(--spacing-md);
+                min-height: auto;
+                height: calc(100vh - 150px);
             }
-
             #sidePanel {
                 width: 100%;
                 max-width: none;
-                max-height: 50vh; 
+                max-height: 45vh;
                 height: auto;
+                order: 2;
             }
-
             #canvasWrapper {
                 min-height: 300px;
-                height: 100vw;
+                height: clamp(300px, 50vw, 400px);
+                max-height: 50vh;
+                order: 1;
+            }
+            #arenaCover {
+                font-size: clamp(1em, 5vw, 1.8em);
+            }
+            .action-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            .game-button {
+                width: 100%;
+                max-width: 200px;
+            }
+            #frontPage {
+                padding: clamp(15px, 4vw, 20px);
+            }
+        }
+        @media (max-width: 480px) {
+            #canvasWrapper {
+                height: 50vw;
+            }
+            #sidePanel {
+                max-height: 40vh;
+            }
+            h1 {
+                font-size: clamp(1.5em, 6vw, 2em);
+            }
+            #frontPage h2 {
+                font-size: clamp(1.2em, 4vw, 1.6em);
             }
         }
     </style>
@@ -474,7 +627,7 @@
             <h1>GLADIATORS DEATH ARENA</h1>
         </div>
         <div id="frontPage">
-            <h2>LAST POKÉMON STANDING SETUP</h2>
+            <h2>LAST POK&Eacute;MON STANDING SETUP</h2>
             <div class="setup-grid">
                 <div class="input-card">
                     <label for="racerNames">Contender Names (one per line, **Max 151 Gladiators**):</label>
@@ -488,44 +641,48 @@
             <div id="status">Arena online. Enter contenders and submit to begin.</div>
         </div>
         <div id="gameView">
+            <div id="canvasWrapper">
+                <div id="arenaCover">ARENA SEALED<br><small>CLASSIFIED</small></div>
+                <canvas id="gameCanvas" width="600" height="600"></canvas>
+                <div id="eliminationPopup">
+                    <div class="popup-content">
+                        <h3>ELIMINATED</h3>
+                        <p id="eliminationMessage"></p>
+                    </div>
+                </div>
+            </div>
             <div id="sidePanel">
                 <div id="infoPanel">
                     <h4>ARENA CORE | ROUND: <span id="roundDisplay">N/A</span></h4>
                     <p>Attack Protocol: <strong id="attackTypeDisplay" style="color: var(--neon-red);">Neutral</strong> (Pattern: <span id="attackPatternDisplay">Aura Scan</span>)</p>
-                    <p>Score: <strong id="scoreDisplay">0</strong></p>
                     <p>Active Contenders:</p>
                     <ul id="currentRacersList"></ul>
-                    <p style="margin-top: 15px; font-size: 0.9em; text-align: center; border-top: 1px solid var(--primary-glow); padding-top: 10px;">
-                        Battle Key: <span style="color: var(--neon-green); text-shadow: 0 0 5px var(--neon-green);">⭐ Immune</span> / <span style="color: var(--secondary-glow); text-shadow: 0 0 5px var(--secondary-glow);">✨ Evasion</span>
-                    </p>
+                    <div class="battle-key">
+                        Battle Key: <span style="color: var(--neon-green); text-shadow: 0 0 5px var(--neon-green);">? Immune</span> / <span style="color: var(--secondary-glow); text-shadow: 0 0 5px var(--secondary-glow);">? Evasion</span>
+                    </div>
                 </div>
                 <div id="statusContainer">
                     <div id="attackStatus"></div>
-                    <div id="status" style="margin-top: 15px;">Initializing Battle...</div>
+                    <div id="status" style="margin-top: var(--spacing-sm);">Initializing Battle...</div>
                 </div>
-                <div id="gameControls" style="display: flex; flex-direction: column; gap: 15px; flex-grow: 1; justify-content: flex-end;">
-                    
+                <div id="gameControls">
                     <div class="range-container">
                         <label for="eliminationTimer">MOVE PHASE TIMER: <span id="timerValueDisplay">3s</span></label>
                         <input type="range" id="eliminationTimer" min="1000" max="10000" value="3000" step="1000">
                     </div>
-                    <button id="shuffleButton" class="game-button">SHUFFLE POKÉMON</button>
+                    <button id="shuffleButton" class="game-button">SHUFFLE POK&Eacute;MON</button>
                     <button id="startGameButton" class="game-button">LAUNCH BATTLE</button>
                     <button onclick="resetGame()" class="game-button prepare-secondary">RESET ARENA</button>
                 </div>
             </div>
-            <div id="canvasWrapper">
-                <canvas id="gameCanvas" width="600" height="600"></canvas>
-            </div>
         </div>
         <div id="winnerOverlay">
+            <h1 class="logo">GLADIATORS DEATH ARENA</h1>
             <h2>VICTOR EMERGES!</h2>
             <span id="winnerName"></span>
-            <p>Final Score: <span id="finalScore"></span></p>
-            <button onclick="resetGame()" class="game-button" style="margin-top: 30px;">NEW BATTLE</button>
+            <button onclick="resetGame()" class="game-button" style="margin-top: var(--spacing-lg);">NEW BATTLE</button>
         </div>
     </div>
-
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
@@ -543,41 +700,39 @@
         const currentRacersList = document.getElementById('currentRacersList');
         const winnerOverlay = document.getElementById('winnerOverlay');
         const winnerNameDisplay = document.getElementById('winnerName');
-        const finalScoreDisplay = document.getElementById('finalScore');
         const attackStatus = document.getElementById('attackStatus');
-        const scoreDisplay = document.getElementById('scoreDisplay');
         const explosionSound = document.getElementById('explosionSound');
-
+        const arenaCover = document.getElementById('arenaCover');
+        const eliminationPopup = document.getElementById('eliminationPopup');
+        const eliminationMessage = document.getElementById('eliminationMessage');
+        const popupTitle = document.querySelector('#eliminationPopup h3');
         // TIMER ELEMENTS
         const eliminationTimerInput = document.getElementById('eliminationTimer');
         const timerValueDisplay = document.getElementById('timerValueDisplay');
-        
+     
         const GRID_SIZE = 10;
         let TILE_SIZE = canvas.width / GRID_SIZE;
         let POKEMON_IMAGE_SIZE = TILE_SIZE * 0.85;
-        
+     
         // Timer variable controlled by the new slider (in milliseconds)
-        let ELIMINATION_TIMER_MS = parseInt(eliminationTimerInput.value); 
-        
+        let ELIMINATION_TIMER_MS = parseInt(eliminationTimerInput.value);
+     
         // Duration of the blink effect
         const BLINK_DURATION = 100; // milliseconds for the flash
-        const CAPTURE_DURATION = 1100; // milliseconds for the post-blink animation
-
+        const CAPTURE_DURATION = 1000; // milliseconds for the post-blink animation
         const GAME_STATES = { SETUP: 'SETUP', PREPARING: 'PREPARING', PLAYING: 'PLAYING', FINISHED: 'FINISHED' };
         let gameState = GAME_STATES.SETUP;
         let racers = [];
         let roundNumber = 0;
-        let gameScore = 0;
         let gameLoopInterval;
         let roundPhase = 0; // 0: Move, 1: Warning/Attack, 2: Resolution
-        
+     
         // Use a function for PHASE_TIMINGS to dynamically update the first value
-        const getPhaseTimings = () => [ELIMINATION_TIMER_MS, 1500, 1200]; 
-
+        const getPhaseTimings = () => [ELIMINATION_TIMER_MS, 1500, 1200];
         const POKEBALL_URL = 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png';
         const POKEBALL_IMAGE = new Image();
         POKEBALL_IMAGE.src = POKEBALL_URL;
-        
+     
         const POKEMON_TYPES = ['Grass', 'Fire', 'Water', 'Electric', 'Ground', 'Fighting', 'Flying', 'Psychic'];
         const ATTACK_PATTERNS = {
             'Earthquake': { type: 'Ground', name: 'Seismic Overload' },
@@ -586,7 +741,7 @@
             'Fire Blast': { type: 'Fire', name: 'Inferno Strike' },
             'Psychic Surge': { type: 'Psychic', name: 'Psyonic Pulse' }
         };
-        
+     
         const pokemonData = [];
         for (let id = 1; id <= 151; id++) {
             pokemonData.push({
@@ -600,15 +755,43 @@
             img.onload = () => { p.sprite = img; };
             img.src = p.imageGif;
         });
-
         let currentAttack = { type: 'Neutral', name: 'Aura Scan', targetRacer: null, dodgeEffect: false };
         let availableAttacks = Object.keys(ATTACK_PATTERNS);
-
         function playExplosion() {
+            document.body.classList.add('shake');
+            setTimeout(() => document.body.classList.remove('shake'), 500);
             explosionSound.currentTime = 0;
             explosionSound.play().catch(e => console.error("Audio playback failed:", e));
+            setTimeout(() => {
+                explosionSound.currentTime = 0;
+                explosionSound.play().catch(e => console.error("Audio playback failed:", e));
+            }, 200);
         }
-
+        function createConfetti() {
+            for (let i = 0; i < 50; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = Math.random() * 100 + 'vw';
+                confetti.style.backgroundColor = `hsl(${Math.random() * 360}, 100%, 50%)`;
+                confetti.style.animationDelay = Math.random() * 3 + 's';
+                confetti.style.animationDuration = (Math.random() * 3 + 2) + 's';
+                document.body.appendChild(confetti);
+                setTimeout(() => confetti.remove(), 5000);
+            }
+        }
+        function showPopup(targetName, isEliminated) {
+            eliminationMessage.textContent = isEliminated ? `${targetName} has been eliminated!` : `${targetName} dodged the pokeball!`;
+            popupTitle.textContent = isEliminated ? 'ELIMINATED' : 'DODGED!';
+            if (isEliminated) {
+                eliminationPopup.classList.remove('survival');
+            } else {
+                eliminationPopup.classList.add('survival');
+            }
+            eliminationPopup.style.display = 'flex';
+            setTimeout(() => {
+                eliminationPopup.style.display = 'none';
+            }, 2000);
+        }
         function updateCanvasSize() {
             const wrapper = document.getElementById('canvasWrapper');
             const size = Math.min(wrapper.clientWidth, wrapper.clientHeight);
@@ -617,41 +800,40 @@
             TILE_SIZE = canvas.width / GRID_SIZE;
             POKEMON_IMAGE_SIZE = TILE_SIZE * 0.85;
         }
-
         function drawGame() {
             updateCanvasSize();
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            // Draw grid
-            ctx.fillStyle = 'var(--grid-color-dark)';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.strokeStyle = 'var(--primary-glow)';
-            ctx.shadowColor = 'var(--primary-glow)';
-            ctx.shadowBlur = 10;
-            ctx.lineWidth = 1.5;
-            for (let i = 0; i <= GRID_SIZE; i++) {
-                ctx.beginPath();
-                ctx.moveTo(i * TILE_SIZE, 0);
-                ctx.lineTo(i * TILE_SIZE, canvas.height);
-                ctx.stroke();
-                ctx.beginPath();
-                ctx.moveTo(0, i * TILE_SIZE);
-                ctx.lineTo(canvas.width, i * TILE_SIZE);
-                ctx.stroke();
+            // Draw grid only if not in concealed mode or during reveal
+            if (arenaCover.style.display === 'none') {
+                ctx.fillStyle = 'var(--grid-color-dark)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.strokeStyle = 'var(--primary-glow)';
+                ctx.shadowColor = 'var(--primary-glow)';
+                ctx.shadowBlur = 8;
+                ctx.lineWidth = 1;
+                for (let i = 0; i <= GRID_SIZE; i++) {
+                    ctx.beginPath();
+                    ctx.moveTo(i * TILE_SIZE, 0);
+                    ctx.lineTo(i * TILE_SIZE, canvas.height);
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.moveTo(0, i * TILE_SIZE);
+                    ctx.lineTo(canvas.width, i * TILE_SIZE);
+                    ctx.stroke();
+                }
+                ctx.shadowBlur = 0;
             }
-            ctx.shadowBlur = 0;
-
-            // Draw target visualization
-            if (currentAttack.targetRacer && currentAttack.targetRacer.active && (roundPhase === 1 || roundPhase === 2)) {
+            // Draw target visualization only during attack phase and if revealed
+            if (currentAttack.targetRacer && currentAttack.targetRacer.active && roundPhase === 1 && arenaCover.style.display === 'none') {
                 const r = currentAttack.targetRacer;
                 const xCenter = r.x * TILE_SIZE + TILE_SIZE / 2;
                 const yCenter = r.y * TILE_SIZE + TILE_SIZE / 2;
-                
-                // Control blink rate: Phase 1 is 1500ms. Blink cycle is 500ms (250ms ON, 250ms OFF). 
+             
+                // Control blink rate: Phase 1 is 1500ms. Blink cycle is 500ms (250ms ON, 250ms OFF).
                 const PHASE_TIMINGS = getPhaseTimings();
                 const timeElapsedInPhase1 = Date.now() - r.roundStartTime - PHASE_TIMINGS[0];
                 let flash = 0;
-                
+             
                 if (roundPhase === 1 && timeElapsedInPhase1 < PHASE_TIMINGS[1]) {
                     const timeInCycle = timeElapsedInPhase1 % 500;
                     if (timeInCycle < 250) {
@@ -662,17 +844,15 @@
                 } else if (roundPhase === 2) {
                     flash = 0; // Hide targeting during resolution animation
                 }
-
                 // Laser targeting circle - only draw when flash is on
                 if (flash > 0) {
                     ctx.beginPath();
                     ctx.arc(xCenter, yCenter, TILE_SIZE * 0.5, 0, Math.PI * 2);
                     ctx.strokeStyle = `rgba(255, 0, 0, ${flash})`;
-                    ctx.lineWidth = 4;
+                    ctx.lineWidth = 3;
                     ctx.shadowColor = 'var(--neon-red)';
-                    ctx.shadowBlur = 15;
+                    ctx.shadowBlur = 12;
                     ctx.stroke();
-
                     // Crosshair X
                     ctx.beginPath();
                     const halfSize = POKEMON_IMAGE_SIZE * 0.5;
@@ -681,26 +861,24 @@
                     ctx.moveTo(xCenter + halfSize, yCenter - halfSize);
                     ctx.lineTo(xCenter - halfSize, yCenter + halfSize);
                     ctx.strokeStyle = `rgba(255, 0, 0, ${flash})`;
-                    ctx.lineWidth = 6;
+                    ctx.lineWidth = 4;
                     ctx.stroke();
                     ctx.shadowBlur = 0;
                 }
             }
-
-            // Draw racers with enhanced visuals
-            racers.filter(r => r.active).forEach(r => {
+            // Draw racers: only target during resolution, all others otherwise
+            const racersToDraw = racers.filter(r => r.active && (roundPhase !== 2 || r === currentAttack.targetRacer));
+            racersToDraw.forEach(r => {
                 const x = r.x * TILE_SIZE + TILE_SIZE / 2;
                 const y = r.y * TILE_SIZE + TILE_SIZE / 2;
                 const nameText = `${r.name} (${r.data.type})`;
                 ctx.save();
                 ctx.translate(x, y);
-
                 // Holographic base effect
                 ctx.beginPath();
                 ctx.arc(0, 0, TILE_SIZE * 0.45, 0, Math.PI * 2);
                 ctx.fillStyle = 'var(--holo-blue)';
                 ctx.fill();
-
                 // Immunity/Evasion glow
                 if (r.isSafe) {
                     ctx.beginPath();
@@ -708,34 +886,32 @@
                     ctx.fillStyle = r.isSafe === 'IMMUNE' ? 'rgba(240,255,0,0.4)' : 'rgba(0,255,133,0.4)';
                     ctx.fill();
                     ctx.strokeStyle = r.isSafe === 'IMMUNE' ? 'var(--neon-green)' : 'var(--secondary-glow)';
-                    ctx.lineWidth = 3;
+                    ctx.lineWidth = 2;
                     ctx.stroke();
                 }
-
                 // **Capture Blink Logic:** Only draw the Pokemon if NOT in the blink phase.
                 let isCapturing = r.captureAnimation && (Date.now() - r.captureStartTime < CAPTURE_DURATION);
                 let isBlinking = isCapturing && (Date.now() - r.captureStartTime < BLINK_DURATION);
-                
+             
                 if (!isCapturing || (isCapturing && !isBlinking)) {
                     // Draw Pokémon sprite
                     if (r.data.sprite && r.data.sprite.complete) {
+                        ctx.imageSmoothingEnabled = false; // Crisp rendering
                         ctx.drawImage(r.data.sprite, -POKEMON_IMAGE_SIZE / 2, -POKEMON_IMAGE_SIZE / 2, POKEMON_IMAGE_SIZE, POKEMON_IMAGE_SIZE);
                     }
                 }
-                
+             
                 // Draw name tag (White with Black Border for visibility)
-                ctx.font = `bold ${TILE_SIZE * 0.28}px 'Bebas Neue', sans-serif`;
-                ctx.textAlign = 'center'; 
+                ctx.font = `bold ${TILE_SIZE * 0.25}px 'Bebas Neue', sans-serif`;
+                ctx.textAlign = 'center';
                 ctx.fillStyle = 'white';
                 ctx.strokeStyle = 'black';
-                ctx.lineWidth = 6; 
-                
-                ctx.strokeText(nameText, 0, -TILE_SIZE / 1.8);
-                ctx.fillText(nameText, 0, -TILE_SIZE / 1.8);
-
+                ctx.lineWidth = 4;
+             
+                ctx.strokeText(nameText, 0, -TILE_SIZE / 2);
+                ctx.fillText(nameText, 0, -TILE_SIZE / 2);
                 ctx.restore();
             });
-
             // --- Capture Animation ---
             racers.filter(r => r.captureAnimation).forEach(r => {
                 const x = r.x * TILE_SIZE + TILE_SIZE / 2;
@@ -743,26 +919,25 @@
                 const animationTime = Date.now() - r.captureStartTime;
                 ctx.save();
                 ctx.translate(x, y);
-
                 // 1. **THE BLINK (First BLINK_DURATION milliseconds)**
                 if (animationTime < BLINK_DURATION) {
                     ctx.beginPath();
                     ctx.arc(0, 0, TILE_SIZE * 1.5, 0, Math.PI * 2);
-                    ctx.fillStyle = 'rgba(255, 255, 255, 1)'; 
+                    ctx.fillStyle = 'rgba(255, 255, 255, 1)';
                     ctx.shadowColor = 'var(--neon-red)';
-                    ctx.shadowBlur = 40;
+                    ctx.shadowBlur = 30;
                     ctx.fill();
-                } 
+                }
                 // 2. **THE CATCH (Rest of the duration)**
                 else if (animationTime < CAPTURE_DURATION) {
                     const progress = (animationTime - BLINK_DURATION) / (CAPTURE_DURATION - BLINK_DURATION);
-                    
+                 
                     // Poké Ball slamming down
                     const ballSize = POKEMON_IMAGE_SIZE * 1.6;
                     const scale = 1 + Math.sin(progress * Math.PI) * 0.3;
                     ctx.globalAlpha = 1 - progress;
+                    ctx.imageSmoothingEnabled = false;
                     ctx.drawImage(POKEBALL_IMAGE, -ballSize * scale / 2, -ballSize * scale / 2, ballSize * scale, ballSize * scale);
-
                     // Sucking in effect (magenta glow)
                     ctx.beginPath();
                     ctx.arc(0, 0, POKEMON_IMAGE_SIZE * (1.2 - progress), 0, Math.PI * 2);
@@ -770,12 +945,11 @@
                     ctx.globalAlpha = 0.5 * (1 - progress);
                     ctx.fill();
                 }
-                
+             
                 ctx.restore();
                 ctx.globalAlpha = 1.0;
             });
         }
-
         function startRound() {
             const activeRacers = racers.filter(r => r.active);
             if (activeRacers.length <= 1) {
@@ -784,60 +958,54 @@
             }
             roundNumber++;
             roundPhase = 0;
-            gameScore += 100; // Score for surviving a round
-            
+         
             const PHASE_TIMINGS = getPhaseTimings(); // Get current phase timings
-            
+         
             // Set round start time for blink logic
             racers.forEach(r => {
                 r.targetX = r.x;
                 r.targetY = r.y;
                 r.isSafe = null;
                 r.captureAnimation = false;
-                r.roundStartTime = Date.now(); 
+                r.roundStartTime = Date.now();
             });
             updateRacerListDisplay();
-            updateScoreDisplay();
-
             const attackName = availableAttacks[Math.floor(Math.random() * availableAttacks.length)];
             const attackConfig = ATTACK_PATTERNS[attackName];
             currentAttack.name = attackName;
             currentAttack.type = attackConfig.type;
             currentAttack.dodgeEffect = (currentAttack.type === 'Water' || currentAttack.type === 'Fire');
             currentAttack.targetRacer = activeRacers[Math.floor(Math.random() * activeRacers.length)];
-
             updateGameInfo();
             attackStatus.textContent = '';
             // Use the dynamic ELIMINATION_TIMER_MS value for the status message
             statusDisplay.textContent = `ROUND ${roundNumber} - MOVE PHASE: ${ELIMINATION_TIMER_MS / 1000}s to evade!`;
-
+            arenaCover.style.display = 'flex';
             setTimeout(attackPhase, PHASE_TIMINGS[0]);
             drawGame();
         }
-
         function attackPhase() {
             roundPhase = 1;
             const PHASE_TIMINGS = getPhaseTimings();
-            const targetName = currentAttack.targetRacer ? currentAttack.targetRacer.name : 'N/A';
-            attackStatus.textContent = `⚠ ${targetName} TARGETED!`;
-            statusDisplay.textContent = `ROUND ${roundNumber} - ${ATTACK_PATTERNS[currentAttack.name].name} DEPLOYING!`;
+            attackStatus.textContent = `? TARGET LOCKED!`;
+            statusDisplay.textContent = `ROUND ${roundNumber} - ${ATTACK_PATTERNS[currentAttack.name].name} CHARGING...`;
             updateGameInfo();
-            drawGame();
+            // Keep cover on during targeting
+            arenaCover.style.display = 'flex';
             setTimeout(resolutionPhase, PHASE_TIMINGS[1]);
         }
-
         function resolutionPhase() {
             roundPhase = 2;
             const PHASE_TIMINGS = getPhaseTimings();
             attackStatus.textContent = '';
             const r = currentAttack.targetRacer;
-
             if (r.active) {
                 r.x = r.targetX;
                 r.y = r.targetY;
                 let captured = true;
                 let reason = currentAttack.type;
-
+                const targetName = r.name;
+                const attackNameFull = ATTACK_PATTERNS[currentAttack.name].name;
                 // Immunity check
                 const type = r.data.type;
                 if ((currentAttack.type === 'Ground' && (type === 'Flying' || type === 'Grass')) ||
@@ -845,7 +1013,6 @@
                     r.isSafe = 'IMMUNE';
                     captured = false;
                     reason = `IMMUNE (${type})`;
-                    gameScore += 200; // Bonus for immunity
                 }
                 // Evasion check
                 else if (currentAttack.dodgeEffect && (type === 'Water' || type === 'Fire')) {
@@ -853,51 +1020,73 @@
                         captured = false;
                         r.isSafe = 'EVADED';
                         reason = `EVADED (${type})`;
-                        gameScore += 150; // Bonus for evasion
                     } else {
                         reason = `CAUGHT (Failed Evasion)`;
                     }
                 } else {
                     reason = `CAUGHT (${currentAttack.type} Hit)`;
                 }
-
+                // Reveal only the target for the animation
+                arenaCover.style.display = 'none';
+                drawGame();
                 if (captured) {
                     // Start the capture animation (first frame is the flash/blink)
                     r.captureAnimation = true;
                     r.captureStartTime = Date.now();
                     r.eliminationReason = reason;
+                    statusDisplay.textContent = `${targetName} caught by ${attackNameFull}!`;
                     playExplosion();
-
+                    // Show popup after 1 second delay
+                    setTimeout(() => {
+                        showPopup(targetName, true);
+                    }, 1000);
                     // Final elimination occurs after the animation finishes
                     setTimeout(() => {
                         r.active = false;
                         r.captureAnimation = false;
-                        statusDisplay.textContent = `💥 ${r.name} ELIMINATED!`;
                         updateRacerListDisplay();
-                        updateScoreDisplay();
-                        setTimeout(startRound, 200);
+                        arenaCover.style.display = 'flex';
+                        setTimeout(startRound, 500);
                     }, CAPTURE_DURATION);
                 } else {
-                    statusDisplay.textContent = `✅ ${r.name} survived! Reason: ${reason}`;
+                    // Updated: Differentiate dodged vs immune display
+                    if (r.isSafe === 'EVADED') {
+                        attackStatus.textContent = `${targetName} Dodged!`;
+                        attackStatus.classList.add('dodged');
+                    } else {
+                        attackStatus.textContent = `? ${targetName} SURVIVES!`;
+                    }
+                    statusDisplay.textContent = `${targetName} ${reason.toLowerCase()} ${attackNameFull}!`;
                     updateRacerListDisplay();
-                    updateScoreDisplay();
-                    setTimeout(startRound, 200);
+                    // Show survival popup almost instantly
+                    showPopup(targetName, false);
+                    setTimeout(() => {
+                        attackStatus.classList.remove('dodged');
+                        arenaCover.style.display = 'flex';
+                        startRound();
+                    }, 1500);
                 }
             } else {
+                arenaCover.style.display = 'flex';
                 setTimeout(startRound, 50);
             }
         }
-
         function endGame(winner) {
             gameState = GAME_STATES.FINISHED;
             winnerNameDisplay.textContent = winner ? `${winner.name}` : "NO VICTOR!";
-            finalScoreDisplay.textContent = gameScore;
-            winnerOverlay.style.display = 'flex';
-            statusDisplay.textContent = `BATTLE TERMINATED! ${winner ? winner.name : 'All'} survived ${roundNumber} rounds. Score: ${gameScore}`;
-            titleContainer.classList.remove('game-active');
-            clearInterval(gameLoopInterval);
+            // Full reveal for fanfare
+            arenaCover.style.display = 'none';
+            drawGame();
+            // Add confetti and shake
+            createConfetti();
+            playExplosion();
+            setTimeout(() => {
+                winnerOverlay.style.display = 'flex';
+                statusDisplay.textContent = `BATTLE TERMINATED! ${winner ? winner.name : 'All'} survived ${roundNumber} rounds.`;
+                titleContainer.classList.remove('game-active');
+                clearInterval(gameLoopInterval);
+            }, 1000);
         }
-
         function updateRacerListDisplay() {
             currentRacersList.innerHTML = racers.map(r => {
                 const isEliminated = !r.active;
@@ -905,22 +1094,20 @@
                 if (isEliminated) {
                     display += ` - ${r.eliminationReason || 'Eliminated'}`;
                 } else if (currentAttack.targetRacer === r && roundPhase !== 0) {
-                    display = `<strong style="color: var(--neon-red);">🔥 ${display} 🔥</strong>`;
+                    display = `<strong style="color: var(--neon-red);">?? ${display} ??</strong>`;
                 }
                 return `<li class="${isEliminated ? 'eliminated-racer' : ''}">${display}</li>`;
             }).join('');
         }
-
         function updateGameInfo() {
             roundDisplay.textContent = `#${roundNumber}`;
             attackTypeDisplay.textContent = currentAttack.type;
-            attackPatternDisplay.textContent = ATTACK_PATTERNS[currentAttack.name].name;
+            if (currentAttack.name in ATTACK_PATTERNS) {
+                attackPatternDisplay.textContent = ATTACK_PATTERNS[currentAttack.name].name;
+            } else {
+                attackPatternDisplay.textContent = currentAttack.name;
+            }
         }
-
-        function updateScoreDisplay() {
-            scoreDisplay.textContent = gameScore;
-        }
-
         function submitNames() {
             initRacers(true);
             if (racers.length === 0) {
@@ -931,7 +1118,6 @@
             statusDisplay.textContent = `${racers.length} contenders locked in. Activate Arena!`;
             drawGame();
         }
-
         function prepareGame() {
             if (racers.length < 2) {
                 statusDisplay.textContent = 'Require at least 2 contenders to initiate Battle!';
@@ -943,39 +1129,37 @@
             titleContainer.classList.add('game-active');
             statusDisplay.textContent = 'CONFIGURE: Shuffle Pokémon, then launch battle.';
             updateCanvasSize();
+            arenaCover.style.display = 'none';
             drawGame();
         }
-
         function startGame() {
             gameState = GAME_STATES.PLAYING;
-            setupControls.style.display = 'none';
             startGameButton.style.display = 'none';
             shuffleButton.style.display = 'none';
-            gameScore = 0;
-            updateScoreDisplay();
+            arenaCover.style.display = 'flex';
             startRound();
         }
-
         function resetGame() {
             gameState = GAME_STATES.SETUP;
             roundNumber = 0;
-            gameScore = 0;
             currentAttack = { type: 'Neutral', name: 'Aura Scan', targetRacer: null, dodgeEffect: false };
             winnerOverlay.style.display = 'none';
+            eliminationPopup.style.display = 'none';
+            eliminationPopup.classList.remove('survival');
             setupControls.style.display = 'block';
             gameView.style.display = 'none';
             titleContainer.classList.remove('game-active');
             updateGameInfo();
-            updateScoreDisplay();
             currentRacersList.innerHTML = '';
             statusDisplay.textContent = 'Arena online. Enter contenders to begin.';
+            document.getElementById('racerNames').value = '';
             initRacers(false);
             startGameButton.style.display = 'block';
             shuffleButton.style.display = 'block';
+            arenaCover.style.display = 'none';
             drawGame();
             gameLoopInterval = setInterval(moveAI, 100);
         }
-
         function moveAI() {
             if (gameState !== GAME_STATES.PLAYING || roundPhase !== 0) return;
             racers.filter(r => r.active).forEach(r => {
@@ -997,17 +1181,16 @@
             });
             drawGame();
         }
-
         function initRacers(fromSetup = true) {
             racers = [];
             const customNamesInput = document.getElementById('racerNames');
             let customNames = customNamesInput.value.split('\n').map(name => name.trim()).filter(name => name);
-            
+         
             if (customNames.length === 0 && fromSetup) return;
-            
+         
             const shuffledPokemon = [...pokemonData].sort(() => 0.5 - Math.random());
-            const numRacers = Math.min(customNames.length, shuffledPokemon.length); 
-            
+            const numRacers = Math.min(customNames.length, shuffledPokemon.length);
+         
             const usedTiles = new Set();
             for (let i = 0; i < numRacers; i++) {
                 let x, y, posKey;
@@ -1033,19 +1216,16 @@
             }
             if (racers.length > 0) reassignPokemons(false);
         }
-
         function reassignPokemons(updateDisplay = true) {
             if (racers.length === 0) return;
             const shuffledPokemon = [...pokemonData].sort(() => 0.5 - Math.random());
             const shuffledTypes = [...POKEMON_TYPES].sort(() => 0.5 - Math.random());
             const usedTiles = new Set();
-
             racers.forEach((racer, i) => {
                 // 1. Assign new type and sprite
                 const newPoke = shuffledPokemon[i % shuffledPokemon.length];
                 const newType = shuffledTypes[i % shuffledTypes.length];
                 racer.data = { ...newPoke, type: newType };
-
                 // 2. Assign new random position (positional shuffle)
                 let x, y, posKey;
                 do {
@@ -1054,36 +1234,36 @@
                     posKey = `${x},${y}`;
                 } while (usedTiles.has(posKey));
                 usedTiles.add(posKey);
-                
+             
                 racer.x = x;
                 racer.y = y;
                 racer.targetX = x;
                 racer.targetY = y;
             });
-
             if (updateDisplay) {
                 updateRacerListDisplay();
                 statusDisplay.textContent = `${racers.length} contenders shuffled and repositioned. Ready to launch!`;
             }
             drawGame();
         }
-        
+     
         // --- TIMER CONTROL LOGIC ---
         eliminationTimerInput.addEventListener('input', (event) => {
             ELIMINATION_TIMER_MS = parseInt(event.target.value);
             // Display the value in seconds
-            timerValueDisplay.textContent = `${ELIMINATION_TIMER_MS / 1000}s`; 
+            timerValueDisplay.textContent = `${ELIMINATION_TIMER_MS / 1000}s`;
         });
         // --- END TIMER CONTROL LOGIC ---
-
         // Initial update of the display to match the default value
-        timerValueDisplay.textContent = `${ELIMINATION_TIMER_MS / 1000}s`; 
-
+        timerValueDisplay.textContent = `${ELIMINATION_TIMER_MS / 1000}s`;
         submitNamesButton.addEventListener('click', submitNames);
         setupStartButton.addEventListener('click', prepareGame);
         startGameButton.addEventListener('click', startGame);
         shuffleButton.addEventListener('click', () => reassignPokemons(true));
-        window.addEventListener('resize', drawGame);
+        window.addEventListener('resize', () => {
+            updateCanvasSize();
+            drawGame();
+        });
         gameLoopInterval = setInterval(moveAI, 100);
         setInterval(drawGame, 30);
         initRacers(false);
