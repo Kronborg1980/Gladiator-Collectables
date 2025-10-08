@@ -11,6 +11,7 @@
             --tron-blue: #00FFFF;
             --tron-magenta: #FF00FF;
             --tron-red: #FF4500; /* Color for Elimination */
+            --tron-green: #39FF14; /* New color for the 4th button */
             --dark-metal: #1a1a1a;
             --dark-bg: #0A0A0A;
             --text-neon: #E0E0E0;
@@ -104,6 +105,19 @@
             transform: scale(1.02);
         }
         
+        /* New Gladiator Death Arena Button (Tron Green) */
+        #arena-button {
+            background-color: var(--tron-green);
+        }
+        #arena-button::before {
+            border-color: var(--tron-green);
+            box-shadow: 0 0 15px var(--tron-green);
+        }
+        #arena-button:hover::before {
+            box-shadow: 0 0 30px var(--tron-green), 0 0 60px var(--tron-green);
+            transform: scale(1.02);
+        }
+
         /* Text Content Layer */
         .button-content {
             z-index: 2;
@@ -129,7 +143,7 @@
         <p class="mt-3 text-xl font-light text-primary-neon/80">Select a Trial for the Arena.</p>
     </header>
 
-    <main class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+    <main class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl mx-auto">
         
         <a id="race-button" href="race.html" class="command-button">
             <div class="button-content">
@@ -149,6 +163,13 @@
             <div class="button-content">
                 <h3>GLADIATORS ELIMINATION ARENA</h3>
                 <p>Execute the Final Trial</p>
+            </div>
+        </a>
+
+        <a id="arena-button" href="DeathArena.html" class="command-button">
+            <div class="button-content">
+                <h3>GLADIATOR DEATH ARENA</h3>
+                <p>Initiate the Ultimate Showdown</p>
             </div>
         </a>
 
