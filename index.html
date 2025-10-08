@@ -53,12 +53,16 @@
             border-radius: 1rem;
             font-weight: 800;
             text-transform: uppercase;
-            color: var(--dark-bg);
+            /* Changed text color to white/light neon for contrast against dark, transparent background */
+            color: var(--text-neon); 
             transition: all 0.3s ease;
             position: relative;
             overflow: hidden;
             border: 3px solid transparent;
             min-height: 250px;
+            
+            /* --- CRITICAL CHANGE: Set transparent background --- */
+            background-color: rgba(0, 0, 0, 0.5); 
         }
 
         /* Neon Border/Glow Effect (Pseudo-element for clean button look) */
@@ -70,22 +74,24 @@
             right: 0;
             bottom: 0;
             border-radius: 1rem;
-            /* INCREASED BORDER THICKNESS FOR VISIBILITY */
             border: 5px solid; 
             transition: all 0.3s ease;
             z-index: 1;
         }
-
-        /* --- Button Colors and Hover Effects --- */
+        
+        /* --- Button Colors and Hover Effects (Updated for Transparency) --- */
 
         /* Race Button (Tron Blue) */
         #race-button {
-            background-color: var(--tron-blue);
+            /* Now uses transparent base background from .command-button */
         }
         #race-button::before {
             border-color: var(--tron-blue);
-            /* INCREASED INITIAL GLOW */
             box-shadow: 0 0 15px var(--tron-blue), inset 0 0 15px var(--tron-blue);
+        }
+        #race-button:hover {
+            /* Added a subtle color layer on hover for feedback */
+            background-color: rgba(0, 255, 255, 0.2); 
         }
         #race-button:hover::before {
             box-shadow: 0 0 30px var(--tron-blue), 0 0 60px var(--tron-blue), inset 0 0 30px var(--tron-blue);
@@ -94,12 +100,15 @@
 
         /* Wheel Button (Tron Magenta) */
         #wheel-button {
-            background-color: var(--tron-magenta);
+            /* Now uses transparent base background from .command-button */
         }
         #wheel-button::before {
             border-color: var(--tron-magenta);
-            /* INCREASED INITIAL GLOW */
             box-shadow: 0 0 15px var(--tron-magenta), inset 0 0 15px var(--tron-magenta);
+        }
+        #wheel-button:hover {
+            /* Added a subtle color layer on hover for feedback */
+            background-color: rgba(255, 0, 255, 0.2);
         }
         #wheel-button:hover::before {
             box-shadow: 0 0 30px var(--tron-magenta), 0 0 60px var(--tron-magenta), inset 0 0 30px var(--tron-magenta);
@@ -108,12 +117,15 @@
 
         /* Elimination Button (Tron Red) */
         #elimination-button {
-            background-color: var(--tron-red);
+            /* Now uses transparent base background from .command-button */
         }
         #elimination-button::before {
             border-color: var(--tron-red);
-            /* INCREASED INITIAL GLOW */
             box-shadow: 0 0 15px var(--tron-red), inset 0 0 15px var(--tron-red);
+        }
+        #elimination-button:hover {
+            /* Added a subtle color layer on hover for feedback */
+            background-color: rgba(255, 69, 0, 0.2);
         }
         #elimination-button:hover::before {
             box-shadow: 0 0 30px var(--tron-red), 0 0 60px var(--tron-red), inset 0 0 30px var(--tron-red);
@@ -122,12 +134,15 @@
 
         /* New Gladiator Death Arena Button (Tron Green) */
         #arena-button {
-            background-color: var(--tron-green);
+            /* Now uses transparent base background from .command-button */
         }
         #arena-button::before {
             border-color: var(--tron-green);
-            /* INCREASED INITIAL GLOW */
             box-shadow: 0 0 15px var(--tron-green), inset 0 0 15px var(--tron-green);
+        }
+        #arena-button:hover {
+            /* Added a subtle color layer on hover for feedback */
+            background-color: rgba(57, 255, 20, 0.2);
         }
         #arena-button:hover::before {
             box-shadow: 0 0 30px var(--tron-green), 0 0 60px var(--tron-green), inset 0 0 30px var(--tron-green);
