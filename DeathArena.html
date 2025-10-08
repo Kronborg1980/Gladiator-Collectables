@@ -55,6 +55,11 @@
             0% { transform: scale(1); opacity: 1; }
             100% { transform: scale(0.5); opacity: 0; }
         }
+        @keyframes critical-hit {
+            0% { box-shadow: 0 0 15px var(--neon-red), 0 0 30px var(--neon-red); }
+            50% { box-shadow: 0 0 30px var(--neon-red), 0 0 50px var(--neon-red); }
+            100% { box-shadow: 0 0 15px var(--neon-red), 0 0 30px var(--neon-red); }
+        }
         
 
         /* --- CORE LAYOUT --- */
@@ -332,6 +337,9 @@
             animation: vanish 0.8s ease-out forwards;
             pointer-events: none;
         }
+        .action-slot.clash-flash {
+            box-shadow: 0 0 40px var(--primary-glow), 0 0 60px var(--secondary-glow);
+        }
         .slot-card-image {
             width: 120px;
             height: 120px;
@@ -372,8 +380,8 @@
         .score-line:last-child { border-bottom: none; }
         .score-p1 { color: var(--primary-glow); }
         .score-p2 { color: var(--secondary-glow); }
-        .type-adj { color: var(--neon-green); font-weight: bold; }
-        .type-disadj { color: var(--neon-red); font-weight: bold; }
+        .type-adj-text { color: var(--neon-green); font-weight: bold; }
+        .type-disadj-text { color: var(--neon-red); font-weight: bold; }
 
 
         /* --- TOURNAMENT LIST & POKEMON CARDS (Same on Setup & Game screens) --- */
@@ -630,8 +638,9 @@
         const p2LuckScoreDisplay = document.getElementById('p2LuckScore');
 
         // --- GLOBAL GAME STATE ---
-        const MATCH_SETUP_DELAY_MS = 1500; // Time to see the pairing before resolution
-        const MATCH_RESOLUTION_DELAY_MS = 3000; // Time to see the result/explosion before next match starts
+        const MATCH_SETUP_DELAY_MS = 1500; // Time to view pairing before resolution starts
+        const MATCH_SCORE_DISPLAY_MS = 1000; // Time the final scores are visible before elimination
+        const MATCH_ELIMINATION_MS = 2000; // Time for explosion/vanish effect
 
         let gameActive = false;
         let tournamentRound = 0;
@@ -726,7 +735,6 @@
             document.body.style.animation = 'damage-shake 0.2s 3';
             setTimeout(() => document.body.style.animation = 'none', 600);
             explosionSound.currentTime = 0;
-            // Catching the error here prevents the console spam, but the sound issue requires the file upload.
             explosionSound.play().catch(e => { /* Audio playback likely blocked by browser, ignoring error */ });
         }
 
@@ -753,17 +761,17 @@
                 <div class="type-badge ${contender.pokemon.type}">TYPE: ${contender.pokemon.type}</div>
                 <div style="font-size: 0.7em;">PWR: ${contender.pokemon.power}</div>
             `;
-            element.classList.remove('winner', 'loser', 'loser-vanish');
+            element.classList.remove('winner', 'loser', 'loser-vanish', 'clash-flash');
             element.querySelector('.luck-score').textContent = '---';
         }
 
         function clearDuelSlots() {
             [p1DuelSlot, p2DuelSlot].forEach(slot => {
-                slot.classList.remove('winner', 'loser', 'loser-vanish');
+                slot.classList.remove('winner', 'loser', 'loser-vanish', 'clash-flash');
                 slot.querySelector('.luck-score').textContent = '---';
             });
             eliminationMessage.style.display = 'none';
-            matchDetails.innerHTML = 'Waiting for match resolution...';
+            matchDetails.innerHTML = 'Awaiting next match command...';
         }
         
         function updateContenderList() {
@@ -849,6 +857,7 @@
             // Hide button while checking/setting up
             nextMatchButton.style.display = 'none'; 
             nextMatchButton.disabled = true;
+            clearDuelSlots(); // Ensure clean slate before new pairing
 
             // 1. Check for Tournament End
             const activeCount = allContenders.filter(c => c.active).length;
@@ -862,16 +871,16 @@
 
             // 2. Check if the current round queue is empty -> START NEW ROUND
             if (activeContendersQueue.length === 0) {
-                // The winner list for the new round is simply the current active contenders.
                 let winners = allContenders.filter(c => c.active);
                 
                 activeContendersQueue = shuffleArray(winners);
                 
                 // Handle odd number of players (bye)
                 if (activeContendersQueue.length % 2 !== 0 && activeContendersQueue.length > 1) {
-                    // The last person gets the bye and is removed from the queue but remains active
                     const byeContender = activeContendersQueue.pop(); 
-                    updateStatus(`ADVANCEMENT: ${getRoundName(tournamentRound + 1)}! ${activeContendersQueue.length + 1} gladiators remain. (${byeContender.name} receives a BYE)`);
+                    updateStatus(`ROUND ANNOUNCEMENT: ${getRoundName(tournamentRound + 1)}! ${activeContendersQueue.length + 1} gladiators remain. **${byeContender.name} receives a BYE!**`);
+                } else {
+                     updateStatus(`ROUND ANNOUNCEMENT: ${getRoundName(tournamentRound + 1)}! ${activeContendersQueue.length} gladiators remain.`);
                 }
 
                 tournamentRound++;
@@ -898,9 +907,8 @@
             // FIX: If p2 is null, it means the player p1 had a bye in the previous round and queue is now empty.
             if (!p2) {
                 // If there's only one player left in the queue, it means they got an implicit bye.
-                // Since the queue is now empty, the next call to scheduleNextMatch will correctly trigger the 'Start New Round' block.
-                updateStatus(`${p1.name} receives a BYE and ADVANCES.`);
-                // BUG FIX: Ensure next action is scheduled correctly in auto mode for bye case
+                updateStatus(`${p1.name} receives a BYE and ADVANCES! Preparing new round pairings...`);
+                
                 if (gameMode === 'auto') {
                     setTimeout(scheduleNextMatch, MATCH_SETUP_DELAY_MS);
                 } else {
@@ -925,28 +933,28 @@
             updateDuelSlot(p1DuelSlot, currentMatch.p1);
             updateDuelSlot(p2DuelSlot, currentMatch.p2);
             
-            clearDuelSlots();
+            p1DuelSlot.classList.add('clash-flash');
+            p2DuelSlot.classList.add('clash-flash');
             
-            updateStatus(`BATTLE PROTOCOL: ${currentMatch.p1.name} (${currentMatch.p1Pokemon.type}) vs ${currentMatch.p2.name} (${currentMatch.p2Pokemon.type}). RESOLUTION IMMINENT.`);
+            updateStatus(`DUEL INITIATED! ${currentMatch.p1.name} (${currentMatch.p1Pokemon.type}) vs ${currentMatch.p2.name} (${currentMatch.p2Pokemon.type}). Fate is sealed...`);
 
             // Time to view the pairing before resolution starts
             if (gameMode === 'auto') {
-                setTimeout(resolveDuel, MATCH_SETUP_DELAY_MS); 
+                setTimeout(resolveDuelScores, MATCH_SETUP_DELAY_MS); 
             } else {
                 nextMatchButton.textContent = 'RESOLVE DUEL';
                 nextMatchButton.disabled = false;
                 nextMatchButton.style.display = 'block';
-                nextMatchButton.onclick = resolveDuel;
+                nextMatchButton.onclick = resolveDuelScores;
             }
         }
+        
+        // --- MULTI-STAGE RESOLUTION ---
 
+        function resolveDuelScores() {
+            // Stage 1: Calculate and display scores
+            nextMatchButton.disabled = true; // Always disable button during auto-stages
 
-        function resolveDuel() {
-            // Disable button during auto-resolution
-            nextMatchButton.disabled = true;
-
-            // --- CORE BATTLE SCORE MECHANIC (Type Dependent) ---
-            
             const p1Roll = Math.floor(Math.random() * 100) + 1;
             const p2Roll = Math.floor(Math.random() * 100) + 1;
 
@@ -958,9 +966,9 @@
 
             const p1BattleScore = p1Roll + p1TypeAdj + p1PowerBonus;
             const p2BattleScore = p2Roll + p2TypeAdj + p2PowerBonus;
-
+            
+            // Determine winner locally for scoring display
             let winnerContender, loserContender;
-
             if (p1BattleScore > p2BattleScore) {
                 winnerContender = currentMatch.p1;
                 loserContender = currentMatch.p2;
@@ -968,72 +976,110 @@
                 winnerContender = currentMatch.p2;
                 loserContender = currentMatch.p1;
             } else {
-                // Tiebreaker: Use the highest base Pokémon Power
-                if (currentMatch.p1Pokemon.power > currentMatch.p2Pokemon.power) {
-                    winnerContender = currentMatch.p1;
-                    loserContender = currentMatch.p2;
-                } else if (currentMatch.p2Pokemon.power > currentMatch.p1Pokemon.power) {
-                    winnerContender = currentMatch.p2;
-                    loserContender = currentMatch.p1;
-                } else {
-                    // Final tiebreaker: Random
-                    const random = Math.random();
-                    winnerContender = random > 0.5 ? currentMatch.p1 : currentMatch.p2;
-                    loserContender = random <= 0.5 ? currentMatch.p1 : currentMatch.p2;
-                }
+                // Tiebreaker logic (using power then random) remains the same
+                const finalDecider = currentMatch.p1Pokemon.power !== currentMatch.p2Pokemon.power ? 
+                    (currentMatch.p1Pokemon.power > currentMatch.p2Pokemon.power ? currentMatch.p1 : currentMatch.p2) :
+                    (Math.random() > 0.5 ? currentMatch.p1 : currentMatch.p2);
+                winnerContender = finalDecider;
+                loserContender = finalDecider === currentMatch.p1 ? currentMatch.p2 : currentMatch.p1;
             }
-
-            // --- VISUAL RESOLUTION ---
-            p1LuckScoreDisplay.textContent = Math.round(p1BattleScore);
-            p2LuckScoreDisplay.textContent = Math.round(p2BattleScore);
             
-            const adjClassP1 = p1TypeAdj > 0 ? 'type-adj' : p1TypeAdj < 0 ? 'type-disadj' : '';
-            const adjClassP2 = p2TypeAdj > 0 ? 'type-adj' : p2TypeAdj < 0 ? 'type-disadj' : '';
-
+            currentMatch.p1Score = p1BattleScore;
+            currentMatch.p2Score = p2BattleScore;
+            currentMatch.winner = winnerContender;
+            currentMatch.loser = loserContender;
+            
+            // Prepare informative message
+            const getAdjText = (adj) => {
+                if (adj > 0) return `<span class="type-adj-text">Super Effective (+50)</span>`;
+                if (adj < 0) return `<span class="type-disadj-text">Not Effective (-30)</span>`;
+                return `Neutral (0)`;
+            };
+            
             const detailMsg = `
                 <div class="score-line score-p1">
                     <strong>${currentMatch.p1.name} (${currentMatch.p1Pokemon.type})</strong><br>
-                    Base Roll: ${p1Roll} | Type Adj: <span class="${adjClassP1}">${p1TypeAdj > 0 ? '+' : ''}${p1TypeAdj}</span> | PWR Adj: +${p1PowerBonus}
+                    LUCK ROLL: +${p1Roll} | TYPE: ${getAdjText(p1TypeAdj)} | PWR: +${p1PowerBonus}
                 </div>
                 <div class="score-line score-p2">
                     <strong>${currentMatch.p2.name} (${currentMatch.p2Pokemon.type})</strong><br>
-                    Base Roll: ${p2Roll} | Type Adj: <span class="${adjClassP2}">${p2TypeAdj > 0 ? '+' : ''}${p2TypeAdj}</span> | PWR Adj: +${p2PowerBonus}
+                    LUCK ROLL: +${p2Roll} | TYPE: ${getAdjText(p2TypeAdj)} | PWR: +${p2PowerBonus}
                 </div>
             `;
             matchDetails.innerHTML = detailMsg;
 
+            updateStatus("SCORES CALCULATED! Standby for the final strike...");
 
-            // Apply winner/loser classes
-            let loserSlot;
-            if (winnerContender === currentMatch.p1) {
+            if (gameMode === 'auto') {
+                setTimeout(resolveDuelClash, MATCH_SCORE_DISPLAY_MS);
+            } else {
+                nextMatchButton.textContent = 'FINAL STRIKE';
+                nextMatchButton.disabled = false;
+                nextMatchButton.onclick = resolveDuelClash;
+            }
+        }
+        
+        function resolveDuelClash() {
+            // Stage 2: Final Clash Animation and Elimination Setup
+            nextMatchButton.disabled = true;
+
+            const { p1Score, p2Score, winner, loser } = currentMatch;
+
+            // Apply final scores and winner/loser styles
+            p1LuckScoreDisplay.textContent = Math.round(p1Score);
+            p2LuckScoreDisplay.textContent = Math.round(p2Score);
+            
+            p1DuelSlot.classList.remove('clash-flash');
+            p2DuelSlot.classList.remove('clash-flash');
+
+            if (winner === currentMatch.p1) {
                 p1DuelSlot.classList.add('winner');
-                p2DuelSlot.classList.add('loser', 'loser-vanish');
-                loserSlot = p2DuelSlot;
+                p2DuelSlot.classList.add('loser');
             } else {
                 p2DuelSlot.classList.add('winner');
-                p1DuelSlot.classList.add('loser', 'loser-vanish');
-                loserSlot = p1DuelSlot;
+                p1DuelSlot.classList.add('loser');
             }
-            playExplosion();
             
-            // Eliminate the loser
-            const eliminatedIndex = allContenders.findIndex(c => c.name === loserContender.name);
-            if (eliminatedIndex !== -1) {
-                allContenders[eliminatedIndex].active = false;
-            }
+            playExplosion();
             
             // Show dramatic result message
             eliminationMessage.innerHTML = `
                 <span style="color: var(--neon-red); text-shadow: 0 0 10px var(--neon-red); font-weight: bold;">
-                    ${loserContender.name} ELIMINATED!
+                    ${loser.name} ELIMINATED!
                 </span> 
                 <span style="color: var(--neon-green); text-shadow: 0 0 10px var(--neon-green);">
-                    ${winnerContender.name} ADVANCES!
+                    ${winner.name} ADVANCES!
                 </span>
             `;
             eliminationMessage.style.display = 'block';
             
-            // Update the contender list (moves loser to greyed-out state)
+            updateStatus("ELIMINATION CONFIRMED! The arena claims its victim...");
+
+            if (gameMode === 'auto') {
+                setTimeout(resolveDuelFinish, MATCH_ELIMINATION_MS);
+            } else {
+                nextMatchButton.textContent = 'CONTINUE';
+                nextMatchButton.disabled = false;
+                nextMatchButton.onclick = resolveDuelFinish;
+            }
+        }
+
+        function resolveDuelFinish() {
+            // Stage 3: Final state transition and queue next match
+            nextMatchButton.disabled = true;
+
+            const { loser } = currentMatch;
+
+            // Apply visual vanishing effect
+            const loserSlot = loser === currentMatch.p1 ? p1DuelSlot : p2DuelSlot;
+            loserSlot.classList.add('loser-vanish');
+
+            // Eliminate the loser from the global list
+            const eliminatedIndex = allContenders.findIndex(c => c.name === loser.name);
+            if (eliminatedIndex !== -1) {
+                allContenders[eliminatedIndex].active = false;
+            }
+            
             updateContenderList();
             
             // --- Determine Next Action ---
@@ -1042,7 +1088,7 @@
             if (remainingContenders.length === 1) {
                 // FINAL WINNER FOUND
                 if (gameMode === 'auto') {
-                    setTimeout(() => endTournament(remainingContenders[0]), MATCH_RESOLUTION_DELAY_MS);
+                    setTimeout(() => endTournament(remainingContenders[0]), MATCH_SETUP_DELAY_MS);
                 } else {
                     nextMatchButton.textContent = 'CROWN CHAMPION';
                     nextMatchButton.disabled = false;
@@ -1052,7 +1098,7 @@
             } else {
                 // CONTINUE TOURNAMENT
                 if (gameMode === 'auto') {
-                    setTimeout(scheduleNextMatch, MATCH_RESOLUTION_DELAY_MS);
+                    setTimeout(scheduleNextMatch, MATCH_SETUP_DELAY_MS);
                 } else {
                     nextMatchButton.textContent = 'NEXT BATTLE';
                     nextMatchButton.disabled = false;
