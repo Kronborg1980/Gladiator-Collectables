@@ -210,6 +210,7 @@
         .range-container input[type="range"] {
             width: 95%;
             -webkit-appearance: none;
+            appearance: none;
             height: 10px;
             background: var(--grid-color-dark);
             border-radius: 5px;
@@ -547,7 +548,7 @@
         const scoreDisplay = document.getElementById('scoreDisplay');
         const explosionSound = document.getElementById('explosionSound');
 
-        // NEW TIMER ELEMENTS
+        // TIMER ELEMENTS
         const eliminationTimerInput = document.getElementById('eliminationTimer');
         const timerValueDisplay = document.getElementById('timerValueDisplay');
         
@@ -1067,13 +1068,13 @@
             drawGame();
         }
         
-        // --- NEW TIMER CONTROL LOGIC ---
+        // --- TIMER CONTROL LOGIC ---
         eliminationTimerInput.addEventListener('input', (event) => {
             ELIMINATION_TIMER_MS = parseInt(event.target.value);
             // Display the value in seconds
             timerValueDisplay.textContent = `${ELIMINATION_TIMER_MS / 1000}s`; 
         });
-        // --- END NEW TIMER CONTROL LOGIC ---
+        // --- END TIMER CONTROL LOGIC ---
 
         // Initial update of the display to match the default value
         timerValueDisplay.textContent = `${ELIMINATION_TIMER_MS / 1000}s`; 
