@@ -23,15 +23,15 @@
             min-height: 100vh;
         }
 
-        /* --- NEW TITLE CONTAINER BORDER STYLES --- */
+        /* --- TITLE CONTAINER BORDER STYLES --- */
         .neon-border-container {
             border: 3px solid var(--tron-blue);
             box-shadow: 0 0 15px var(--tron-blue), inset 0 0 15px var(--tron-blue);
             padding: 1rem 2rem;
             border-radius: 1rem;
             transition: all 0.3s ease;
-            display: inline-block; /* Essential to wrap content */
-            background-color: rgba(0, 0, 0, 0.4); /* Slightly darken background behind title */
+            display: inline-block;
+            background-color: rgba(0, 0, 0, 0.4);
         }
         .neon-border-container:hover {
             box-shadow: 0 0 30px var(--tron-blue), inset 0 0 30px var(--tron-blue);
@@ -40,7 +40,6 @@
 
         /* Header/Title Styling */
         .neon-title-glow {
-            /* Kept the text-shadow for the text itself */
             text-shadow: 0 0 5px #fff, 0 0 10px var(--tron-blue), 0 0 20px var(--tron-blue), 0 0 40px var(--tron-blue);
         }
 
@@ -58,7 +57,7 @@
             transition: all 0.3s ease;
             position: relative;
             overflow: hidden;
-            border: 3px solid transparent; /* Removed base border to rely on ::before */
+            border: 3px solid transparent;
             min-height: 250px;
         }
 
@@ -71,7 +70,8 @@
             right: 0;
             bottom: 0;
             border-radius: 1rem;
-            border: 3px solid; /* Border thickness */
+            /* INCREASED BORDER THICKNESS FOR VISIBILITY */
+            border: 5px solid; 
             transition: all 0.3s ease;
             z-index: 1;
         }
@@ -84,10 +84,11 @@
         }
         #race-button::before {
             border-color: var(--tron-blue);
-            box-shadow: 0 0 10px var(--tron-blue), inset 0 0 10px var(--tron-blue); /* Added inset for depth */
+            /* INCREASED INITIAL GLOW */
+            box-shadow: 0 0 15px var(--tron-blue), inset 0 0 15px var(--tron-blue);
         }
         #race-button:hover::before {
-            box-shadow: 0 0 20px var(--tron-blue), 0 0 40px var(--tron-blue), inset 0 0 20px var(--tron-blue);
+            box-shadow: 0 0 30px var(--tron-blue), 0 0 60px var(--tron-blue), inset 0 0 30px var(--tron-blue);
             transform: scale(1.02);
         }
 
@@ -97,10 +98,11 @@
         }
         #wheel-button::before {
             border-color: var(--tron-magenta);
-            box-shadow: 0 0 10px var(--tron-magenta), inset 0 0 10px var(--tron-magenta);
+            /* INCREASED INITIAL GLOW */
+            box-shadow: 0 0 15px var(--tron-magenta), inset 0 0 15px var(--tron-magenta);
         }
         #wheel-button:hover::before {
-            box-shadow: 0 0 20px var(--tron-magenta), 0 0 40px var(--tron-magenta), inset 0 0 20px var(--tron-magenta);
+            box-shadow: 0 0 30px var(--tron-magenta), 0 0 60px var(--tron-magenta), inset 0 0 30px var(--tron-magenta);
             transform: scale(1.02);
         }
 
@@ -110,11 +112,11 @@
         }
         #elimination-button::before {
             border-color: var(--tron-red);
-            box-shadow: 0 0 10px var(--tron-red), inset 0 0 10px var(--tron-red);
+            /* INCREASED INITIAL GLOW */
+            box-shadow: 0 0 15px var(--tron-red), inset 0 0 15px var(--tron-red);
         }
-        /* Adjusted hover block to just use ::before for consistency */
         #elimination-button:hover::before {
-            box-shadow: 0 0 20px var(--tron-red), 0 0 40px var(--tron-red), inset 0 0 20px var(--tron-red);
+            box-shadow: 0 0 30px var(--tron-red), 0 0 60px var(--tron-red), inset 0 0 30px var(--tron-red);
             transform: scale(1.02);
         }
 
@@ -124,10 +126,11 @@
         }
         #arena-button::before {
             border-color: var(--tron-green);
-            box-shadow: 0 0 10px var(--tron-green), inset 0 0 10px var(--tron-green);
+            /* INCREASED INITIAL GLOW */
+            box-shadow: 0 0 15px var(--tron-green), inset 0 0 15px var(--tron-green);
         }
         #arena-button:hover::before {
-            box-shadow: 0 0 20px var(--tron-green), 0 0 40px var(--tron-green), inset 0 0 20px var(--tron-green);
+            box-shadow: 0 0 30px var(--tron-green), 0 0 60px var(--tron-green), inset 0 0 30px var(--tron-green);
             transform: scale(1.02);
         }
 
