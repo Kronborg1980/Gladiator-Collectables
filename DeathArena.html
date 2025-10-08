@@ -4,8 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Gladiators Death Arena: Sudden Death Tournament</title>
-    <!-- Custom Fonts: Orbitron for titles, Bebas Neue for strong text/numbers, Roboto Mono for console text -->
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Bebas+Neue&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Bebas+Neue&family=Roboto+Mono:wght{400;700}&display=swap" rel="stylesheet">
     <style>
         /* --- VISUAL CONFIGURATION --- */
         :root {
@@ -522,7 +521,6 @@
     </style>
 </head>
 <body>
-    <!-- NOTE: Audio source might fail due to browser security restrictions in an iframe. To ensure sound, upload a file named 'arena_explosion.mp3' to the environment. -->
     <audio id="explosionSound" src="arena_explosion.mp3"></audio>
 
     <div id="mainContainer">
@@ -530,11 +528,9 @@
             <h1>GLADIATORS DEATH ARENA: SUDDEN DEATH TOURNAMENT</h1>
         </div>
 
-        <!-- SETUP SCREEN -->
         <div id="setupScreen">
             <h2>TOURNAMENT REGISTRATION & POKÉMON ASSIGNMENT</h2>
             
-            <!-- Mode Selector -->
             <div class="mode-selector">
                 <p>TOURNAMENT MODE:</p>
                 <input type="radio" id="modeAuto" name="gameMode" value="auto" checked>
@@ -563,18 +559,14 @@
             <button onclick="resetGame()" class="game-button secondary" style="margin-top: var(--spacing-md);">RESET ARENA</button>
         </div>
 
-        <!-- GAME SCREEN -->
         <div id="gameScreen">
-            <!-- Consolidated Status Bar at the top of the game screen -->
             <div id="statusConsole"></div>
 
             <div id="arena">
-                <!-- DUEL ZONE (Centered) -->
                 <div id="duelZone">
                     <div id="roundDisplay">MATCH 1 / ROUND 1</div>
 
                     <div id="actionSlots">
-                        <!-- P1 Card Slot -->
                         <div id="p1DuelSlot" class="action-slot">
                             <h4>CONTENDER 1</h4>
                             <img class="slot-card-image" src="" alt="P1 Pokemon" style="display: none;">
@@ -584,7 +576,6 @@
 
                         <h2 style="font-family: 'Orbitron', sans-serif; color: var(--neon-red); text-shadow: 0 0 10px var(--neon-red); margin: 0;">VS</h2>
 
-                        <!-- P2 Card Slot -->
                         <div id="p2DuelSlot" class="action-slot">
                             <h4>CONTENDER 2</h4>
                             <img class="slot-card-image" src="" alt="P2 Pokemon" style="display: none;">
@@ -593,21 +584,17 @@
                         </div>
                     </div>
 
-                    <!-- Match Detail Console -->
                     <div id="matchDetails">
                         Waiting for match resolution...
                     </div>
 
-                    <!-- Elimination Message -->
                     <h2 id="eliminationMessage" style="color: var(--neon-red); display: none;"></h2>
                 </div>
                 
-                <!-- Manual Control Button -->
                 <button id="nextMatchButton" class="game-button manual-advance" style="display: none;">NEXT BATTLE</button>
             </div>
         </div>
 
-        <!-- WINNER OVERLAY -->
         <div id="winnerOverlay">
             <h2>TOURNAMENT CHAMPION EMERGES!</h2>
             <span id="winnerName"></span>
@@ -641,6 +628,8 @@
         const MATCH_SETUP_DELAY_MS = 1500; // Time to view pairing before resolution starts
         const MATCH_SCORE_DISPLAY_MS = 1000; // Time the final scores are visible before elimination
         const MATCH_ELIMINATION_MS = 2000; // Time for explosion/vanish effect
+        // ADDED MISSING VARIABLE for round transitions
+        const MATCH_RESOLUTION_DELAY_MS = 2500; 
 
         let gameActive = false;
         let tournamentRound = 0;
@@ -706,7 +695,6 @@
                 });
             }
             POKEMON_SPRITE_DATA = shuffleArray(POKEMON_SPRITE_DATA);
-            updateStatus('Pokémon attributes initialized. Enter contenders.');
         }
 
         function shufflePokemons() {
@@ -716,7 +704,8 @@
             if (allContenders.length > 0) {
                 const shuffledPokemonData = shuffleArray([...POKEMON_SPRITE_DATA]);
                 allContenders.forEach((contender, index) => {
-                    contender.pokemon = shuffledPokemonData[index % shuffledPokemonData.length];
+                    // Re-assign a new, random Pokémon from the shuffled list
+                    contender.pokemon = shuffledPokemonData[index % shuffledPokemonData.length]; 
                 });
                 updateContenderList();
             }
@@ -769,6 +758,8 @@
             [p1DuelSlot, p2DuelSlot].forEach(slot => {
                 slot.classList.remove('winner', 'loser', 'loser-vanish', 'clash-flash');
                 slot.querySelector('.luck-score').textContent = '---';
+                // Reset image visibility in case of bye
+                slot.querySelector('.slot-card-image').style.display = 'none';
             });
             eliminationMessage.style.display = 'none';
             matchDetails.innerHTML = 'Awaiting next match command...';
@@ -776,14 +767,22 @@
         
         function updateContenderList() {
             const namesInput = document.getElementById('contenderNames').value.split('\n').map(n => n.trim()).filter(n => n);
-            if (allContenders.length === 0 && namesInput.length >= 2) {
+            
+            // Only force setup if we are missing contenders or the count has changed
+            if (allContenders.length === 0 || allContenders.length !== namesInput.length) {
                 setupTournament(true); 
             }
 
             tournamentListContainer.style.display = 'block';
             contenderListUl.innerHTML = '';
 
-            allContenders.filter(c => c.active || !c.active).forEach(c => { 
+            // Sort by active status, then name
+            const sortedContenders = [...allContenders].sort((a, b) => {
+                if (a.active !== b.active) return a.active ? -1 : 1;
+                return a.name.localeCompare(b.name);
+            });
+
+            sortedContenders.forEach(c => { 
                 const div = document.createElement('div');
                 div.className = `contender-card-item ${c.active ? 'contender-active' : 'contender-eliminated'}`;
                 
@@ -802,18 +801,31 @@
         
         function setupTournament(isInitialSetup = false) {
             const namesInput = document.getElementById('contenderNames').value.split('\n').map(n => n.trim()).filter(n => n);
+            
+            // Ensure Pokemon data is ready before assignment
+            if (POKEMON_SPRITE_DATA.length === 0) {
+                initializePokemonData();
+            }
+
             if (namesInput.length < 2) {
                 setupStatus.textContent = 'ERROR: Need at least two contender names.';
+                allContenders = []; // Clear list if invalid
+                tournamentListContainer.style.display = 'none';
                 return;
             }
 
-            if (isInitialSetup || allContenders.length !== namesInput.length) {
+            // Only re-initialize or re-assign Pokemons if the list is empty or the number of contenders has changed
+            if (isInitialSetup || allContenders.length === 0 || allContenders.length !== namesInput.length) {
                 const shuffledPokemonData = shuffleArray([...POKEMON_SPRITE_DATA]);
-                allContenders = namesInput.map((name, index) => ({
-                    name: name,
-                    pokemon: shuffledPokemonData[index % shuffledPokemonData.length],
-                    active: true
-                }));
+                allContenders = namesInput.map((name, index) => {
+                    // Try to preserve pokemon if name matches, otherwise assign new one
+                    const existing = allContenders.find(c => c.name === name);
+                    return {
+                        name: name,
+                        pokemon: existing && existing.pokemon ? existing.pokemon : shuffledPokemonData[index % shuffledPokemonData.length],
+                        active: true
+                    }
+                });
             }
             
             activeContendersQueue = allContenders.filter(c => c.active);
@@ -828,7 +840,7 @@
             if (active <= 2) return "THE FINAL SHOWDOWN";
             if (active <= 4) return "THE SEMI-FINALS";
             if (active <= 8) return "THE QUARTER-FINALS";
-            return `ROUND ${round + 1}`;
+            return `ROUND ${round}`;
         }
 
         function beginTournament() {
@@ -842,6 +854,7 @@
             tournamentRound = 0;
             matchNumber = 0;
             
+            // Initialize the first queue with all active, shuffled
             activeContendersQueue = shuffleArray(allContenders.filter(c => c.active));
 
             setupScreen.style.display = 'none';
@@ -850,6 +863,7 @@
             
             statusConsole.innerHTML = setupStatus.innerHTML;
 
+            // Immediately schedule the first match (or round setup)
             scheduleNextMatch();
         }
         
@@ -861,62 +875,56 @@
 
             // 1. Check for Tournament End
             const activeCount = allContenders.filter(c => c.active).length;
-            if (activeCount === 1) {
-                endTournament(allContenders.find(c => c.active));
-                return;
-            } else if (activeCount === 0) {
-                endTournament(null);
+            if (activeCount <= 1) {
+                endTournament(activeCount === 1 ? allContenders.find(c => c.active) : null);
                 return;
             }
 
             // 2. Check if the current round queue is empty -> START NEW ROUND
-            if (activeContendersQueue.length === 0) {
+            if (activeContendersQueue.length < 2) { 
                 let winners = allContenders.filter(c => c.active);
                 
+                // If there's 1 player left in queue, they got a bye. Move them into the next round's list.
+                if (activeContendersQueue.length === 1) {
+                    // The winner list already contains this person, so we just proceed to shuffle.
+                }
+
+                // Fully new round pairing
                 activeContendersQueue = shuffleArray(winners);
                 
-                // Handle odd number of players (bye)
+                // Handle odd number of players (bye) for the *new* round
                 if (activeContendersQueue.length % 2 !== 0 && activeContendersQueue.length > 1) {
-                    const byeContender = activeContendersQueue.pop(); 
+                    const byeContender = activeContendersQueue.shift(); // First player gets the bye
                     updateStatus(`ROUND ANNOUNCEMENT: ${getRoundName(tournamentRound + 1)}! ${activeContendersQueue.length + 1} gladiators remain. **${byeContender.name} receives a BYE!**`);
-                } else {
+                    // Place the bye player at the end of the queue for the next full round
+                    activeContendersQueue.push(byeContender); 
+                } else if (activeCount > 1) {
                      updateStatus(`ROUND ANNOUNCEMENT: ${getRoundName(tournamentRound + 1)}! ${activeContendersQueue.length} gladiators remain.`);
                 }
 
                 tournamentRound++;
                 matchNumber = 0;
-                
                 roundDisplay.textContent = getRoundName(tournamentRound);
                 
-                // Pause slightly longer for round announcement
-                if (gameMode === 'auto') {
-                    setTimeout(scheduleNextMatch, MATCH_RESOLUTION_DELAY_MS);
-                } else {
-                    nextMatchButton.textContent = 'START NEXT ROUND';
+                if (gameMode === 'manual') {
+                    nextMatchButton.textContent = 'START NEXT BATTLE';
                     nextMatchButton.disabled = false;
                     nextMatchButton.style.display = 'block';
                     nextMatchButton.onclick = scheduleNextMatch;
+                    return;
                 }
-                return;
             }
 
             // 3. Schedule the match
             const p1 = activeContendersQueue.shift();
             const p2 = activeContendersQueue.shift();
 
-            // FIX: If p2 is null, it means the player p1 had a bye in the previous round and queue is now empty.
-            if (!p2) {
-                // If there's only one player left in the queue, it means they got an implicit bye.
-                updateStatus(`${p1.name} receives a BYE and ADVANCES! Preparing new round pairings...`);
-                
-                if (gameMode === 'auto') {
-                    setTimeout(scheduleNextMatch, MATCH_SETUP_DELAY_MS);
-                } else {
-                    nextMatchButton.textContent = 'CONTINUE TOURNAMENT';
-                    nextMatchButton.disabled = false;
-                    nextMatchButton.style.display = 'block';
-                    nextMatchButton.onclick = scheduleNextMatch;
-                }
+            if (!p1 || !p2) {
+                // If this happens, it means we entered the block with 1 player left (who got a bye)
+                // The correct logic above should prevent p2 from being null unless activeCount was 1.
+                // We re-run the check to confirm tournament end if needed.
+                console.error("Critical pairing error, re-checking tournament status.");
+                setTimeout(scheduleNextMatch, 100);
                 return;
             }
 
@@ -1075,9 +1083,9 @@
             loserSlot.classList.add('loser-vanish');
 
             // Eliminate the loser from the global list
-            const eliminatedIndex = allContenders.findIndex(c => c.name === loser.name);
-            if (eliminatedIndex !== -1) {
-                allContenders[eliminatedIndex].active = false;
+            const eliminatedContender = allContenders.find(c => c.name === loser.name);
+            if (eliminatedContender) {
+                 eliminatedContender.active = false;
             }
             
             updateContenderList();
@@ -1138,6 +1146,7 @@
             tournamentListContainer.style.display = 'none';
             nextMatchButton.style.display = 'none';
             
+            // Re-initialize all data
             initializePokemonData();
             updateStatus('Enter contenders and press SHUFFLE POKÉMONS.');
             clearDuelSlots();
@@ -1146,7 +1155,8 @@
         // --- EVENT LISTENERS ---
         selectPlayersButton.addEventListener('click', beginTournament);
         shufflePokemonsButton.addEventListener('click', shufflePokemons);
-        document.getElementById('contenderNames').addEventListener('input', () => setupTournament(true));
+        // Using blur to update the list only when the user finishes typing/clicks away
+        document.getElementById('contenderNames').addEventListener('blur', () => setupTournament(true)); 
         
         // Initial setup
         initializePokemonData();
