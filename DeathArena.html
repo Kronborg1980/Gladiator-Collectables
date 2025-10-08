@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Gladiators Death Arena: Sudden Death Tournament</title>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Bebas+Neue&family=Roboto+Mono:wght{400;700}&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght{400;700}&family=Bebas+Neue&family=Roboto+Mono:wght{400;700}&display=swap" rel="stylesheet">
     <style>
         /* --- VISUAL CONFIGURATION --- */
         :root {
@@ -789,17 +789,22 @@
             POKEMON_SPRITE_DATA = shuffleArray(POKEMON_SPRITE_DATA);
         }
 
+        // FIX 1: Overhaul shufflePokemons to explicitly re-assign new Pokémon
         function shufflePokemons() {
             if (gameActive) return;
             initializePokemonData();
             
             if (allContenders.length > 0) {
-                const shuffledPokemonData = shuffleArray([...POKEMON_SPRITE_DATA]);
+                // Shuffle Pokémon data, ensuring we have enough for all contenders
+                const shuffledPokemonData = shuffleArray([...POKEMON_SPRITE_DATA]); 
+                
+                // Assign a new, random Pokémon to every contender
                 allContenders.forEach((contender, index) => {
-                    // Re-assign a new, random Pokémon from the shuffled list
                     contender.pokemon = shuffledPokemonData[index % shuffledPokemonData.length]; 
                 });
-                updateContenderList();
+                
+                // FIX 2: Ensure all lists (setup and game screen side panels) update
+                updateContenderLists();
             }
             updateStatus('Pokémon Types and Powers have been SHUFFLED. Ready to start tournament.');
         }
@@ -870,17 +875,19 @@
             return div;
         }
 
-        // NEW: Update function for side panels and setup screen list
         function updateContenderLists() {
             // 1. Update setup screen list (only used for visual setup phase)
             const namesInput = document.getElementById('contenderNames').value.split('\n').map(n => n.trim()).filter(n => n);
             if (allContenders.length === 0 || allContenders.length !== namesInput.length) {
-                setupTournament(true); 
+                // Only run setup if names changed or list is empty. Otherwise, use existing 'allContenders'
+                if (namesInput.length >= 2) {
+                    setupTournament(true); 
+                }
             }
+            
+            // Clear lists
             tournamentListContainer.style.display = 'block';
             contenderListUl.innerHTML = '';
-            
-            // 2. Update Side Panels (Game Screen)
             eliminatedListUl.innerHTML = '';
             advancingListUl.innerHTML = '';
 
@@ -909,7 +916,6 @@
         function setupTournament(isInitialSetup = false) {
             const namesInput = document.getElementById('contenderNames').value.split('\n').map(n => n.trim()).filter(n => n);
             
-            // Ensure Pokemon data is ready before assignment
             if (POKEMON_SPRITE_DATA.length === 0) {
                 initializePokemonData();
             }
@@ -927,7 +933,8 @@
                     const existing = allContenders.find(c => c.name === name);
                     return {
                         name: name,
-                        pokemon: existing && existing.pokemon ? existing.pokemon : shuffledPokemonData[index % shuffledPokemonData.length],
+                        // Fix: On initial setup, always assign new pokemon, but try to keep active status
+                        pokemon: existing && existing.pokemon && !isInitialSetup ? existing.pokemon : shuffledPokemonData[index % shuffledPokemonData.length],
                         active: true
                     }
                 });
@@ -1014,7 +1021,6 @@
             const p2 = activeContendersQueue.shift();
 
             if (!p1 || !p2) {
-                // Should only be hit if activeCount was 1. Re-run check just in case.
                 setTimeout(scheduleNextMatch, 100);
                 return;
             }
@@ -1168,7 +1174,6 @@
                  eliminatedContender.active = false;
             }
             
-            // NEW: Update the side panel lists
             updateContenderLists(); 
             
             const remainingContenders = allContenders.filter(c => c.active);
@@ -1227,7 +1232,7 @@
             initializePokemonData();
             updateStatus('Enter contenders and press SHUFFLE POKÉMONS.');
             clearDuelSlots();
-            updateContenderLists(); // Clear side panels
+            updateContenderLists();
         }
 
         // --- EVENT LISTENERS ---
