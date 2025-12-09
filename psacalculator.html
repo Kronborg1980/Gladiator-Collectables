@@ -27,7 +27,6 @@
         body { 
             font-family: 'Inter', sans-serif;
             background-color: var(--bg-dark); 
-            /* Subtle Background Mesh */
             background-image: 
                 radial-gradient(circle at 15% 50%, rgba(0, 242, 255, 0.05) 0%, transparent 25%),
                 radial-gradient(circle at 85% 30%, rgba(40, 100, 255, 0.08) 0%, transparent 25%);
@@ -38,7 +37,7 @@
         .font-brand { font-family: 'Cinzel', serif; }
         [v-cloak] { display: none; }
 
-        /* --- GLASS THEME --- */
+        /* GLASS THEME */
         .glass-panel { 
             background: var(--glass-bg); 
             backdrop-filter: blur(20px); 
@@ -48,7 +47,15 @@
             border-radius: 16px;
         }
 
-        /* --- INTERACTIVE ELEMENTS --- */
+        /* --- DROPDOWN FIX --- */
+        /* Forces dropdown options to be black background with white text */
+        select option { 
+            background-color: #050508; 
+            color: #fff; 
+            padding: 10px;
+        }
+
+        /* INTERACTIVE ELEMENTS */
         .nav-btn { 
             transition: all 0.2s ease; border-radius: 8px; font-weight: 500;
             border-left: 3px solid transparent;
@@ -67,7 +74,7 @@
             box-shadow: 0 0 20px rgba(0, 242, 255, 0.15); 
         }
 
-        /* --- INPUTS --- */
+        /* INPUTS */
         .glass-input { 
             background: rgba(0,0,0,0.4); 
             border: 1px solid rgba(255,255,255,0.1); 
@@ -77,13 +84,13 @@
         .glass-input:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 10px rgba(0, 242, 255, 0.2); }
         .glass-input:disabled { opacity: 0.5; cursor: not-allowed; }
 
-        /* Scrollbar */
+        /* SCROLLBAR */
         ::-webkit-scrollbar { width: 5px; height: 5px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
         ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
         
-        /* Graph Animation */
+        /* CHART ANIMATION */
         .chart-line { stroke-dasharray: 1000; stroke-dashoffset: 1000; animation: draw 2s ease-out forwards; }
         @keyframes draw { to { stroke-dashoffset: 0; } }
     </style>
@@ -233,30 +240,38 @@
                 <button @click="showSearch=false" class="text-gray-500 hover:text-white transition"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
             
-            <div class="px-8 py-8 bg-[#080a10] grid grid-cols-1 md:grid-cols-4 gap-6 border-b border-white/5">
-                <div><label class="text-[10px] text-gray-500 font-bold uppercase mb-2 block tracking-widest">1. Era</label><select v-model="selectedEra" class="glass-input"><option value="">Select Era</option><option v-for="era in eras" :value="era">{{ era }}</option></select></div>
-                <div><label class="text-[10px] text-gray-500 font-bold uppercase mb-2 block tracking-widest">2. Set</label><select v-model="selectedSet" :disabled="!selectedEra" class="glass-input disabled:opacity-30"><option value="">Select Set</option><option v-for="s in filteredSets" :value="s.id">{{ s.name }}</option></select></div>
-                <div><label class="text-[10px] text-gray-500 font-bold uppercase mb-2 block tracking-widest">3. Name</label><input v-model="query" @keyup.enter="fetchCards" :disabled="!selectedSet" placeholder="e.g. Charizard" class="glass-input disabled:opacity-30 lowercase placeholder:uppercase"></div>
-                <div><label class="text-[10px] text-[#00f2ff] font-bold uppercase mb-2 block tracking-widest">4. Add To</label><select v-model="targetBinder" class="glass-input border-[#00f2ff] text-[#00f2ff]"><option value="master">All Cards (Master)</option><option v-for="b in binders" :value="b.id">{{ b.name }}</option></select></div>
+            <div v-if="setsLoading" class="flex-1 flex flex-col items-center justify-center p-12 space-y-4">
+                <i class="fa-solid fa-circle-notch fa-spin text-4xl text-[#00f2ff]"></i>
+                <div class="text-sm font-bold text-white tracking-widest animate-pulse">SYNCING DATABASE...</div>
+                <div class="text-xs text-gray-500">Downloading expansion sets from cloud</div>
             </div>
-            
-            <div class="px-8 py-4 bg-[#050505] flex justify-end border-b border-white/5">
-                <button @click="fetchCards" class="bg-[#00f2ff] hover:bg-white text-black text-xs font-bold px-10 py-3 rounded shadow-lg uppercase tracking-widest transition transform active:scale-95">Search</button>
-            </div>
-            
-            <div class="flex-1 overflow-y-auto p-8 bg-[#050508]">
-                <div v-if="searchResults.length === 0" class="h-full flex flex-col items-center justify-center opacity-30">
-                    <i class="fa-solid fa-magnifying-glass text-6xl mb-4 text-white"></i>
-                    <p class="uppercase font-bold tracking-widest text-xs">Ready to Search</p>
+
+            <template v-else>
+                <div class="px-8 py-8 bg-[#080a10] grid grid-cols-1 md:grid-cols-4 gap-6 border-b border-white/5">
+                    <div><label class="text-[10px] text-gray-500 font-bold uppercase mb-2 block tracking-widest">1. Era</label><select v-model="selectedEra" class="glass-input"><option value="">Select Era</option><option v-for="era in eras" :value="era">{{ era }}</option></select></div>
+                    <div><label class="text-[10px] text-gray-500 font-bold uppercase mb-2 block tracking-widest">2. Set</label><select v-model="selectedSet" :disabled="!selectedEra" class="glass-input disabled:opacity-30"><option value="">Select Set</option><option v-for="s in filteredSets" :value="s.id">{{ s.name }}</option></select></div>
+                    <div><label class="text-[10px] text-gray-500 font-bold uppercase mb-2 block tracking-widest">3. Name</label><input v-model="query" @keyup.enter="fetchCards" :disabled="!selectedSet" placeholder="e.g. Charizard" class="glass-input disabled:opacity-30 lowercase placeholder:uppercase"></div>
+                    <div><label class="text-[10px] text-[#00f2ff] font-bold uppercase mb-2 block tracking-widest">4. Add To</label><select v-model="targetBinder" class="glass-input border-[#00f2ff] text-[#00f2ff]"><option value="master">All Cards (Master)</option><option v-for="b in binders" :value="b.id">{{ b.name }}</option></select></div>
                 </div>
-                <div v-else class="grid grid-cols-2 md:grid-cols-5 gap-6">
-                    <div v-for="card in searchResults" :key="card.id" @click="addCard(card)" class="bg-[#0a0f18] p-3 rounded-xl cursor-pointer hover:border-[#00f2ff] border border-white/5 group relative transition duration-200">
-                        <img :src="card.images.small" class="w-full rounded-lg mb-3 shadow-lg">
-                        <div class="text-center text-xs font-bold text-white truncate">{{ card.name }}</div>
-                        <div class="absolute top-2 right-2 bg-black/90 backdrop-blur text-[#00f2ff] text-[9px] font-bold px-2 py-1 rounded border border-[#00f2ff] shadow-lg">${{ getCardPrice(card) }}</div>
+                
+                <div class="px-8 py-4 bg-[#050505] flex justify-end border-b border-white/5">
+                    <button @click="fetchCards" class="bg-[#00f2ff] hover:bg-white text-black text-xs font-bold px-10 py-3 rounded shadow-lg uppercase tracking-widest transition transform active:scale-95">Search</button>
+                </div>
+                
+                <div class="flex-1 overflow-y-auto p-8 bg-[#050508]">
+                    <div v-if="searchResults.length === 0" class="h-full flex flex-col items-center justify-center opacity-30">
+                        <i class="fa-solid fa-magnifying-glass text-6xl mb-4 text-white"></i>
+                        <p class="uppercase font-bold tracking-widest text-xs">Ready to Search</p>
+                    </div>
+                    <div v-else class="grid grid-cols-2 md:grid-cols-5 gap-6">
+                        <div v-for="card in searchResults" :key="card.id" @click="addCard(card)" class="bg-[#0a0f18] p-3 rounded-xl cursor-pointer hover:border-[#00f2ff] border border-white/5 group relative transition duration-200">
+                            <img :src="card.images.small" class="w-full rounded-lg mb-3 shadow-lg">
+                            <div class="text-center text-xs font-bold text-white truncate">{{ card.name }}</div>
+                            <div class="absolute top-2 right-2 bg-black/90 backdrop-blur text-[#00f2ff] text-[9px] font-bold px-2 py-1 rounded border border-[#00f2ff] shadow-lg">${{ getCardPrice(card) }}</div>
+                        </div>
                     </div>
                 </div>
-            </div>
+            </template>
         </div>
     </div>
     </Transition>
@@ -337,7 +352,7 @@
             return {
                 user: null, currentView: 'dashboard', currentBinder: null, 
                 localBinders: [], localCards: [], cloudBinders: [], cloudCards: [],
-                showSearch: false, detailCard: null,
+                showSearch: false, detailCard: null, setsLoading: false,
                 allSets: [], eras: [], selectedEra: "", selectedSet: "", query: "", targetBinder: 'master', searchResults: [],
                 cacheKey: 'gladiator_sets_v6'
             }
@@ -415,12 +430,18 @@
             getCardPrice(c) { return c.tcgplayer?.prices?.holofoil?.market || c.tcgplayer?.prices?.normal?.market || 0; },
             
             async loadSetsAPI() {
+                this.setsLoading = true;
                 const c = localStorage.getItem(this.cacheKey);
-                if(c) { const d = JSON.parse(c); this.allSets = d.sets; this.eras = d.eras; return; }
+                if(c) { 
+                    const d = JSON.parse(c); this.allSets = d.sets; this.eras = d.eras; 
+                    this.setsLoading = false;
+                    return; 
+                }
                 const res = await fetch('https://api.pokemontcg.io/v2/sets?select=id,name,series,releaseDate&orderBy=-releaseDate');
                 const data = await res.json();
                 this.allSets = data.data; this.eras = [...new Set(data.data.map(s => s.series))];
                 localStorage.setItem(this.cacheKey, JSON.stringify({sets: this.allSets, eras: this.eras}));
+                this.setsLoading = false;
             },
             async fetchCards() {
                 if(!this.selectedSet) return;
