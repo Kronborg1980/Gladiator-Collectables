@@ -51,10 +51,11 @@
         /* --- ROI CALCULATOR TABLE --- */
         .roi-grid {
             display: grid;
-            grid-template-columns: 50px 2fr 1.2fr 0.8fr 0.8fr 0.8fr 1fr 0.8fr 1fr 40px;
-            gap: 16px;
+            /* Columns: Checkbox | Image | Details | Binder | Raw $ | Fee $ | Target | Est Value | Decision | Profit | Delete */
+            grid-template-columns: 30px 50px 2fr 1.2fr 0.8fr 0.8fr 0.8fr 1fr 0.8fr 1fr 40px;
+            gap: 12px;
             align-items: center;
-            padding: 12px 24px;
+            padding: 12px 20px;
             border-bottom: 1px solid rgba(255,255,255,0.05);
             transition: all 0.2s;
         }
@@ -71,6 +72,17 @@
         .sortable { cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 4px; }
         .sortable:hover { color: var(--accent); }
         .sortable.active { color: var(--accent); text-shadow: 0 0 10px rgba(0, 242, 255, 0.3); }
+
+        /* Custom Checkbox */
+        .custom-checkbox {
+            appearance: none; background-color: #000; margin: 0;
+            font: inherit; color: var(--accent); width: 14px; height: 14px;
+            border: 1px solid #555; border-radius: 3px; display: grid; place-content: center;
+            cursor: pointer;
+        }
+        .custom-checkbox::before { content: ""; width: 8px; height: 8px; transform: scale(0); transition: 120ms transform ease-in-out; box-shadow: inset 1em 1em var(--accent); transform-origin: center; clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%); }
+        .custom-checkbox:checked::before { transform: scale(1); }
+        .custom-checkbox:checked { border-color: var(--accent); }
 
         /* --- PAGINATION --- */
         .pagination-btn {
@@ -222,6 +234,9 @@
 
         <div v-else class="flex-1 flex flex-col overflow-hidden glass-panel">
             <div class="roi-grid roi-header shrink-0">
+                <div class="flex items-center gap-2">
+                    <input type="checkbox" :checked="isAllSelected" @click="toggleSelectAll" class="custom-checkbox">
+                </div>
                 <div class="text-center">IMG</div>
                 <div class="sortable" @click="setSort('name')" :class="{active: sortBy==='name'}">
                     ASSET DETAILS <i class="fa-solid" :class="sortDesc ? 'fa-caret-down' : 'fa-caret-up'" v-if="sortBy==='name'"></i>
@@ -239,7 +254,11 @@
                 <div class="text-right sortable justify-end" @click="setSort('profit')" :class="{active: sortBy==='profit'}">
                     PROFIT <i class="fa-solid" :class="sortDesc ? 'fa-caret-down' : 'fa-caret-up'" v-if="sortBy==='profit'"></i>
                 </div>
-                <div></div>
+                <div class="flex justify-end">
+                    <button v-if="selectedIds.length > 0" @click="deleteSelected" class="bg-red-500 hover:bg-red-600 text-white text-[9px] font-bold px-3 py-1 rounded uppercase tracking-wider transition">
+                        DELETE {{ selectedIds.length }}
+                    </button>
+                </div>
             </div>
 
             <div class="flex-1 overflow-y-auto p-0">
@@ -249,7 +268,11 @@
                 </div>
                 
                 <div v-else>
-                    <div v-for="(c, i) in paginatedCards" :key="c.uid || i" class="roi-grid hover:bg-white/5 transition">
+                    <div v-for="(c, i) in paginatedCards" :key="c.uid || i" class="roi-grid hover:bg-white/5 transition" :class="{'bg-white/5': selectedIds.includes(c.uid)}">
+                        <div>
+                            <input type="checkbox" :value="c.uid" v-model="selectedIds" class="custom-checkbox">
+                        </div>
+
                         <div class="flex justify-center">
                             <div class="w-10 h-14 bg-black rounded border border-white/10 overflow-hidden cursor-pointer hover:border-[#00f2ff] transition" @click="openCardDetail(c)">
                                 <img :src="c.image" class="w-full h-full object-cover">
@@ -454,7 +477,8 @@
                 
                 // SEARCH PAGINATION
                 searchPage: 1,
-                addedIds: [] // Track added cards for visual feedback
+                addedIds: [],
+                selectedIds: [] // For bulk delete
             }
         },
         mounted() {
@@ -476,6 +500,10 @@
                 return this.currentBinder ? this.cards.filter(c => c.binderId === this.currentBinder.id) : this.cards; 
             },
             
+            isAllSelected() {
+                return this.displayCards.length > 0 && this.selectedIds.length === this.displayCards.length;
+            },
+
             // --- SMART SORTING ---
             sortedCards() {
                 let list = [...this.displayCards];
@@ -513,6 +541,24 @@
         methods: {
             loginWithGoogle() { if(auth) auth.signInWithPopup(provider).catch(e => alert(e.message)); },
             logout() { if(auth) auth.signOut(); },
+
+            // --- BULK DELETE ---
+            toggleSelectAll() {
+                if (this.isAllSelected) {
+                    this.selectedIds = [];
+                } else {
+                    this.selectedIds = this.displayCards.map(c => c.uid);
+                }
+            },
+            deleteSelected() {
+                if(!confirm(`Delete ${this.selectedIds.length} cards?`)) return;
+                this.selectedIds.forEach(uid => {
+                    if(this.user) db.collection('users').doc(this.user.uid).collection('cards').doc(uid).delete();
+                    else this.localCards = this.localCards.filter(c => c.uid !== uid);
+                });
+                this.selectedIds = [];
+                this.saveData();
+            },
 
             // --- SORT & PAGE METHODS ---
             setSort(key) {
