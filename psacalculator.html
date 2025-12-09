@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Gladiator | Compact</title>
+    <title>Gladiator | Pro Dashboard</title>
     <link rel="icon" type="image/webp" href="https://raw.githubusercontent.com/Kronborg1980/Gladiator-Collectables/main/logogla.webp">
     
     <script src="https://cdn.tailwindcss.com"></script>
@@ -46,7 +46,6 @@
             <img src="https://raw.githubusercontent.com/Kronborg1980/Gladiator-Collectables/main/logogla.webp" class="h-6 w-6 object-contain">
             <span class="font-bold text-[#D4AF37] uppercase tracking-wider text-xs">Gladiator Pro</span>
         </div>
-
         <div class="flex items-center gap-6 text-[10px] font-mono text-slate-400">
             <div>ASSETS: <span class="text-white font-bold">{{ cards.length }}</span></div>
             <div class="hidden sm:block">COST: <span class="text-blue-400 font-bold">${{ formatNumber(totalCost) }}</span></div>
@@ -57,22 +56,15 @@
     <div class="p-2 bg-[#0e0e0e] border-b border-[#222] flex flex-wrap gap-2 items-center shrink-0">
         <div class="relative group">
             <i class="fa-solid fa-search absolute left-2 top-1.5 text-slate-600 text-[10px]"></i>
-            <input v-model="filter" placeholder="FILTER..." 
-                class="bg-[#000] border border-[#222] text-white text-[10px] font-bold rounded pl-6 pr-2 py-1 w-32 focus:w-48 focus:border-[#D4AF37] outline-none transition-all uppercase">
+            <input v-model="filter" placeholder="FILTER..." class="bg-[#000] border border-[#222] text-white text-[10px] font-bold rounded pl-6 pr-2 py-1 w-32 focus:w-48 focus:border-[#D4AF37] outline-none transition-all uppercase">
         </div>
-
         <div class="h-4 w-[1px] bg-[#333] mx-1"></div>
-
         <button @click="updatePrices" :disabled="isUpdating" class="h-6 px-2 bg-[#1a1a1a] hover:bg-[#222] text-slate-400 hover:text-green-400 border border-[#222] rounded text-[10px]" title="Update Prices"><i class="fa-solid fa-arrows-rotate" :class="{'animate-spin': isUpdating}"></i></button>
         <button @click="exportExcel" class="h-6 px-2 bg-[#1a1a1a] hover:bg-[#222] text-slate-400 hover:text-green-500 border border-[#222] rounded text-[10px]" title="Excel"><i class="fa-solid fa-file-excel"></i></button>
         <button @click="backup" class="h-6 px-2 bg-[#1a1a1a] hover:bg-[#222] text-slate-400 hover:text-blue-500 border border-[#222] rounded text-[10px]" title="Save"><i class="fa-solid fa-download"></i></button>
         <label class="h-6 px-2 bg-[#1a1a1a] hover:bg-[#222] text-slate-400 hover:text-purple-500 border border-[#222] rounded text-[10px] cursor-pointer flex items-center" title="Load"><i class="fa-solid fa-upload"></i> <input type="file" @change="restore" class="hidden"></label>
-        
         <div class="flex-1"></div>
-        
-        <button @click="openSearch" class="h-6 px-4 bg-[#D4AF37] hover:bg-white text-black text-[10px] font-bold uppercase rounded flex items-center gap-1 shadow-sm">
-            <i class="fa-solid fa-plus"></i> Add
-        </button>
+        <button @click="openSearch" class="h-6 px-4 bg-[#D4AF37] hover:bg-white text-black text-[10px] font-bold uppercase rounded flex items-center gap-1 shadow-sm"><i class="fa-solid fa-plus"></i> Add</button>
     </div>
 
     <div class="hidden md:block flex-1 overflow-hidden relative bg-[#050505]">
@@ -96,50 +88,24 @@
                 <tbody class="text-[11px] divide-y divide-[#151515]">
                     <tr v-for="(c, i) in filteredCards" :key="i" class="hover:bg-[#111] group h-8">
                         <td class="pl-2 py-0.5 text-center relative group/img">
-                            <div class="w-5 h-7 bg-[#222] rounded border border-[#333] overflow-hidden">
-                                <img v-if="c.img" :src="c.img" class="w-full h-full object-cover">
-                            </div>
-                            <div class="hidden group-hover/img:block absolute top-0 left-8 z-50 w-24 rounded border border-[#D4AF37] shadow-xl">
-                                <img v-if="c.img" :src="c.img" class="w-full h-full object-cover">
-                            </div>
+                            <div class="w-5 h-7 bg-[#222] rounded border border-[#333] overflow-hidden"><img v-if="c.img" :src="c.img" class="w-full h-full object-cover"></div>
+                            <div class="hidden group-hover/img:block absolute top-0 left-8 z-50 w-24 rounded border border-[#D4AF37] shadow-xl"><img v-if="c.img" :src="c.img" class="w-full h-full object-cover"></div>
                         </td>
-
                         <td class="px-2 font-bold text-slate-300 truncate max-w-[150px]" :title="c.name">{{ c.name }}</td>
                         <td class="px-2 text-[10px] text-slate-500 truncate max-w-[100px]">{{ c.set }}</td>
-                        
                         <td class="px-2"><input v-model="c.condition" class="pro-input"></td>
                         <td class="px-2"><input v-model.number="c.raw" type="number" class="pro-input number text-right text-slate-400"></td>
                         <td class="px-2"><input v-model.number="c.fee" type="number" class="pro-input number text-right text-slate-500"></td>
-                        
-                        <td class="px-2 text-center">
-                            <select v-model="c.target" class="bg-transparent text-[#D4AF37] font-bold text-[10px] outline-none text-center p-0 cursor-pointer">
-                                <option value="10">10</option><option value="9">9</option><option value="8">8</option>
-                            </select>
-                        </td>
-                        
-                        <td class="px-2">
-                            <input :value="getValue(c)" @input="updateValue(c, $event.target.value)" type="number" class="pro-input number text-right text-white font-bold bg-[#111] rounded px-1">
-                        </td>
-                        
-                        <td class="px-2 text-right font-mono font-bold">
-                            <span :class="getProfit(c) >= 0 ? 'text-[#D4AF37]' : 'text-red-600'">{{ Math.round(getProfit(c)) }}</span>
-                        </td>
-                        
-                        <td class="px-2 text-center">
-                            <i v-if="getProfit(c) > 0" class="fa-solid fa-check text-green-500 text-[10px]"></i>
-                            <i v-else class="fa-solid fa-xmark text-red-500 text-[10px]"></i>
-                        </td>
-                        
-                        <td class="px-2 text-center">
-                            <button @click="remove(i)" class="text-slate-700 hover:text-red-500 opacity-0 group-hover:opacity-100"><i class="fa-solid fa-times"></i></button>
-                        </td>
+                        <td class="px-2 text-center"><select v-model="c.target" class="bg-transparent text-[#D4AF37] font-bold text-[10px] outline-none text-center p-0 cursor-pointer"><option value="10">10</option><option value="9">9</option><option value="8">8</option></select></td>
+                        <td class="px-2"><input :value="getValue(c)" @input="updateValue(c, $event.target.value)" type="number" class="pro-input number text-right text-white font-bold bg-[#111] rounded px-1"></td>
+                        <td class="px-2 text-right font-mono font-bold"><span :class="getProfit(c) >= 0 ? 'text-[#D4AF37]' : 'text-red-600'">{{ Math.round(getProfit(c)) }}</span></td>
+                        <td class="px-2 text-center"><i v-if="getProfit(c) > 0" class="fa-solid fa-check text-green-500 text-[10px]"></i><i v-else class="fa-solid fa-xmark text-red-500 text-[10px]"></i></td>
+                        <td class="px-2 text-center"><button @click="remove(i)" class="text-slate-700 hover:text-red-500 opacity-0 group-hover:opacity-100"><i class="fa-solid fa-times"></i></button></td>
                     </tr>
                 </tbody>
             </table>
         </div>
-        <div v-if="cards.length === 0" class="absolute inset-0 flex items-center justify-center pointer-events-none opacity-20">
-            <h3 class="text-2xl font-brand font-bold text-slate-600 uppercase">Empty Armory</h3>
-        </div>
+        <div v-if="cards.length === 0" class="absolute inset-0 flex items-center justify-center pointer-events-none opacity-20"><h3 class="text-2xl font-brand font-bold text-slate-600 uppercase">Empty Armory</h3></div>
     </div>
 
     <div class="md:hidden flex-1 overflow-y-auto bg-[#050505] p-2 space-y-2">
@@ -169,7 +135,7 @@
                 </div>
                 
                 <div class="flex gap-2">
-                    <select v-model="selectedSet" class="bg-black border border-[#333] text-slate-300 text-[10px] font-bold rounded px-2 py-2 outline-none uppercase w-1/3">
+                    <select v-model="selectedSet" class="bg-black border border-[#333] text-slate-300 text-[10px] font-bold rounded px-2 py-2 outline-none uppercase w-1/3 cursor-pointer">
                         <option value="">ALL SETS</option>
                         <optgroup label="Scarlet & Violet">
                             <option value="sv8pt5">Prismatic Evolutions</option>
@@ -220,7 +186,12 @@
                             <option value="base5">Team Rocket</option>
                         </optgroup>
                     </select>
-                    <input ref="searchBox" v-model="query" placeholder="Name..." class="flex-1 bg-black border border-[#333] text-white rounded px-3 py-2 text-xs outline-none focus:border-[#D4AF37] uppercase">
+                    
+                    <input ref="searchBox" v-model="query" @keyup.enter="triggerSearch" placeholder="Name..." class="flex-1 bg-black border border-[#333] text-white rounded px-3 py-2 text-xs outline-none focus:border-[#D4AF37] uppercase">
+                    
+                    <button @click="triggerSearch" class="bg-[#D4AF37] hover:bg-white text-black px-4 py-2 rounded text-[10px] font-bold uppercase transition">
+                        SEARCH
+                    </button>
                 </div>
             </div>
             
@@ -236,6 +207,7 @@
                         <div class="text-[8px] text-slate-500 truncate">{{ item.set.name }} #{{ item.number }}</div>
                     </div>
                 </div>
+                <div v-else-if="hasSearched" class="text-center py-8 text-slate-600 text-xs">No cards found.</div>
             </div>
         </div>
     </div>
@@ -250,11 +222,11 @@
         data() {
             return {
                 cards: [], filter: '', showSearch: false, query: '', 
-                results: [], loading: false, timer: null, selectedSet: '', isUpdating: false
+                results: [], loading: false, selectedSet: '', isUpdating: false, hasSearched: false
             }
         },
         mounted() {
-            const db = localStorage.getItem('gladiator_v26');
+            const db = localStorage.getItem('gladiator_v27');
             if(db) this.cards = JSON.parse(db);
         },
         computed: {
@@ -265,13 +237,9 @@
             totalCost() { return this.cards.reduce((sum, c) => sum + (c.raw || 0) + (c.fee || 0), 0); },
             totalProfit() { return this.cards.reduce((sum, c) => sum + this.getProfit(c), 0); }
         },
-        watch: {
-            query(val) { this.triggerSearch(); },
-            selectedSet() { this.triggerSearch(); }
-        },
         methods: {
             formatNumber(n) { return (n||0).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0}); },
-            save() { localStorage.setItem('gladiator_v26', JSON.stringify(this.cards)); },
+            save() { localStorage.setItem('gladiator_v27', JSON.stringify(this.cards)); },
             
             getValue(c) {
                 if(c.target == 10) return c.psa10;
@@ -287,38 +255,39 @@
             },
             getProfit(c) { return this.getValue(c) - ((c.raw || 0) + (c.fee || 0)); },
 
-            // --- API LOGIC ---
-            triggerSearch() {
-                clearTimeout(this.timer);
-                if(this.selectedSet || this.query.length >= 2) {
-                    this.loading = true;
-                    this.timer = setTimeout(() => this.fetchAPI(), 400);
-                } else {
-                    this.results = [];
-                }
-            },
+            // --- MANUAL SEARCH LOGIC ---
+            async triggerSearch() {
+                // Prevent empty searches unless a set is selected
+                if (!this.selectedSet && this.query.length < 2) return;
 
-            async fetchAPI() {
+                this.loading = true;
+                this.hasSearched = true;
+                this.results = [];
+
                 try {
                     let q = '';
+                    
                     // Prefix Name Search
-                    if (this.query.length >= 2) {
+                    if (this.query.length >= 1) {
                         const terms = this.query.trim().split(/\s+/);
                         const nameQ = terms.map(t => `name:"${t.replace(/[^a-zA-Z0-9]/g, '')}*"`).join(' ');
                         q += nameQ;
                     }
+
                     // Strict Set Filter
                     if (this.selectedSet) {
                         q += ` set.id:${this.selectedSet}`;
                     }
 
-                    if(!q.trim()) { this.loading = false; return; }
-
                     const url = `https://api.pokemontcg.io/v2/cards?q=${q}&pageSize=24&orderBy=-set.releaseDate`; 
                     const res = await fetch(url);
                     const data = await res.json();
                     this.results = data.data || [];
-                } catch(e) {} finally { this.loading = false; }
+                } catch(e) {
+                    console.error(e);
+                } finally { 
+                    this.loading = false; 
+                }
             },
 
             async updatePrices() {
@@ -354,7 +323,7 @@
                 return p.holofoil?.market || p.normal?.market || p.reverseHolofoil?.market || p.unlimitedHolofoil?.market || 0;
             },
 
-            openSearch() { this.showSearch = true; this.query = ''; this.selectedSet = ''; this.results = []; this.$nextTick(() => this.$refs.searchBox.focus()); },
+            openSearch() { this.showSearch = true; this.query = ''; this.selectedSet = ''; this.results = []; this.hasSearched = false; this.$nextTick(() => this.$refs.searchBox.focus()); },
             
             add(item) {
                 const rawPrice = this.getPrice(item);
