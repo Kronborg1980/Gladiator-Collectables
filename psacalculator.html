@@ -1,194 +1,492 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Kronborg Pokémon Price Tool</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Gladiator | Pro Dashboard</title>
+    <link rel="icon" type="image/webp" href="https://raw.githubusercontent.com/Kronborg1980/Gladiator-Collectables/main/logogla.webp">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-<style>
-    body {
-        background: #111;
-        color: #fff;
-        font-family: Arial, sans-serif;
-        margin: 0;
-        padding: 0;
-    }
+    <style>
+        :root { --bg-dark: #050505; --panel: #09090b; --border: #222; --gold: #FACC15; --blue: #3B82F6; }
+        body { font-family: 'Inter', sans-serif; background-color: #000; color: #e4e4e7; height: 100vh; overflow: hidden; }
+        .font-brand { font-family: 'Cinzel', serif; }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #000; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #444; }
+        
+        /* Inputs */
+        .table-input { background: transparent; border-bottom: 1px solid transparent; color: #fff; width: 100%; transition: 0.2s; font-size: 13px; text-align: right; }
+        .table-input:hover { border-bottom-color: #333; }
+        .table-input:focus { border-bottom-color: var(--gold); outline: none; }
+        .text-left-input { text-align: left; }
 
-    .container {
-        max-width: 900px;
-        margin: 40px auto;
-        padding: 20px;
-    }
-
-    h1 {
-        text-align: center;
-        margin-bottom: 25px;
-        color: #ffd700;
-    }
-
-    input, button, select {
-        width: 100%;
-        padding: 12px;
-        margin-bottom: 15px;
-        border-radius: 6px;
-        border: none;
-        font-size: 16px;
-    }
-
-    button {
-        background: #fbbf24;
-        color: #000;
-        cursor: pointer;
-        font-weight: bold;
-    }
-
-    button:hover {
-        background: #facc15;
-    }
-
-    .card-box {
-        background: #222;
-        padding: 20px;
-        border-radius: 10px;
-        margin-top: 20px;
-    }
-
-    .row {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 15px;
-    }
-
-    .label {
-        font-size: 15px;
-        margin-top: 10px;
-        color: #aaa;
-    }
-
-</style>
-
+        /* Stats Boxes */
+        .stat-box { background: #0a0a0a; border: 1px solid #333; border-radius: 8px; padding: 12px 20px; min-width: 140px; display: flex; flex-direction: column; justify-content: center; }
+        .stat-label { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+        .stat-value { font-family: 'Inter', sans-serif; font-weight: 700; font-size: 22px; line-height: 1; }
+        
+        /* Modal & Autocomplete */
+        .autocomplete-list {
+            position: absolute; top: 100%; left: 0; right: 0;
+            background: #111; border: 1px solid #333; border-radius: 0 0 8px 8px;
+            max-height: 200px; overflow-y: auto; z-index: 50;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.8);
+        }
+        .autocomplete-item { padding: 10px 12px; cursor: pointer; font-size: 12px; color: #ccc; border-bottom: 1px solid #222; }
+        .autocomplete-item:hover { background: #222; color: var(--gold); }
+        
+        select option { background-color: #000; color: #fff; padding: 10px; }
+        [v-cloak] { display: none; }
+    </style>
 </head>
-<body>
+<body class="flex flex-col h-screen">
 
-<div class="container">
+<div id="app" v-cloak class="flex flex-col h-full w-full max-w-[1920px] mx-auto">
+    
+    <header class="flex flex-col md:flex-row items-center justify-between px-8 py-5 border-b border-[#222] bg-[#050505] shrink-0 gap-6">
+        <div class="flex items-center gap-4">
+            <img src="https://raw.githubusercontent.com/Kronborg1980/Gladiator-Collectables/main/logogla.webp" class="w-12 h-12 object-contain">
+            <div>
+                <h1 class="text-2xl font-brand font-bold text-white tracking-wide">
+                    GLADIATOR <span class="text-[#D4AF37]">COLLECTIBLES</span>
+                </h1>
+                <div class="text-xs text-[#555] font-medium tracking-wide">Professional Grading ROI Calculator</div>
+            </div>
+        </div>
 
-    <h1>Pokémon Price Lookup (Fast Mode)</h1>
+        <div class="flex items-center gap-4 w-full md:w-auto overflow-x-auto pb-2 md:pb-0">
+            <div class="stat-box border-[#333]">
+                <div class="stat-label text-[#71717a]">Inventory</div>
+                <div class="stat-value text-white">{{ cards.length }} <span class="text-xs text-[#555] font-normal">Items</span></div>
+            </div>
+            <div class="stat-box border-[#3B82F6] bg-[#3B82F6]/5">
+                <div class="stat-label text-[#3B82F6]">Total Cost</div>
+                <div class="stat-value text-white">${{ formatNumber(totalCost) }}</div>
+            </div>
+            <div class="stat-box border-[#FACC15] bg-[#FACC15]/5">
+                <div class="stat-label text-[#FACC15]">Proj. Net Profit</div>
+                <div class="stat-value" :class="totalProfit >= 0 ? 'text-[#FACC15]' : 'text-red-500'">${{ formatNumber(totalProfit) }}</div>
+            </div>
+        </div>
+    </header>
 
-    <!-- SEARCH FIELD -->
-    <input id="pokemonSearch" type="text" placeholder="Type Pokémon card name… (Example: Charizard VMAX)" />
+    <div class="px-8 py-4 bg-[#0a0a0a] border-b border-[#222] shrink-0">
+        <div class="flex flex-col md:flex-row gap-4 justify-between items-center">
+            <div class="relative w-full md:max-w-md group">
+                <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-[#555] group-focus-within:text-white transition"></i>
+                <input v-model="filter" placeholder="Search by name, set, or notes..." class="w-full bg-[#111] border border-[#27272a] text-sm text-white rounded-lg pl-11 pr-4 py-3 outline-none focus:border-[#D4AF37] focus:bg-[#000] transition placeholder-[#555]">
+            </div>
 
-    <button id="searchBtn">Search</button>
+            <div class="flex items-center gap-3">
+                <div class="flex bg-[#111] rounded-lg border border-[#27272a] p-1">
+                    <button @click="initializeDatabase" class="w-10 h-10 flex items-center justify-center text-[#777] hover:text-white hover:bg-[#222] rounded transition" title="Reload Database"><i class="fa-solid fa-sync" :class="{'fa-spin': initLoading}"></i></button>
+                    <div class="w-[1px] bg-[#333] my-2 mx-1"></div>
+                    <button @click="exportExcel" class="w-10 h-10 flex items-center justify-center text-[#777] hover:text-green-500 hover:bg-[#222] rounded transition"><i class="fa-solid fa-file-excel"></i></button>
+                    <button @click="exportPDF" class="w-10 h-10 flex items-center justify-center text-[#777] hover:text-red-500 hover:bg-[#222] rounded transition"><i class="fa-solid fa-file-pdf"></i></button>
+                    <div class="w-[1px] bg-[#333] my-2 mx-1"></div>
+                    <button @click="backup" class="w-10 h-10 flex items-center justify-center text-[#777] hover:text-blue-500 hover:bg-[#222] rounded transition"><i class="fa-solid fa-download"></i></button>
+                    <label class="w-10 h-10 flex items-center justify-center text-[#777] hover:text-purple-500 hover:bg-[#222] rounded transition cursor-pointer"><i class="fa-solid fa-upload"></i> <input type="file" @change="restore" class="hidden"></label>
+                </div>
 
-    <!-- CARD DISPLAY BOX -->
-    <div id="cardBox" class="card-box" style="display:none;">
-        <h2 id="cardTitle"></h2>
-        <p class="label">Raw Market Price</p>
-        <div id="rawPrice">-</div>
-
-        <p class="label">PSA 8</p>
-        <div id="psa8Price">-</div>
-
-        <p class="label">PSA 9</p>
-        <div id="psa9Price">-</div>
-
-        <p class="label">PSA 10</p>
-        <div id="psa10Price">-</div>
-
-        <button id="refreshPSA">Refresh PSA Prices</button>
+                <button @click="openSearch" class="flex items-center gap-2 bg-[#FACC15] hover:bg-[#EAB308] text-black text-sm font-bold px-6 py-3 rounded-lg transition shadow-[0_0_15px_rgba(250,204,21,0.2)] active:scale-95">
+                    <i class="fa-solid fa-plus"></i> Add Card
+                </button>
+                <!-- Refresh PSA Prices button (non-intrusive) -->
+                <button @click="updatePrices" :disabled="isUpdating" class="ml-2 w-10 h-10 flex items-center justify-center text-[#777] hover:text-[#FACC15] hover:bg-[#222] rounded transition" title="Refresh PSA Prices"><i class="fa-solid fa-arrow-rotate-right" :class="{'fa-spin': isUpdating}"></i></button>
+            </div>
+        </div>
     </div>
 
+    <div class="flex-1 overflow-hidden bg-[#050505] relative flex flex-col">
+        <div class="grid grid-cols-[60px_2fr_1fr_1fr_1fr_1fr_1fr_1fr_50px] gap-6 px-8 py-4 border-b border-[#222] bg-[#0c0c0c] text-[10px] font-bold text-[#666] uppercase tracking-widest shrink-0 hidden md:grid">
+            <div class="text-center">Img</div>
+            <div>Asset Details</div>
+            <div class="text-right">Raw Cost</div>
+            <div class="text-right">Grade Fee</div>
+            <div class="text-center">Exp. Grade</div>
+            <div class="text-right">Est. Value</div>
+            <div class="text-center">Decision</div>
+            <div class="text-right">Profit</div>
+            <div></div>
+        </div>
+
+        <div class="flex-1 overflow-y-auto px-8 py-2">
+            <div v-if="filteredCards.length === 0" class="h-full flex flex-col items-center justify-center text-center pb-32">
+                <div class="w-24 h-24 rounded-full bg-[#0a0a0a] border border-[#222] flex items-center justify-center mb-6 shadow-inner">
+                    <i class="fa-solid fa-magnifying-glass-chart text-4xl text-[#222]"></i>
+                </div>
+                <h2 class="text-2xl font-brand font-bold text-[#eee] uppercase tracking-widest mb-3">Your Armory Is Empty</h2>
+                <p class="text-sm text-[#555] mb-8">Start by adding cards to analyze your grading margins.</p>
+                <button @click="openSearch" class="text-[#D4AF37] text-xs font-bold uppercase tracking-[0.2em] hover:text-white border-b border-[#D4AF37] hover:border-white pb-1 transition">Add First Card</button>
+            </div>
+
+            <div v-else class="hidden md:flex flex-col">
+                <div v-for="(c, i) in filteredCards" :key="i" class="grid grid-cols-[60px_2fr_1fr_1fr_1fr_1fr_1fr_1fr_50px] gap-6 items-center py-3 border-b border-[#1a1a1a] hover:bg-[#111] group transition">
+                    <div class="flex justify-center">
+                        <div class="w-10 h-14 bg-black rounded border border-[#333] relative overflow-hidden group-hover:border-[#D4AF37] transition cursor-pointer">
+                            <img :src="c.img" class="w-full h-full object-cover">
+                        </div>
+                    </div>
+                    
+                    <div class="min-w-0">
+                        <div class="font-bold text-white text-sm truncate">{{ c.name }}</div>
+                        <div class="text-[10px] text-[#666] uppercase font-bold tracking-wide truncate mt-0.5">{{ c.set }}</div>
+                        <input v-model="c.condition" class="table-input text-left-input text-[#888] mt-1 placeholder-[#333]" placeholder="Add notes...">
+                    </div>
+
+                    <div class="text-right font-mono text-[#aaa]">$<input v-model.number="c.raw" type="number" class="bg-transparent w-16 text-right outline-none focus:text-white border-b border-transparent focus:border-[#D4AF37]"></div>
+                    <div class="text-right font-mono text-[#aaa]">$<input v-model.number="c.fee" type="number" class="bg-transparent w-16 text-right outline-none focus:text-white border-b border-transparent focus:border-[#D4AF37]"></div>
+
+                    <div class="flex justify-center">
+                        <select v-model="c.target" class="bg-[#0e0e0e] text-[#D4AF37] font-bold text-xs border border-[#222] rounded px-2 py-1 outline-none focus:border-[#D4AF37] cursor-pointer">
+                            <option value="10">PSA 10</option><option value="9">PSA 9</option><option value="8">PSA 8</option>
+                        </select>
+                    </div>
+
+                    <div class="text-right font-mono text-white font-bold">$<input :value="getValue(c)" @input="updateValue(c, $event.target.value)" type="number" class="bg-transparent w-20 text-right outline-none border-b border-transparent focus:border-[#D4AF37]"></div>
+
+                    <div class="text-center">
+                        <span v-if="getProfit(c) > 0" class="text-[10px] font-bold text-green-500 bg-green-900/10 border border-green-500/20 px-3 py-1 rounded uppercase tracking-wide">GRADE</span>
+                        <span v-else class="text-[10px] font-bold text-red-500 bg-red-900/10 border border-red-500/20 px-3 py-1 rounded uppercase tracking-wide">HOLD</span>
+                    </div>
+
+                    <div class="text-right font-mono font-bold text-sm" :class="getProfit(c) >= 0 ? 'text-[#FACC15]' : 'text-red-500'">
+                        {{ getProfit(c) >= 0 ? '+' : '' }}{{ Math.round(getProfit(c)) }}
+                    </div>
+
+                    <div class="text-center"><button @click="remove(i)" class="text-[#333] hover:text-red-500 transition"><i class="fa-solid fa-trash"></i></button></div>
+                </div>
+            </div>
+
+            <div class="md:hidden space-y-3 mt-2">
+                <div v-for="(c, i) in filteredCards" :key="i" class="bg-[#111] border border-[#222] rounded-lg p-4 flex gap-4">
+                     <div class="w-20 h-28 bg-black rounded border border-[#333] shrink-0 overflow-hidden"><img :src="c.img" class="w-full h-full object-cover"></div>
+                     <div class="flex-1 min-w-0 flex flex-col justify-between">
+                        <div>
+                            <div class="font-bold text-white text-sm truncate">{{ c.name }}</div>
+                            <div class="text-[10px] text-[#666] uppercase font-bold">{{ c.set }}</div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2 my-2">
+                            <div>
+                                <label class="text-[9px] text-[#555] uppercase block">Grade</label>
+                                <select v-model="c.target" class="bg-black text-[#D4AF37] text-xs font-bold border border-[#333] rounded w-full"><option value="10">PSA 10</option><option value="9">PSA 9</option></select>
+                            </div>
+                            <div>
+                                <label class="text-[9px] text-[#555] uppercase block">Profit</label>
+                                <div class="text-sm font-bold font-mono" :class="getProfit(c) >= 0 ? 'text-[#FACC15]' : 'text-red-500'">${{ Math.round(getProfit(c)) }}</div>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-end">
+                             <div class="flex items-center text-[#888] text-xs">Raw: $<input v-model="c.raw" type="number" class="bg-transparent border-b border-[#333] w-12 text-white ml-1 outline-none"></div>
+                             <button @click="remove(i)" class="text-[#444] hover:text-red-500"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <Transition name="modal">
+    <div v-if="showSearch" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-[#09090b] w-full max-w-4xl h-[85vh] rounded-xl border border-[#222] shadow-2xl flex flex-col overflow-hidden">
+            <div class="p-6 border-b border-[#222] flex justify-between items-center bg-[#0c0c0c]">
+                <div class="flex items-center gap-3">
+                    <h2 class="font-brand font-bold text-xl text-[#FACC15] tracking-widest">ARMORY ACCESS</h2>
+                    <span v-if="loading" class="text-[10px] text-[#555] animate-pulse uppercase font-bold">Searching…</span>
+                </div>
+                <button @click="showSearch=false" class="text-[#555] hover:text-white transition"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+
+            <!-- NOTE: Era & Set removed per your request. Layout and styling unchanged. -->
+            <div class="p-6 bg-[#0c0c0c] border-b border-[#222]">
+                <div>
+                    <label class="text-[10px] text-[#555] font-bold uppercase mb-2 block tracking-wider">Pokemon Name</label>
+                    <div class="relative">
+                        <i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-[#444]"></i>
+                        <input v-model="query" @input="filterNames" :disabled="loading" placeholder="Type name (e.g. Charizard VMAX)" class="w-full bg-[#111] border border-[#333] text-white text-xs font-bold rounded-lg p-3 pl-9 outline-none focus:border-[#D4AF37] uppercase disabled:opacity-50" autocomplete="off">
+                        <div v-if="showPredictions && predictedNames.length > 0" class="autocomplete-list">
+                            <div v-for="name in predictedNames" @click="selectName(name)" class="autocomplete-item">{{ name }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="px-6 py-4 bg-[#0c0c0c] border-b border-[#222] flex justify-end">
+                <button @click="fetchCards" :disabled="!query" class="bg-[#D4AF15] hover:bg-[#EAB308] text-black text-xs font-bold px-8 py-3 rounded-lg uppercase tracking-wider shadow-lg active:scale-95 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                    Search Database
+                </button>
+            </div>
+
+            <div class="flex-1 overflow-y-auto p-6 bg-[#050505]">
+                <div v-if="loading" class="h-full flex flex-col items-center justify-center text-[#D4AF15]">
+                    <i class="fa-solid fa-circle-notch fa-spin text-3xl mb-4"></i>
+                    <div class="text-xs font-bold uppercase tracking-widest">Downloading Asset Data...</div>
+                </div>
+
+                <div v-else-if="results.length > 0" class="grid grid-cols-2 md:grid-cols-5 gap-4">
+                    <div v-for="item in results" :key="item.id" @click="add(item)" class="group bg-[#111] border border-[#222] rounded-xl p-3 hover:border-[#D4AF15] cursor-pointer transition relative">
+                        <div class="aspect-[0.7] bg-black rounded-lg overflow-hidden mb-3 relative">
+                            <img :src="item.images?.small || item.images?.large || ''" loading="lazy" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
+                             <div class="absolute bottom-0 inset-x-0 bg-black/90 border-t border-[#333] py-1.5 text-center">
+                                <span class="text-[#D4AF15] font-bold text-xs">${{ getPrice(item) }}</span>
+                            </div>
+                        </div>
+                        <div class="text-[10px] font-bold text-white truncate text-center">{{ item.name }}</div>
+                        <div class="text-[9px] text-[#666] font-bold uppercase text-center">#{{ item.number }}</div>
+                    </div>
+                </div>
+
+                <div v-else class="h-full flex flex-col items-center justify-center text-[#333]">
+                    <i class="fa-solid fa-crosshairs text-5xl mb-4 text-[#222]"></i>
+                    <p class="text-xs font-bold uppercase tracking-widest text-[#555]">System Ready</p>
+                    <p class="text-[10px] text-[#444] mt-2">Type a Pokemon & Press Search</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    </Transition>
+
+    <input type="file" ref="restoreInput" @change="restore" class="hidden">
 </div>
 
 <script>
-const API_KEY = "pokeprice_free_2d3a863c6c494cc90dc40d488e4f48482e085d28fd2f0617";
+    const { createApp } = Vue;
 
-/* --------------------------------------------------
-    FAST CARD SEARCH (NAME ONLY)
--------------------------------------------------- */
-async function searchCardByName(name) {
-    const url = `https://api.pokemonpricetracker.com/v2/card/search?name=${encodeURIComponent(name)}`;
+    createApp({
+        data() {
+            return {
+                cards: [], filter: '', showSearch: false, query: '', 
+                results: [], loading: false, isUpdating: false, initLoading: false,
+                allNamesInSet: [], predictedNames: [], showPredictions: false,
+                // PokemonPriceTracker config (your provided key)
+                API_BASE: 'https://api.pokemonpricetracker.com/api/v2',
+                API_KEY: 'pokeprice_free_2d3a863c6c494cc90dc40d488e4f48482e085d28fd2f0617'
+            }
+        },
+        mounted() {
+            const db = localStorage.getItem('gladiator_v26');
+            if(db) this.cards = JSON.parse(db);
+            // No sets/eras preloaded — per your instruction
+        },
+        computed: {
+            filteredCards() {
+                if(!this.filter) return this.cards;
+                return this.cards.filter(c => c.name.toLowerCase().includes(this.filter.toLowerCase()));
+            },
+            totalProfit() { return this.cards.reduce((sum, c) => sum + this.getProfit(c), 0); },
+            totalCost() { return this.cards.reduce((sum, c) => sum + (c.raw || 0) + (c.fee || 0), 0); }
+        },
+        methods: {
+            apiHeaders() {
+                return {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'Authorization': `Bearer ${this.API_KEY}`
+                };
+            },
 
-    const response = await fetch(url, {
-        headers: {
-            "Authorization": "Bearer " + API_KEY
+            // preserve the old initializeDatabase button behavior but it no longer fetches sets
+            initializeDatabase() {
+                alert('No set list available — this button is kept to preserve UI behavior.');
+            },
+
+            // Autocomplete: we will do a light local store of recent names
+            filterNames() {
+                if(!this.query) { this.showPredictions = false; return; }
+                // simple fetch of card names that match query (name-only)
+                // we'll fetch using the API search endpoint for name suggestions (light)
+                // and only request name field to keep it small
+                this.fetchNameSuggestions(this.query);
+            },
+
+            async fetchNameSuggestions(q) {
+                if(!q) return;
+                try {
+                    const url = `${this.API_BASE}/card/search?name=${encodeURIComponent(q)}&select=name&pageSize=20`;
+                    this.loading = true;
+                    const res = await fetch(url, { headers: this.apiHeaders() });
+                    if(!res.ok) throw new Error('Name suggestions failed');
+                    const data = await res.json();
+                    const names = (data?.cards || []).map(c => c.name).filter(Boolean);
+                    this.predictedNames = [...new Set(names)].slice(0, 10);
+                    this.showPredictions = true;
+                } catch(e) {
+                    console.error('Name suggestions error', e);
+                    this.predictedNames = [];
+                    this.showPredictions = false;
+                } finally {
+                    this.loading = false;
+                }
+            },
+
+            selectName(name) {
+                this.query = name;
+                this.showPredictions = false;
+            },
+
+            // SEARCH: name-only (fast)
+            async fetchCards() {
+                if(!this.query) return;
+                this.loading = true;
+                this.results = [];
+                try {
+                    // name-only search
+                    // pokemonpricetracker accepts: /card/search?name=
+                    const url = `${this.API_BASE}/card/search?name=${encodeURIComponent(this.query)}&pageSize=250&select=id,name,number,images,prices,psa,rarity,tcgplayer`;
+                    const res = await fetch(url, { headers: this.apiHeaders() });
+                    if(!res.ok) throw new Error('cards fetch failed ' + res.status);
+                    const data = await res.json();
+                    this.results = data.cards || data.data || [];
+                } catch(e) {
+                    console.error(e);
+                    alert("Search failed. Check console for details.");
+                } finally {
+                    this.loading = false;
+                }
+            },
+
+            formatNumber(n) { return (n||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}); },
+            save() { localStorage.setItem('gladiator_v26', JSON.stringify(this.cards)); },
+
+            getValue(c) {
+                if(c.target == 10) return c.psa10 || c.estimatedPsa10 || 0;
+                if(c.target == 9) return c.psa9 || c.estimatedPsa9 || 0;
+                return c.psa8 || c.estimatedPsa8 || 0;
+            },
+            updateValue(c, newVal) {
+                const v = parseFloat(newVal);
+                if(c.target == 10) c.psa10 = v;
+                else if(c.target == 9) c.psa9 = v;
+                else c.psa8 = v;
+                this.save();
+            },
+            getProfit(c) { return this.getValue(c) - ((c.raw || 0) + (c.fee || 0)); },
+
+            // Update prices for existing cards (chunks) - refreshing PSA and market prices
+            async updatePrices() {
+                if(!this.API_KEY) {
+                    alert('API key missing.');
+                    return;
+                }
+                if(this.cards.length === 0) { alert('No cards to update'); return; }
+                this.isUpdating = true;
+                const cardsWithIds = this.cards.filter(c => c.id);
+                for (let i = 0; i < cardsWithIds.length; i += 20) {
+                    const chunk = cardsWithIds.slice(i, i + 20);
+                    const idsQuery = chunk.map(c => `id:${c.id}`).join(' OR ');
+                    try {
+                        const url = `${this.API_BASE}/cards?q=${encodeURIComponent(idsQuery)}&pageSize=50&select=id,prices,psa,images,tcgplayer`;
+                        const res = await fetch(url, { headers: this.apiHeaders() });
+                        if(!res.ok) {
+                            console.warn('Price chunk fetch failed', res.status);
+                            continue;
+                        }
+                        const data = await res.json();
+                        const apiCards = data.cards || data.data || [];
+                        apiCards.forEach(apiCard => {
+                            const match = this.cards.find(c => c.id === apiCard.id);
+                            if(match) {
+                                let rawPrice = 0;
+                                if(apiCard.prices) rawPrice = apiCard.prices.market || apiCard.prices.tcgplayer?.market || apiCard.prices.average || rawPrice;
+                                if(!rawPrice && apiCard.tcgplayer?.prices) {
+                                    const p = apiCard.tcgplayer.prices;
+                                    rawPrice = p.normal?.market || p.holofoil?.market || 0;
+                                }
+
+                                const psaData = apiCard.psa || apiCard.psa_data || null;
+                                const estimatedPsa10 = psaData?.prices?.psa10 || psaData?.psa10 || null;
+                                const estimatedPsa9 = psaData?.prices?.psa9 || psaData?.psa9 || null;
+                                const estimatedPsa8 = psaData?.prices?.psa8 || psaData?.psa8 || null;
+
+                                const fallbackPsa10 = rawPrice ? parseFloat((rawPrice * 3.2).toFixed(2)) : (match.psa10 || 0);
+                                const fallbackPsa9 = rawPrice ? parseFloat((rawPrice * 1.1).toFixed(2)) : (match.psa9 || 0);
+                                const fallbackPsa8 = rawPrice ? parseFloat((rawPrice * 0.85).toFixed(2)) : (match.psa8 || 0);
+
+                                if(rawPrice > 0) match.raw = rawPrice;
+                                match.estimatedPsa10 = estimatedPsa10 || fallbackPsa10;
+                                match.estimatedPsa9 = estimatedPsa9 || fallbackPsa9;
+                                match.estimatedPsa8 = estimatedPsa8 || fallbackPsa8;
+
+                                if(!match.psa10) match.psa10 = match.estimatedPsa10;
+                                if(!match.psa9) match.psa9 = match.estimatedPsa9;
+                                if(!match.psa8) match.psa8 = match.estimatedPsa8;
+
+                                if(!match.img && apiCard.images?.small) match.img = apiCard.images.small;
+                            }
+                        });
+                    } catch(e) {
+                        console.error('Chunk update failed', e);
+                    }
+                }
+                this.save();
+                this.isUpdating = false;
+                alert('Prices refreshed.');
+            },
+
+            // getPrice used in search grid
+            getPrice(item) {
+                if(!item) return 0;
+                if(item.prices?.market) return parseFloat(item.prices.market);
+                if(item.tcgplayer?.prices) {
+                    const p = item.tcgplayer.prices;
+                    return parseFloat(p.holofoil?.market || p.normal?.market || p.reverseHolofoil?.market || 0);
+                }
+                return 0;
+            },
+
+            openSearch() { this.showSearch = true; this.query = ""; this.results = []; this.allNamesInSet = []; },
+            add(item) {
+                const rawPrice = this.getPrice(item);
+                const newCard = {
+                    id: item.id, name: item.name, set: item.set?.name || "Unknown", img: item.images?.small || item.images?.large || '',
+                    condition: '', raw: rawPrice, fee: 15, target: 10,
+                    psa10: parseFloat(((item.psa?.prices?.psa10 || item.prices?.psa10 || rawPrice * 3.2) || 0).toFixed(2)),
+                    psa9: parseFloat(((item.psa?.prices?.psa9 || item.prices?.psa9 || rawPrice * 1.1) || 0).toFixed(2)),
+                    psa8: parseFloat(((item.psa?.prices?.psa8 || item.prices?.psa8 || rawPrice * 0.85) || 0).toFixed(2))
+                };
+                this.cards.push(newCard);
+                this.save();
+                this.showSearch = false;
+            },
+            remove(i) { if(confirm('Delete?')) { this.cards.splice(i,1); this.save(); } },
+            exportExcel() {
+                const data = this.cards.map(c => ({ Card: c.name, Set: c.set, Raw: c.raw, Cost: c.fee, Grade: c.target, Est_Value: this.getValue(c), Profit: this.getProfit(c) }));
+                const ws = XLSX.utils.json_to_sheet(data);
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, "Gladiator");
+                XLSX.writeFile(wb, "Gladiator_Export.xlsx");
+            },
+            exportPDF() {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                doc.setFont("helvetica", "bold"); doc.text("GLADIATOR REPORT", 14, 20);
+                const rows = this.cards.map(c => [c.name, `$${c.raw}`, `$${c.fee}`, c.target, `$${this.getProfit(c).toFixed(0)}`, this.getProfit(c)>0?"YES":"NO"]);
+                doc.autoTable({ startY: 30, head: [['Card', 'Raw', 'Cost', 'Grd', 'Profit', 'Dec']], body: rows });
+                doc.save("Gladiator_Report.pdf");
+            },
+            backup() {
+                const blob = new Blob([JSON.stringify(this.cards)], {type: "application/json"});
+                const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = "gladiator_backup.json"; a.click();
+            },
+            restoreTrigger() { this.$refs.restoreInput.click(); },
+            restore(e) {
+                const reader = new FileReader();
+                reader.onload = e => { this.cards = JSON.parse(e.target.result); this.save(); };
+                reader.readAsText(e.target.files[0]);
+            }
         }
-    });
-
-    if (!response.ok) throw new Error("Search failed");
-
-    const data = await response.json();
-    return data?.cards?.[0] || null; // returns first match
-}
-
-/* --------------------------------------------------
-    PSA PRICE HELPERS
--------------------------------------------------- */
-function extractPSA(card) {
-    if (!card || !card.prices) return null;
-
-    return {
-        raw: card.prices.raw || 0,
-        psa8: card.prices.psa8 || 0,
-        psa9: card.prices.psa9 || 0,
-        psa10: card.prices.psa10 || 0
-    };
-}
-
-/* --------------------------------------------------
-    UPDATE UI
--------------------------------------------------- */
-function updateCardUI(card, psa) {
-    document.getElementById("cardTitle").innerText = card.name || "Card";
-
-    document.getElementById("rawPrice").innerText = psa.raw;
-    document.getElementById("psa8Price").innerText = psa.psa8;
-    document.getElementById("psa9Price").innerText = psa.psa9;
-    document.getElementById("psa10Price").innerText = psa.psa10;
-
-    document.getElementById("cardBox").style.display = "block";
-}
-
-/* --------------------------------------------------
-    SEARCH BUTTON HANDLER
--------------------------------------------------- */
-document.getElementById("searchBtn").addEventListener("click", async () => {
-    const name = document.getElementById("pokemonSearch").value.trim();
-    if (!name) return alert("Enter card name!");
-
-    try {
-        const card = await searchCardByName(name);
-        if (!card) return alert("No results found.");
-
-        const psa = extractPSA(card);
-        if (!psa) return alert("No PSA data for this card.");
-
-        updateCardUI(card, psa);
-    } catch (err) {
-        alert("Failed to search. Check internet / API.");
-    }
-});
-
-/* --------------------------------------------------
-    REFRESH PSA BUTTON
--------------------------------------------------- */
-document.getElementById("refreshPSA").addEventListener("click", async () => {
-    const name = document.getElementById("pokemonSearch").value.trim();
-    if (!name) return;
-
-    try {
-        const card = await searchCardByName(name);
-        const psa = extractPSA(card);
-
-        if (!psa) return alert("No PSA data found.");
-
-        updateCardUI(card, psa);
-        alert("PSA prices refreshed.");
-    } catch (err) {
-        alert("Could not refresh PSA prices.");
-    }
-});
-
+    }).mount('#app');
 </script>
-
 </body>
 </html>
