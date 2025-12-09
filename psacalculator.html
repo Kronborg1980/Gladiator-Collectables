@@ -36,7 +36,7 @@
         [v-cloak] { display: none; }
         select option { background-color: #000; color: #fff; padding: 12px; }
 
-        /* --- NEW LED / GLOW EFFECTS --- */
+        /* --- LED / GLOW EFFECTS --- */
         .logo-container {
             position: relative;
             padding: 2px;
@@ -45,38 +45,29 @@
             box-shadow: 0 0 20px rgba(212, 175, 55, 0.15), inset 0 0 10px rgba(0,0,0,0.8);
             border: 1px solid #333;
         }
-        .logo-img {
-            filter: drop-shadow(0 0 8px rgba(250, 204, 21, 0.4));
-        }
-        .text-glow {
-            text-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
-        }
+        .logo-img { filter: drop-shadow(0 0 8px rgba(250, 204, 21, 0.4)); }
+        .text-glow { text-shadow: 0 0 20px rgba(212, 175, 55, 0.3); }
         .stat-box { background: #0a0a0a; border: 1px solid #222; border-radius: 6px; padding: 8px 16px; min-width: 120px; }
         
         /* AUTOCOMPLETE DROPDOWN */
         .autocomplete-list {
             position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
-            background: #111;
-            border: 1px solid #333;
-            border-radius: 0 0 8px 8px;
-            max-height: 200px;
-            overflow-y: auto;
-            z-index: 50;
+            top: 100%; left: 0; right: 0;
+            background: #111; border: 1px solid #333; border-radius: 0 0 8px 8px;
+            max-height: 200px; overflow-y: auto; z-index: 50;
             box-shadow: 0 10px 20px rgba(0,0,0,0.8);
         }
         .autocomplete-item {
-            padding: 10px 12px;
-            cursor: pointer;
-            font-size: 11px;
-            font-weight: bold;
-            color: #ccc;
-            border-bottom: 1px solid #222;
+            padding: 10px 12px; cursor: pointer; font-size: 11px; font-weight: bold; color: #ccc; border-bottom: 1px solid #222;
         }
         .autocomplete-item:hover { background: #222; color: #D4AF37; }
-        .autocomplete-item.active { background: #222; color: #D4AF37; }
+        
+        /* STATUS LIGHT */
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+        .status-green { background: #10B981; box-shadow: 0 0 8px #10B981; }
+        .status-red { background: #EF4444; box-shadow: 0 0 8px #EF4444; }
+        .status-yellow { background: #F59E0B; box-shadow: 0 0 8px #F59E0B; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
     </style>
 </head>
 <body class="flex flex-col h-screen">
@@ -121,7 +112,7 @@
 
             <div class="flex items-center gap-3">
                 <div class="flex bg-[#111] rounded border border-[#222] p-0.5">
-                    <button @click="forceRefreshSets" class="w-8 h-8 flex items-center justify-center text-[#555] hover:text-[#D4AF37] hover:bg-[#222] rounded transition"><i class="fa-solid fa-sync" :class="{'fa-spin': setsLoading}"></i></button>
+                    <button @click="forceRefreshSets" class="w-8 h-8 flex items-center justify-center text-[#555] hover:text-[#D4AF37] hover:bg-[#222] rounded transition" title="Refresh API"><i class="fa-solid fa-sync" :class="{'fa-spin': setsLoading}"></i></button>
                     <div class="w-[1px] bg-[#222] my-1 mx-0.5"></div>
                     <button @click="exportExcel" class="w-8 h-8 flex items-center justify-center text-[#555] hover:text-green-500 hover:bg-[#222] rounded transition"><i class="fa-solid fa-file-excel"></i></button>
                     <button @click="exportPDF" class="w-8 h-8 flex items-center justify-center text-[#555] hover:text-red-500 hover:bg-[#222] rounded transition"><i class="fa-solid fa-file-pdf"></i></button>
@@ -212,7 +203,10 @@
             <div class="p-5 border-b border-[#222] flex justify-between items-center bg-[#0c0c0c]">
                 <div class="flex items-center gap-3">
                     <h2 class="font-brand font-bold text-xl text-[#FACC15] tracking-widest text-glow">ARMORY ACCESS</h2>
-                    <span v-if="namesLoading" class="text-[9px] text-[#555] uppercase animate-pulse">Indexing Names...</span>
+                    <div class="flex items-center gap-2 px-3 py-1 bg-[#111] rounded border border-[#222]">
+                        <span class="status-dot" :class="dbStatusClass"></span>
+                        <span class="text-[9px] font-bold uppercase text-[#777]">{{ dbStatusText }}</span>
+                    </div>
                 </div>
                 <button @click="showSearch=false" class="text-[#555] hover:text-white transition"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
@@ -222,7 +216,7 @@
                     <label class="text-[9px] text-[#555] font-bold uppercase mb-1.5 block tracking-wider">1. Select Era</label>
                     <div class="relative">
                         <select v-model="selectedEra" class="w-full bg-[#111] border border-[#333] text-white text-xs font-bold rounded p-3 outline-none focus:border-[#D4AF37] appearance-none uppercase cursor-pointer">
-                            <option value="">-- Era --</option>
+                            <option value="">-- Choose Era --</option>
                             <option v-for="era in eras" :value="era">{{ era }}</option>
                         </select>
                         <i class="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-[#555] text-xs pointer-events-none"></i>
@@ -232,7 +226,7 @@
                     <label class="text-[9px] text-[#555] font-bold uppercase mb-1.5 block tracking-wider">2. Select Set</label>
                     <div class="relative">
                         <select v-model="selectedSet" :disabled="!selectedEra" class="w-full bg-[#111] border border-[#333] text-white text-xs font-bold rounded p-3 outline-none focus:border-[#D4AF37] appearance-none uppercase cursor-pointer disabled:opacity-30">
-                            <option value="">-- Set --</option>
+                            <option value="">-- Choose Set --</option>
                             <option v-for="set in filteredSets" :value="set.id">{{ set.name }}</option>
                         </select>
                         <i class="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-[#555] text-xs pointer-events-none"></i>
@@ -310,16 +304,19 @@
                 results: [], loading: false, isUpdating: false,
                 
                 // Dynamic Data
-                allSets: [], eras: [],
+                allSets: [], 
+                // PRE-FILLED ERAS GUARANTEE DROPDOWN WORKS
+                eras: ["Scarlet & Violet", "Sword & Shield", "Sun & Moon", "XY", "Black & White", "Classic"],
                 
                 // Selection State
                 selectedEra: "", selectedSet: "",
                 
                 // Name Prediction State
-                allNamesInSet: [], // List of strings ["Charizard", "Pikachu"...]
+                allNamesInSet: [], 
                 predictedNames: [],
                 showPredictions: false,
-                namesLoading: false
+                namesLoading: false,
+                setsLoading: false
             }
         },
         mounted() {
@@ -337,10 +334,19 @@
             filteredSets() {
                 if (!this.selectedEra) return [];
                 return this.allSets.filter(s => s.series === this.selectedEra);
+            },
+            dbStatusText() {
+                if(this.setsLoading) return "Syncing...";
+                if(this.allSets.length > 0) return "Online";
+                return "Offline";
+            },
+            dbStatusClass() {
+                if(this.setsLoading) return "status-yellow";
+                if(this.allSets.length > 0) return "status-green";
+                return "status-red";
             }
         },
         watch: {
-            // When Set changes, Fetch Names ONLY (Tiny payload)
             selectedSet(newVal) {
                 this.query = ''; 
                 this.results = []; 
@@ -366,45 +372,50 @@
             },
             getProfit(c) { return this.getValue(c) - ((c.raw || 0) + (c.fee || 0)); },
             
-            // --- 1. SET LOADER ---
+            // --- 1. SET LOADER (Hybrid: Cache + Fetch) ---
             async loadSets() {
                 const cached = localStorage.getItem('gladiator_sets_v3');
-                if(cached) { this.processSets(JSON.parse(cached)); this.fetchSetsFromApi(); }
-                else { await this.fetchSetsFromApi(); }
+                if(cached) { this.processSets(JSON.parse(cached)); }
+                // Always try to update in background
+                this.fetchSetsFromApi();
             },
             async forceRefreshSets() {
                 localStorage.removeItem('gladiator_sets_v3');
                 await this.fetchSetsFromApi();
-                alert("Database Refreshed");
+                if(this.allSets.length > 0) alert("Database Synced Successfully");
+                else alert("Connection Failed");
             },
             async fetchSetsFromApi() {
+                this.setsLoading = true;
                 try {
                     const res = await fetch('https://api.pokemontcg.io/v2/sets?orderBy=-releaseDate&pageSize=250');
                     const data = await res.json();
                     localStorage.setItem('gladiator_sets_v3', JSON.stringify(data.data));
                     this.processSets(data.data);
-                } catch(e) {}
+                } catch(e) { console.error("Set fetch failed"); }
+                finally { this.setsLoading = false; }
             },
             processSets(data) {
                 this.allSets = data;
                 const uniqueSeries = [...new Set(data.map(s => s.series))];
+                // Smart sort eras
                 const priority = ["Scarlet & Violet", "Sword & Shield", "Sun & Moon", "XY", "Black & White"];
-                this.eras = uniqueSeries.sort((a,b) => {
+                const dynamicEras = uniqueSeries.sort((a,b) => {
                     const idxA = priority.indexOf(a); const idxB = priority.indexOf(b);
                     if(idxA !== -1 && idxB !== -1) return idxA - idxB;
                     if(idxA !== -1) return -1; if(idxB !== -1) return 1; return 0;
                 });
+                // Ensure Base Set is "Classic" for UI if needed, but API usually sends "Base"
+                this.eras = dynamicEras;
             },
 
-            // --- 2. LIGHTWEIGHT NAME FETCHER (THE SPEED FIX) ---
+            // --- 2. LIGHTWEIGHT NAME FETCHER ---
             async fetchSetNames(setId) {
                 this.namesLoading = true;
                 try {
-                    // Fetch ONLY names. Returns ~10KB json. Super fast.
                     const url = `https://api.pokemontcg.io/v2/cards?q=set.id:${setId}&select=name`;
                     const res = await fetch(url);
                     const data = await res.json();
-                    // Extract unique names
                     const names = [...new Set(data.data.map(c => c.name))].sort();
                     this.allNamesInSet = names;
                 } catch(e) { console.error(e); }
@@ -415,8 +426,7 @@
             filterNames() {
                 if(!this.query) { this.showPredictions = false; return; }
                 const q = this.query.toLowerCase();
-                // Filter local list instantly
-                this.predictedNames = this.allNamesInSet.filter(n => n.toLowerCase().startsWith(q)).slice(0, 10); // Show top 10
+                this.predictedNames = this.allNamesInSet.filter(n => n.toLowerCase().startsWith(q)).slice(0, 10);
                 this.showPredictions = true;
             },
             selectName(name) {
@@ -431,11 +441,9 @@
                 this.results = [];
                 try {
                     let q = `set.id:${this.selectedSet}`;
-                    // If searching specific name, add exact match
                     if(searchByName && this.query) {
-                        q += ` name:"${this.query}"`; // Exact match quote
+                        q += ` name:"${this.query}"`; 
                     }
-                    // Fetch full data for these cards
                     const url = `https://api.pokemontcg.io/v2/cards?q=${q}&pageSize=250&select=id,name,number,images,tcgplayer,rarity&orderBy=number`;
                     const res = await fetch(url);
                     const data = await res.json();
