@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Gladiator | Pro Dashboard</title>
+    <title>Gladiator | Pro Assets</title>
     <link rel="icon" type="image/webp" href="https://raw.githubusercontent.com/Kronborg1980/Gladiator-Collectables/main/logogla.webp">
     
     <script src="https://cdn.tailwindcss.com"></script>
@@ -15,301 +15,302 @@
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
-        :root { --bg-dark: #050505; --gold: #D4AF37; --text-main: #e2e8f0; }
-        body { font-family: 'Inter', sans-serif; background-color: var(--bg-dark); background-image: radial-gradient(circle at 50% 0%, #1a1500 0%, #000 60%); color: var(--text-main); height: 100vh; overflow: hidden; }
+        :root { --bg-dark: #09090b; --panel-bg: #121214; --border: #27272a; --gold: #FACC15; --blue: #3B82F6; --text-muted: #71717a; }
+        body { font-family: 'Inter', sans-serif; background-color: #000000; color: #e4e4e7; height: 100vh; overflow: hidden; }
         .font-brand { font-family: 'Cinzel', serif; }
-        .text-gold-gradient { background: linear-gradient(to right, #D4AF37, #FFE5B4, #D4AF37); -webkit-background-clip: text; background-clip: text; color: transparent; }
-        .glass-panel { background: rgba(16, 16, 16, 0.85); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.05); }
-        .pro-input { background: transparent; border-bottom: 1px solid transparent; color: #aaa; transition: all 0.2s; padding: 4px 0; width: 100%; font-size: 14px; }
-        .pro-input:hover { border-bottom-color: #333; color: white; }
-        .pro-input:focus { border-bottom-color: var(--gold); outline: none; color: white; }
-        .pro-input.number { font-family: 'Courier New', monospace; font-weight: 700; font-size: 15px; }
+        
+        /* Custom Scrollbar */
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: #000; }
         ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: var(--gold); }
+        ::-webkit-scrollbar-thumb:hover { background: #444; }
+        
+        /* Inputs */
+        .search-input { background: #000; border: 1px solid #27272a; transition: all 0.2s; }
+        .search-input:focus { border-color: var(--gold); outline: none; }
+        
+        .table-input { background: transparent; border-bottom: 1px solid transparent; color: #fff; width: 100%; font-family: 'Inter', sans-serif; transition: 0.2s; }
+        .table-input:hover { border-bottom-color: #333; }
+        .table-input:focus { border-bottom-color: var(--gold); outline: none; }
+        
+        /* Utility */
         [v-cloak] { display: none; }
-        select option { background-color: #000; color: #fff; padding: 12px; font-size: 14px; }
+        .stat-box { background: #111; border: 1px solid #222; border-radius: 8px; padding: 10px 20px; min-width: 140px; }
+        .stat-label { font-size: 10px; font-weight: 700; text-transform: uppercase; color: #71717a; letter-spacing: 0.05em; margin-bottom: 4px; }
+        .stat-value { font-family: 'Inter', sans-serif; font-weight: 700; font-size: 20px; }
+        
+        /* Modal Animation */
+        .modal-enter-active, .modal-leave-active { transition: opacity 0.2s ease; }
+        .modal-enter-from, .modal-leave-to { opacity: 0; }
     </style>
 </head>
-<body class="flex flex-col h-screen overflow-hidden">
+<body class="flex flex-col h-screen">
 
-<div id="app" v-cloak class="flex flex-col h-full w-full max-w-[1900px] mx-auto">
+<div id="app" v-cloak class="flex flex-col h-full w-full max-w-[1920px] mx-auto">
     
-    <div class="hidden md:flex flex-col lg:flex-row justify-between items-end gap-6 p-6 pb-4 shrink-0">
-        <div class="flex items-center gap-6">
-            <div class="w-24 h-24 bg-black rounded-xl border border-[#222] flex items-center justify-center shadow-[0_0_25px_rgba(212,175,55,0.1)] p-4 relative group">
-                <div class="absolute inset-0 bg-[#D4AF37] opacity-0 group-hover:opacity-5 rounded-xl transition"></div>
-                <img src="https://raw.githubusercontent.com/Kronborg1980/Gladiator-Collectables/main/logogla.webp" class="w-full h-full object-contain">
-            </div>
-            <div>
-                <h1 class="text-5xl font-bold font-brand text-white tracking-wide uppercase drop-shadow-lg">
-                    Gladiator <span class="text-gold-gradient">Collectibles</span>
-                </h1>
-                <div class="flex gap-8 mt-3">
-                    <div class="text-sm uppercase tracking-[0.15em] text-slate-500 font-bold">
-                        Assets: <span class="text-white text-base">{{ cards.length }}</span>
-                    </div>
-                    <div class="text-sm uppercase tracking-[0.15em] text-slate-500 font-bold">
-                        Profit: <span class="text-base" :class="totalProfit >= 0 ? 'text-[#D4AF37]' : 'text-red-500'">${{ formatNumber(totalProfit) }}</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="flex flex-wrap items-center gap-3 bg-[#111] p-3 rounded-xl border border-[#222] shadow-xl">
-            <div class="relative group">
-                <i class="fa-solid fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-[#D4AF37] transition text-lg"></i>
-                <input v-model="filter" placeholder="FILTER INV..." class="bg-black border border-[#222] text-white text-sm font-bold rounded-lg pl-12 pr-4 py-3 w-40 focus:w-56 focus:border-[#D4AF37] outline-none transition-all uppercase placeholder-slate-600 tracking-wider">
-            </div>
-            <div class="w-[1px] h-10 bg-[#222] mx-2"></div>
-            <button @click="updatePrices" :disabled="isUpdating" class="w-12 h-12 flex items-center justify-center bg-[#1a1a1a] hover:bg-[#222] text-slate-400 hover:text-green-400 rounded-lg transition border border-transparent hover:border-[#333]" title="Update Prices"><i class="fa-solid fa-arrows-rotate text-xl" :class="{'animate-spin': isUpdating}"></i></button>
-            <button @click="exportExcel" class="w-12 h-12 flex items-center justify-center bg-[#1a1a1a] hover:bg-[#222] text-slate-400 hover:text-green-500 rounded-lg transition border border-transparent hover:border-[#333]" title="Excel"><i class="fa-solid fa-file-excel text-xl"></i></button>
-            <button @click="exportPDF" class="w-12 h-12 flex items-center justify-center bg-[#1a1a1a] hover:bg-[#222] text-slate-400 hover:text-red-500 rounded-lg transition border border-transparent hover:border-[#333]" title="PDF"><i class="fa-solid fa-file-pdf text-xl"></i></button>
-            <button @click="backup" class="w-12 h-12 flex items-center justify-center bg-[#1a1a1a] hover:bg-[#222] text-slate-400 hover:text-blue-500 rounded-lg transition border border-transparent hover:border-[#333]" title="Save"><i class="fa-solid fa-download text-xl"></i></button>
-            <label class="w-12 h-12 flex items-center justify-center bg-[#1a1a1a] hover:bg-[#222] text-slate-400 hover:text-purple-500 rounded-lg transition border border-transparent hover:border-[#333] cursor-pointer" title="Load"><i class="fa-solid fa-upload text-xl"></i> <input type="file" @change="restore" class="hidden"></label>
-            <div class="w-[1px] h-10 bg-[#222] mx-2"></div>
-            <button @click="openSearch" class="flex items-center gap-2 px-8 py-3 bg-[#D4AF37] hover:bg-[#fff] text-black text-sm font-bold uppercase rounded-lg shadow-lg transition transform active:scale-95 tracking-wider"><i class="fa-solid fa-plus"></i> Add</button>
-        </div>
-    </div>
-    
-    <div class="md:hidden flex justify-between items-center p-4 bg-[#080808] border-b border-[#222] shrink-0 z-20">
-        <div class="flex items-center gap-3">
+    <header class="flex flex-col md:flex-row items-center justify-between px-6 py-5 border-b border-[#222] bg-[#050505] shrink-0 gap-6">
+        <div class="flex items-center gap-4">
             <img src="https://raw.githubusercontent.com/Kronborg1980/Gladiator-Collectables/main/logogla.webp" class="w-12 h-12 object-contain">
-            <h1 class="font-brand font-bold text-xl text-white">Gladiator</h1>
+            <div>
+                <h1 class="text-2xl font-brand font-bold text-white tracking-wide">
+                    GLADIATOR <span class="text-[#D4AF37]">ASSETS</span>
+                </h1>
+                <div class="text-xs text-[#555] font-medium tracking-wide">Professional Grading ROI Calculator</div>
+            </div>
         </div>
-        <div class="text-right">
-             <div class="text-[10px] uppercase text-slate-500 font-bold tracking-widest">Net Profit</div>
-             <div class="font-mono font-bold text-[#D4AF37] text-lg">${{ formatNumber(totalProfit) }}</div>
+
+        <div class="flex items-center gap-4 w-full md:w-auto overflow-x-auto">
+            <div class="stat-box border-l-4 border-l-[#333]">
+                <div class="stat-label">Inventory</div>
+                <div class="stat-value text-white">{{ cards.length }} <span class="text-xs text-[#555] font-normal">Items</span></div>
+            </div>
+            <div class="stat-box border-l-4 border-l-[#3B82F6]">
+                <div class="stat-label text-[#3B82F6]">Total Cost</div>
+                <div class="stat-value text-white">${{ formatNumber(totalCost) }}</div>
+            </div>
+            <div class="stat-box border-l-4 border-l-[#FACC15] !border-r-[#FACC15]/20">
+                <div class="stat-label text-[#FACC15]">Proj. Net Profit</div>
+                <div class="stat-value" :class="totalProfit >= 0 ? 'text-[#FACC15]' : 'text-red-500'">${{ formatNumber(totalProfit) }}</div>
+            </div>
+        </div>
+    </header>
+
+    <div class="px-6 py-4 bg-[#0a0a0a] border-b border-[#222] shrink-0">
+        <div class="flex flex-col md:flex-row gap-4 justify-between items-center">
+            
+            <div class="relative w-full md:max-w-md group">
+                <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-[#555] group-focus-within:text-white transition"></i>
+                <input v-model="filter" placeholder="Search by name, set, or notes..." class="w-full bg-[#111] border border-[#27272a] text-sm text-white rounded-lg pl-11 pr-4 py-2.5 outline-none focus:border-[#D4AF37] focus:bg-[#000] transition placeholder-[#555]">
+            </div>
+
+            <div class="flex items-center gap-3">
+                <div class="flex bg-[#111] rounded-lg border border-[#27272a] p-1">
+                    <button @click="exportExcel" class="w-9 h-9 flex items-center justify-center text-[#777] hover:text-green-500 hover:bg-[#222] rounded transition" title="Export Excel"><i class="fa-solid fa-file-excel"></i></button>
+                    <button @click="exportPDF" class="w-9 h-9 flex items-center justify-center text-[#777] hover:text-red-500 hover:bg-[#222] rounded transition" title="Export PDF"><i class="fa-solid fa-file-pdf"></i></button>
+                    <div class="w-[1px] bg-[#333] my-1 mx-1"></div>
+                    <button @click="backup" class="w-9 h-9 flex items-center justify-center text-[#777] hover:text-blue-500 hover:bg-[#222] rounded transition" title="Save Backup"><i class="fa-solid fa-download"></i></button>
+                    <label class="w-9 h-9 flex items-center justify-center text-[#777] hover:text-purple-500 hover:bg-[#222] rounded transition cursor-pointer" title="Restore Backup"><i class="fa-solid fa-upload"></i> <input type="file" @change="restore" class="hidden"></label>
+                </div>
+
+                <button @click="openSearch" class="flex items-center gap-2 bg-[#FACC15] hover:bg-[#EAB308] text-black text-sm font-bold px-5 py-2.5 rounded-lg transition shadow-[0_0_15px_rgba(250,204,21,0.2)] active:scale-95">
+                    <i class="fa-solid fa-plus"></i> Add Card
+                </button>
+            </div>
         </div>
     </div>
 
-    <div class="flex-1 overflow-hidden relative md:px-6 md:pb-6">
+    <div class="flex-1 overflow-hidden bg-[#050505] relative flex flex-col">
         
-        <div class="md:hidden h-full overflow-y-auto p-4 space-y-4 pb-24">
-            <div class="flex gap-2 mb-4">
-                <input v-model="filter" placeholder="Search..." class="flex-1 bg-[#111] border border-[#222] p-4 rounded-xl text-base text-white outline-none focus:border-[#D4AF37]">
-                <button @click="openSearch" class="bg-[#D4AF37] text-black px-6 rounded-xl font-bold text-lg"><i class="fa-solid fa-plus"></i></button>
-            </div>
+        <div class="grid grid-cols-[60px_2fr_1fr_1fr_1fr_1fr_1fr_1fr_50px] gap-4 px-6 py-3 border-b border-[#222] bg-[#0c0c0c] text-[10px] font-bold text-[#555] uppercase tracking-wider shrink-0 sticky top-0 z-10 hidden md:grid">
+            <div class="text-center">IMG</div>
+            <div>Asset Details</div>
+            <div class="text-right">Raw Cost</div>
+            <div class="text-right">Grade Fee</div>
+            <div class="text-center">Exp. Grade</div>
+            <div class="text-right">Est. Value</div>
+            <div class="text-center">Decision</div>
+            <div class="text-right">Profit</div>
+            <div></div>
+        </div>
+
+        <div class="flex-1 overflow-y-auto px-6 py-2">
             
-            <div v-for="(c, i) in filteredCards" :key="i" class="bg-[#111] border border-[#222] rounded-2xl p-5 shadow-lg relative overflow-hidden">
-                <div class="flex gap-5 items-start">
-                    <div class="w-24 h-36 bg-black rounded-lg border border-[#333] shrink-0 shadow-lg">
-                        <img v-if="c.img" :src="c.img" class="w-full h-full object-cover rounded-lg">
-                    </div>
-                    <div class="flex-1 min-w-0">
-                        <div class="font-bold text-white text-lg leading-tight mb-1">{{ c.name }}</div>
-                        <div class="text-xs text-slate-500 uppercase tracking-widest mb-3 font-semibold">{{ c.set }}</div>
-                        <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider border" :class="getProfit(c) >= 0 ? 'bg-green-900/20 text-green-400 border-green-500/30' : 'bg-red-900/20 text-red-400 border-red-500/30'">
-                            Profit: ${{ Math.round(getProfit(c)) }}
+            <div v-if="filteredCards.length === 0" class="h-full flex flex-col items-center justify-center text-center pb-20">
+                <div class="w-20 h-20 rounded-full bg-[#111] border border-[#222] flex items-center justify-center mb-6">
+                    <i class="fa-solid fa-magnifying-glass-chart text-3xl text-[#333]"></i>
+                </div>
+                <h2 class="text-xl font-brand font-bold text-[#555] uppercase tracking-widest mb-2">Your Armory Is Empty</h2>
+                <p class="text-sm text-[#444] mb-6">Start by adding cards to analyze your grading margins.</p>
+                <button @click="openSearch" class="text-[#D4AF37] text-xs font-bold uppercase tracking-widest hover:text-white border-b border-[#D4AF37] hover:border-white pb-0.5 transition">Add First Card</button>
+            </div>
+
+            <div v-else class="hidden md:flex flex-col gap-1">
+                <div v-for="(c, i) in filteredCards" :key="i" class="grid grid-cols-[60px_2fr_1fr_1fr_1fr_1fr_1fr_1fr_50px] gap-4 items-center py-3 border-b border-[#1a1a1a] hover:bg-[#111] group transition">
+                    <div class="flex justify-center">
+                        <div class="w-10 h-14 bg-black rounded border border-[#333] relative overflow-hidden group-hover:border-[#D4AF37] transition">
+                            <img :src="c.img" class="w-full h-full object-cover">
                         </div>
                     </div>
-                    <button @click="remove(i)" class="w-10 h-10 flex items-center justify-center bg-[#222] rounded-full text-slate-400 hover:text-red-500"><i class="fa-solid fa-trash"></i></button>
-                </div>
-                <div class="mt-5 grid grid-cols-2 gap-x-6 gap-y-4">
-                    <div><label class="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Condition</label><input v-model="c.condition" class="pro-input w-full text-slate-300"></div>
-                    <div><label class="text-[10px] text-[#D4AF37] uppercase font-bold tracking-wider">Target</label><select v-model="c.target" class="w-full bg-transparent text-[#D4AF37] font-bold text-sm outline-none py-1"><option value="10">PSA 10</option><option value="9">PSA 9</option><option value="8">PSA 8</option></select></div>
-                    <div><label class="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Raw Cost</label><div class="flex text-slate-300 text-base font-mono">$<input v-model.number="c.raw" type="number" class="pro-input"></div></div>
-                    <div><label class="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Est. Value</label><div class="flex text-white text-base font-bold font-mono">$<input :value="getValue(c)" @input="updateValue(c, $event.target.value)" type="number" class="pro-input"></div></div>
-                </div>
-            </div>
-            <div v-if="cards.length === 0" class="text-center py-20 text-slate-600"><p class="text-lg">No Assets Found</p></div>
-        </div>
+                    
+                    <div class="min-w-0">
+                        <div class="font-bold text-white text-sm truncate pr-2">{{ c.name }}</div>
+                        <div class="text-[10px] text-[#666] uppercase font-bold tracking-wide truncate">{{ c.set }}</div>
+                        <input v-model="c.condition" class="table-input text-[11px] text-[#888] mt-1 placeholder-[#333]" placeholder="Add notes...">
+                    </div>
 
-        <div class="hidden md:flex flex-col h-full glass-panel rounded-2xl shadow-2xl">
-            <div class="overflow-auto flex-1">
-                <table class="w-full text-left border-collapse">
-                    <thead class="sticky top-0 z-10 bg-[#080808] shadow-lg">
-                        <tr class="text-xs text-slate-500 uppercase tracking-[0.1em] border-b border-[#222] h-14 font-bold">
-                            <th class="pl-6 w-24 text-center">Img</th>
-                            <th class="px-4">Asset Details</th>
-                            <th class="px-4 w-40">Condition</th>
-                            <th class="px-4 text-right w-28">Raw $</th>
-                            <th class="px-4 text-right w-28">Cost $</th>
-                            <th class="px-4 text-center w-32 text-[#D4AF37]">Target</th>
-                            <th class="px-4 text-right w-32 text-white">Est. Value</th>
-                            <th class="px-4 text-right w-32">Net Profit</th>
-                            <th class="px-4 text-center w-32">Action</th>
-                            <th class="px-4 w-16"></th>
-                        </tr>
-                    </thead>
-                    <tbody class="text-sm divide-y divide-[#1a1a1a]">
-                        <tr v-for="(c, i) in filteredCards" :key="i" class="hover:bg-[#111] group transition-colors h-24">
-                            <td class="p-3 text-center align-middle">
-                                <div class="w-16 h-22 mx-auto rounded-lg border border-[#333] bg-black overflow-hidden relative group-hover:border-[#D4AF37] transition shadow-md hover:scale-110 duration-200 z-0 hover:z-10">
-                                    <img v-if="c.img" :src="c.img" class="absolute inset-0 w-full h-full object-cover">
-                                </div>
-                            </td>
-                            <td class="p-4 align-middle">
-                                <div class="font-bold text-slate-200 text-base truncate w-64" :title="c.name">{{ c.name }}</div>
-                                <div class="text-xs font-bold text-slate-500 uppercase tracking-wide mt-1">{{ c.set }}</div>
-                            </td>
-                            <td class="p-4 align-middle"><input v-model="c.condition" type="text" placeholder="Notes..." class="pro-input w-full text-sm"></td>
-                            <td class="p-4 align-middle"><input v-model.number="c.raw" type="number" class="pro-input number w-full text-right text-slate-400"></td>
-                            <td class="p-4 align-middle"><input v-model.number="c.fee" type="number" class="pro-input number w-full text-right text-slate-500"></td>
-                            <td class="p-4 text-center align-middle">
-                                <select v-model="c.target" class="bg-transparent border-none text-[#D4AF37] font-bold text-sm cursor-pointer outline-none text-center hover:bg-[#1a1a1a] rounded py-2 px-2">
-                                    <option value="10">PSA 10</option><option value="9">PSA 9</option><option value="8">PSA 8</option>
-                                </select>
-                            </td>
-                            <td class="p-4 align-middle"><input :value="getValue(c)" @input="updateValue(c, $event.target.value)" type="number" class="pro-input number w-full text-right text-white font-bold bg-[#111] rounded px-3 py-2 border border-[#222]"></td>
-                            <td class="p-4 text-right font-mono font-bold text-base align-middle"><span :class="getProfit(c) >= 0 ? 'text-[#D4AF37]' : 'text-red-500'">{{ getProfit(c) >= 0 ? '+' : '' }}{{ Math.round(getProfit(c)) }}</span></td>
-                            <td class="p-4 text-center align-middle">
-                                <span v-if="getProfit(c) > 0" class="inline-flex items-center gap-2 bg-green-900/10 text-green-400 border border-green-500/20 px-3 py-1 rounded text-[10px] font-bold uppercase tracking-wider shadow-sm">GRADE</span>
-                                <span v-else class="inline-flex items-center gap-2 bg-red-900/10 text-red-400 border border-red-500/20 px-3 py-1 rounded text-[10px] font-bold uppercase tracking-wider shadow-sm">HOLD</span>
-                            </td>
-                            <td class="p-4 text-center align-middle"><button @click="remove(i)" class="text-slate-600 hover:text-red-500 transition opacity-0 group-hover:opacity-100 text-lg p-2"><i class="fa-solid fa-times"></i></button></td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-             <div v-if="cards.length === 0" class="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <div class="text-center">
-                    <div class="bg-[#111] p-6 rounded-full inline-block mb-4 border border-[#222]"><i class="fa-solid fa-layer-group text-4xl text-[#333]"></i></div>
-                    <h3 class="text-slate-500 font-bold font-brand tracking-widest uppercase text-base">Inventory Empty</h3>
+                    <div class="text-right font-mono text-sm text-[#aaa]">$<input v-model.number="c.raw" type="number" class="bg-transparent text-right w-16 outline-none focus:text-white border-b border-transparent focus:border-[#D4AF37]"></div>
+                    <div class="text-right font-mono text-sm text-[#aaa]">$<input v-model.number="c.fee" type="number" class="bg-transparent text-right w-16 outline-none focus:text-white border-b border-transparent focus:border-[#D4AF37]"></div>
+
+                    <div class="flex justify-center">
+                        <select v-model="c.target" class="bg-[#111] text-[#D4AF37] font-bold text-xs border border-[#222] rounded px-2 py-1 outline-none focus:border-[#D4AF37] cursor-pointer">
+                            <option value="10">PSA 10</option>
+                            <option value="9">PSA 9</option>
+                            <option value="8">PSA 8</option>
+                        </select>
+                    </div>
+
+                    <div class="text-right font-mono text-sm font-bold text-white">$<input :value="getValue(c)" @input="updateValue(c, $event.target.value)" type="number" class="bg-transparent text-right w-20 outline-none focus:border-b focus:border-[#D4AF37]"></div>
+
+                    <div class="text-center">
+                        <span v-if="getProfit(c) > 0" class="inline-block text-[9px] font-bold text-green-500 bg-green-900/20 border border-green-500/20 px-2 py-0.5 rounded uppercase tracking-wide">GRADE</span>
+                        <span v-else class="inline-block text-[9px] font-bold text-red-500 bg-red-900/20 border border-red-500/20 px-2 py-0.5 rounded uppercase tracking-wide">HOLD</span>
+                    </div>
+
+                    <div class="text-right font-mono text-sm font-bold" :class="getProfit(c) >= 0 ? 'text-[#FACC15]' : 'text-red-500'">
+                        {{ getProfit(c) >= 0 ? '+' : '' }}{{ Math.round(getProfit(c)) }}
+                    </div>
+
+                    <div class="text-center">
+                        <button @click="remove(i)" class="text-[#444] hover:text-red-500 transition"><i class="fa-solid fa-trash"></i></button>
+                    </div>
                 </div>
             </div>
+
+            <div class="md:hidden space-y-3 mt-2">
+                <div v-for="(c, i) in filteredCards" :key="i" class="bg-[#111] border border-[#222] rounded-lg p-4 flex gap-4">
+                     <div class="w-20 h-28 bg-black rounded border border-[#333] shrink-0 overflow-hidden">
+                        <img :src="c.img" class="w-full h-full object-cover">
+                    </div>
+                    <div class="flex-1 min-w-0 flex flex-col justify-between">
+                        <div>
+                            <div class="font-bold text-white text-sm truncate">{{ c.name }}</div>
+                            <div class="text-[10px] text-[#666] uppercase font-bold">{{ c.set }}</div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2 mt-2">
+                            <div>
+                                <label class="text-[9px] text-[#555] uppercase block">Grade</label>
+                                <select v-model="c.target" class="bg-black text-[#D4AF37] text-xs font-bold border border-[#333] rounded w-full"><option value="10">PSA 10</option><option value="9">PSA 9</option></select>
+                            </div>
+                            <div>
+                                <label class="text-[9px] text-[#555] uppercase block">Profit</label>
+                                <div class="text-sm font-bold font-mono" :class="getProfit(c) >= 0 ? 'text-[#FACC15]' : 'text-red-500'">${{ Math.round(getProfit(c)) }}</div>
+                            </div>
+                        </div>
+                        <div class="flex justify-between items-end mt-2">
+                             <input v-model="c.raw" type="number" placeholder="Raw $" class="bg-transparent border-b border-[#333] text-xs text-white w-16 outline-none focus:border-[#D4AF37]">
+                             <button @click="remove(i)" class="text-[#444] hover:text-red-500"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
 
-    <div v-if="showSearch" class="fixed inset-0 bg-black/90 backdrop-blur-md flex items-start justify-center pt-10 z-50 p-4 transition-all">
-        <div class="w-full max-w-6xl bg-[#0a0a0a] border border-[#222] rounded-2xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-            <div class="p-6 border-b border-[#222] bg-[#0f0f0f]">
-                <div class="flex items-center justify-between mb-6">
-                    <h2 class="text-2xl font-bold font-brand text-[#D4AF37] uppercase tracking-wide">Add Asset</h2>
-                    <button @click="showSearch=false" class="text-slate-500 hover:text-white"><i class="fa-solid fa-xmark text-2xl"></i></button>
-                </div>
-                
-                <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
-                    
-                    <div class="md:col-span-3 relative">
-                        <label class="text-[10px] text-[#D4AF37] font-bold ml-1 mb-2 block tracking-wider">STEP 1: ERA</label>
-                        <select v-model="selectedEra" class="w-full bg-[#050505] border border-[#333] text-white text-sm font-bold rounded px-4 py-4 outline-none uppercase appearance-none cursor-pointer hover:border-[#D4AF37] focus:border-[#D4AF37] transition shadow-lg">
-                            <option value="">-- SELECT ERA --</option>
+    <Transition name="modal">
+    <div v-if="showSearch" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-[#09090b] w-full max-w-5xl h-[85vh] rounded-xl border border-[#222] shadow-2xl flex flex-col overflow-hidden">
+            <div class="p-5 border-b border-[#222] flex justify-between items-center bg-[#0c0c0c]">
+                <h2 class="font-brand font-bold text-xl text-[#FACC15]">Add to Armory</h2>
+                <button @click="showSearch=false" class="text-[#555] hover:text-white transition"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+
+            <div class="p-5 border-b border-[#222] bg-[#0c0c0c] grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label class="text-[10px] text-[#555] font-bold uppercase mb-1.5 block">1. Select Era</label>
+                    <div class="relative">
+                        <select v-model="selectedEra" class="w-full bg-[#111] border border-[#333] text-white text-xs font-bold rounded p-3 outline-none focus:border-[#D4AF37] appearance-none uppercase cursor-pointer">
+                            <option value="">-- Choose Era --</option>
                             <option v-for="era in eras" :value="era">{{ era }}</option>
                         </select>
-                        <i class="fa-solid fa-chevron-down absolute right-4 bottom-5 text-slate-600 text-xs pointer-events-none"></i>
+                        <i class="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-[#555] text-xs pointer-events-none"></i>
                     </div>
-
-                    <div class="md:col-span-4 relative">
-                        <label class="text-[10px] text-[#D4AF37] font-bold ml-1 mb-2 block tracking-wider">STEP 2: EXPANSION</label>
-                        <select v-model="selectedSet" :disabled="!selectedEra" class="w-full bg-[#050505] border border-[#333] text-white text-sm font-bold rounded px-4 py-4 outline-none uppercase appearance-none cursor-pointer hover:border-[#D4AF37] focus:border-[#D4AF37] transition shadow-lg disabled:opacity-30 disabled:cursor-not-allowed">
-                            <option value="">-- SELECT SET --</option>
+                </div>
+                <div>
+                    <label class="text-[10px] text-[#555] font-bold uppercase mb-1.5 block">2. Select Expansion</label>
+                    <div class="relative">
+                        <select v-model="selectedSet" :disabled="!selectedEra" class="w-full bg-[#111] border border-[#333] text-white text-xs font-bold rounded p-3 outline-none focus:border-[#D4AF37] appearance-none uppercase cursor-pointer disabled:opacity-50">
+                            <option value="">-- Choose Set --</option>
                             <option v-for="set in filteredSets" :value="set.id">{{ set.name }} ({{ set.releaseDate.substring(0,4) }})</option>
                         </select>
-                        <i class="fa-solid fa-chevron-down absolute right-4 bottom-5 text-slate-600 text-xs pointer-events-none"></i>
+                        <i class="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-[#555] text-xs pointer-events-none"></i>
                     </div>
-
-                    <div class="md:col-span-5 relative">
-                        <label class="text-[10px] text-[#D4AF37] font-bold ml-1 mb-2 block tracking-wider">STEP 3: POKEMON</label>
-                        <i class="fa-solid fa-search absolute left-4 bottom-4 text-slate-500 text-sm"></i>
-                        <input ref="searchBox" v-model="query" :disabled="!selectedSet" :placeholder="selectedSet ? 'Type Name (e.g. Charizard)...' : 'Waiting for Step 2...'" class="w-full bg-[#050505] border border-[#333] text-white rounded pl-10 pr-4 py-3.5 text-base outline-none focus:border-[#D4AF37] uppercase disabled:opacity-30 disabled:cursor-not-allowed transition font-bold placeholder-slate-700">
+                </div>
+                <div>
+                    <label class="text-[10px] text-[#555] font-bold uppercase mb-1.5 block">3. Find Pokemon</label>
+                    <div class="relative">
+                        <i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-[#555]"></i>
+                        <input ref="searchBox" v-model="query" :disabled="!selectedSet" placeholder="e.g. Charizard" class="w-full bg-[#111] border border-[#333] text-white text-xs font-bold rounded p-3 pl-9 outline-none focus:border-[#D4AF37] uppercase disabled:opacity-50">
                     </div>
                 </div>
             </div>
-            
-            <div class="flex-1 overflow-y-auto p-6 bg-[#050505] relative">
-                
-                <div v-if="loading" class="flex flex-col items-center justify-center py-20 gap-3">
-                    <i class="fa-solid fa-circle-notch fa-spin text-4xl text-[#D4AF37]"></i>
-                    <div class="text-sm uppercase tracking-widest text-[#D4AF37] font-bold">Loading Set Data...</div>
+
+            <div class="flex-1 overflow-y-auto p-5 bg-[#050505]">
+                <div v-if="loading" class="h-full flex flex-col items-center justify-center text-[#D4AF37]">
+                    <i class="fa-solid fa-circle-notch fa-spin text-3xl mb-3"></i>
+                    <div class="text-xs font-bold uppercase tracking-widest">Scanning Database...</div>
                 </div>
-                
-                <div v-else-if="filteredResults.length" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                    <div v-for="item in filteredResults" :key="item.id" @click="add(item)" class="bg-[#111] border border-[#222] p-3 rounded-xl hover:border-[#D4AF37] cursor-pointer group hover:bg-[#161616] transition relative overflow-hidden shadow-lg">
-                        <div class="aspect-[0.7] bg-black rounded-lg overflow-hidden mb-3 relative">
+
+                <div v-else-if="filteredResults.length > 0" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                    <div v-for="item in filteredResults" :key="item.id" @click="add(item)" class="group bg-[#111] border border-[#222] rounded-lg p-2 hover:border-[#D4AF37] cursor-pointer transition relative">
+                        <div class="aspect-[0.7] bg-black rounded overflow-hidden mb-2 relative">
                             <img :src="item.images.small" loading="lazy" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
-                            <div class="absolute top-2 right-2 w-8 h-8 bg-white/10 rounded-full flex items-center justify-center p-1.5 backdrop-blur-md">
-                                <img :src="item.set.images.symbol" class="w-full h-full object-contain">
+                             <div class="absolute bottom-0 inset-x-0 bg-black/90 border-t border-[#333] py-1 text-center">
+                                <span class="text-[#D4AF37] font-bold text-xs">${{ getPrice(item) }}</span>
                             </div>
-                            <div class="absolute bottom-0 inset-x-0 bg-black/90 text-center text-[#D4AF37] font-bold text-sm p-1.5 border-t border-[#333]">${{ getPrice(item) }}</div>
                         </div>
-                        <div class="text-xs font-bold text-slate-300 truncate group-hover:text-white">{{ item.name }}</div>
-                        <div class="flex justify-between items-center mt-1.5">
-                             <div class="text-[10px] text-slate-500 uppercase truncate font-bold">#{{ item.number }}</div>
-                             <div class="text-[10px] text-slate-600 uppercase font-bold">{{ item.rarity || 'Common' }}</div>
-                        </div>
+                        <div class="text-[10px] font-bold text-white truncate text-center">{{ item.name }}</div>
+                        <div class="text-[9px] text-[#666] font-bold uppercase text-center">#{{ item.number }} • {{ item.rarity }}</div>
                     </div>
-                </div>
-                
-                <div v-else-if="!loading && selectedSet && filteredResults.length === 0" class="flex flex-col items-center justify-center h-full text-slate-600 opacity-50">
-                    <i class="fa-solid fa-ghost text-5xl mb-4"></i>
-                    <p class="text-sm uppercase font-bold">No Pokemon Found</p>
-                </div>
-                
-                <div v-else-if="!loading && !selectedSet" class="flex flex-col items-center justify-center h-full text-slate-700">
-                    <div class="w-20 h-20 rounded-full bg-[#111] border border-[#222] flex items-center justify-center mb-6">
-                        <i class="fa-solid fa-layer-group text-3xl text-[#333]"></i>
-                    </div>
-                    <p class="text-sm uppercase font-bold tracking-widest">Please Select Era & Set</p>
                 </div>
 
+                <div v-else class="h-full flex flex-col items-center justify-center text-[#333]">
+                    <i class="fa-solid fa-layer-group text-5xl mb-4"></i>
+                    <p class="text-xs font-bold uppercase tracking-widest">Select Era & Set to Begin</p>
+                </div>
             </div>
             
-            <div class="p-3 bg-[#080808] border-t border-[#222] flex justify-between items-center text-[10px] text-slate-500 uppercase font-bold px-6">
-                 <div>{{ filteredResults.length }} Cards Loaded</div>
-                 <div>Data: PokemonTCG.io</div>
-             </div>
+            <div class="p-3 bg-[#0c0c0c] border-t border-[#222] flex justify-between px-6 text-[10px] text-[#555] uppercase font-bold">
+                <div>{{ filteredResults.length }} Cards Found</div>
+                <div>Live Pricing via PokemonTCG.io</div>
+            </div>
         </div>
     </div>
-    
-    <input type="file" ref="restoreInput" @change="restore" class="hidden">
-    
-    <div class="md:hidden fixed bottom-0 inset-x-0 bg-[#080808] border-t border-[#222] p-3 flex justify-around z-30 pb-5">
-        <button @click="updatePrices" class="flex flex-col items-center text-slate-500 text-xs gap-1" :class="{'text-green-400': isUpdating}"><i class="fa-solid fa-arrows-rotate text-xl" :class="{'animate-spin': isUpdating}"></i> Update</button>
-        <button @click="backup" class="flex flex-col items-center text-slate-500 text-xs gap-1"><i class="fa-solid fa-download text-xl"></i> Save</button>
-        <button @click="restoreTrigger" class="flex flex-col items-center text-slate-500 text-xs gap-1"><i class="fa-solid fa-upload text-xl"></i> Load</button>
-    </div>
+    </Transition>
 
+    <input type="file" ref="restoreInput" @change="restore" class="hidden">
 </div>
 
 <script>
     const { createApp } = Vue;
 
-    // --- PRELOADED DATA STRUCTURE (INSTANT LOAD) ---
-    // Organized by Era for the 3-Step logic
-    // NOTE: Prismatic Evolutions is part of Scarlet & Violet Series
+    // --- PRELOADED DATA ---
     const PRELOADED_SETS = [
         // SCARLET & VIOLET
-        {id: "sv8pt5", name: "Prismatic Evolutions", series: "Scarlet & Violet", releaseDate: "2025/01/17", images: {symbol: "https://images.pokemontcg.io/sv8pt5/symbol.png"}},
-        {id: "sv8", name: "Surging Sparks", series: "Scarlet & Violet", releaseDate: "2024/11/08", images: {symbol: "https://images.pokemontcg.io/sv8/symbol.png"}},
-        {id: "sv7", name: "Stellar Crown", series: "Scarlet & Violet", releaseDate: "2024/09/13", images: {symbol: "https://images.pokemontcg.io/sv7/symbol.png"}},
-        {id: "sv6pt5", name: "Shrouded Fable", series: "Scarlet & Violet", releaseDate: "2024/08/02", images: {symbol: "https://images.pokemontcg.io/sv6pt5/symbol.png"}},
-        {id: "sv6", name: "Twilight Masquerade", series: "Scarlet & Violet", releaseDate: "2024/05/24", images: {symbol: "https://images.pokemontcg.io/sv6/symbol.png"}},
-        {id: "sv5", name: "Temporal Forces", series: "Scarlet & Violet", releaseDate: "2024/03/22", images: {symbol: "https://images.pokemontcg.io/sv5/symbol.png"}},
-        {id: "sv4pt5", name: "Paldean Fates", series: "Scarlet & Violet", releaseDate: "2024/01/26", images: {symbol: "https://images.pokemontcg.io/sv4pt5/symbol.png"}},
-        {id: "sv4", name: "Paradox Rift", series: "Scarlet & Violet", releaseDate: "2023/11/03", images: {symbol: "https://images.pokemontcg.io/sv4/symbol.png"}},
-        {id: "sv3pt5", name: "151", series: "Scarlet & Violet", releaseDate: "2023/09/22", images: {symbol: "https://images.pokemontcg.io/sv3pt5/symbol.png"}},
-        {id: "sv3", name: "Obsidian Flames", series: "Scarlet & Violet", releaseDate: "2023/08/11", images: {symbol: "https://images.pokemontcg.io/sv3/symbol.png"}},
-        {id: "sv2", name: "Paldea Evolved", series: "Scarlet & Violet", releaseDate: "2023/06/09", images: {symbol: "https://images.pokemontcg.io/sv2/symbol.png"}},
-        {id: "sv1", name: "Scarlet & Violet Base", series: "Scarlet & Violet", releaseDate: "2023/03/31", images: {symbol: "https://images.pokemontcg.io/sv1/symbol.png"}},
-        
+        {id: "sv8pt5", name: "Prismatic Evolutions", series: "Scarlet & Violet", releaseDate: "2025/01/17"},
+        {id: "sv8", name: "Surging Sparks", series: "Scarlet & Violet", releaseDate: "2024/11/08"},
+        {id: "sv7", name: "Stellar Crown", series: "Scarlet & Violet", releaseDate: "2024/09/13"},
+        {id: "sv6pt5", name: "Shrouded Fable", series: "Scarlet & Violet", releaseDate: "2024/08/02"},
+        {id: "sv6", name: "Twilight Masquerade", series: "Scarlet & Violet", releaseDate: "2024/05/24"},
+        {id: "sv5", name: "Temporal Forces", series: "Scarlet & Violet", releaseDate: "2024/03/22"},
+        {id: "sv4pt5", name: "Paldean Fates", series: "Scarlet & Violet", releaseDate: "2024/01/26"},
+        {id: "sv4", name: "Paradox Rift", series: "Scarlet & Violet", releaseDate: "2023/11/03"},
+        {id: "sv3pt5", name: "151", series: "Scarlet & Violet", releaseDate: "2023/09/22"},
+        {id: "sv3", name: "Obsidian Flames", series: "Scarlet & Violet", releaseDate: "2023/08/11"},
+        {id: "sv2", name: "Paldea Evolved", series: "Scarlet & Violet", releaseDate: "2023/06/09"},
+        {id: "sv1", name: "Scarlet & Violet Base", series: "Scarlet & Violet", releaseDate: "2023/03/31"},
         // SWORD & SHIELD
-        {id: "swsh12pt5", name: "Crown Zenith", series: "Sword & Shield", releaseDate: "2023/01/20", images: {symbol: "https://images.pokemontcg.io/swsh12pt5/symbol.png"}},
-        {id: "swsh12", name: "Silver Tempest", series: "Sword & Shield", releaseDate: "2022/11/11", images: {symbol: "https://images.pokemontcg.io/swsh12/symbol.png"}},
-        {id: "swsh11", name: "Lost Origin", series: "Sword & Shield", releaseDate: "2022/09/09", images: {symbol: "https://images.pokemontcg.io/swsh11/symbol.png"}},
-        {id: "swsh10", name: "Astral Radiance", series: "Sword & Shield", releaseDate: "2022/05/27", images: {symbol: "https://images.pokemontcg.io/swsh10/symbol.png"}},
-        {id: "swsh9", name: "Brilliant Stars", series: "Sword & Shield", releaseDate: "2022/02/25", images: {symbol: "https://images.pokemontcg.io/swsh9/symbol.png"}},
-        {id: "swsh8", name: "Fusion Strike", series: "Sword & Shield", releaseDate: "2021/11/12", images: {symbol: "https://images.pokemontcg.io/swsh8/symbol.png"}},
-        {id: "swsh7", name: "Evolving Skies", series: "Sword & Shield", releaseDate: "2021/08/27", images: {symbol: "https://images.pokemontcg.io/swsh7/symbol.png"}},
-        {id: "swsh6", name: "Chilling Reign", series: "Sword & Shield", releaseDate: "2021/06/18", images: {symbol: "https://images.pokemontcg.io/swsh6/symbol.png"}},
-        
+        {id: "swsh12pt5", name: "Crown Zenith", series: "Sword & Shield", releaseDate: "2023/01/20"},
+        {id: "swsh12", name: "Silver Tempest", series: "Sword & Shield", releaseDate: "2022/11/11"},
+        {id: "swsh11", name: "Lost Origin", series: "Sword & Shield", releaseDate: "2022/09/09"},
+        {id: "swsh10", name: "Astral Radiance", series: "Sword & Shield", releaseDate: "2022/05/27"},
+        {id: "swsh9", name: "Brilliant Stars", series: "Sword & Shield", releaseDate: "2022/02/25"},
+        {id: "swsh8", name: "Fusion Strike", series: "Sword & Shield", releaseDate: "2021/11/12"},
+        {id: "swsh7", name: "Evolving Skies", series: "Sword & Shield", releaseDate: "2021/08/27"},
+        {id: "swsh6", name: "Chilling Reign", series: "Sword & Shield", releaseDate: "2021/06/18"},
         // SUN & MOON
-        {id: "sm12", name: "Cosmic Eclipse", series: "Sun & Moon", releaseDate: "2019/11/01", images: {symbol: "https://images.pokemontcg.io/sm12/symbol.png"}},
-        {id: "sm115", name: "Hidden Fates", series: "Sun & Moon", releaseDate: "2019/08/23", images: {symbol: "https://images.pokemontcg.io/sm115/symbol.png"}},
-        {id: "sm9", name: "Team Up", series: "Sun & Moon", releaseDate: "2019/02/01", images: {symbol: "https://images.pokemontcg.io/sm9/symbol.png"}},
-        
+        {id: "sm12", name: "Cosmic Eclipse", series: "Sun & Moon", releaseDate: "2019/11/01"},
+        {id: "sm115", name: "Hidden Fates", series: "Sun & Moon", releaseDate: "2019/08/23"},
+        {id: "sm9", name: "Team Up", series: "Sun & Moon", releaseDate: "2019/02/01"},
         // XY
-        {id: "xy12", name: "Evolutions", series: "XY", releaseDate: "2016/11/02", images: {symbol: "https://images.pokemontcg.io/xy12/symbol.png"}},
-        {id: "xy7", name: "Ancient Origins", series: "XY", releaseDate: "2015/08/12", images: {symbol: "https://images.pokemontcg.io/xy7/symbol.png"}},
-
+        {id: "xy12", name: "Evolutions", series: "XY", releaseDate: "2016/11/02"},
+        {id: "xy7", name: "Ancient Origins", series: "XY", releaseDate: "2015/08/12"},
         // BLACK & WHITE
-        {id: "bw11", name: "Legendary Treasures", series: "Black & White", releaseDate: "2013/11/06", images: {symbol: "https://images.pokemontcg.io/bw11/symbol.png"}},
-
+        {id: "bw11", name: "Legendary Treasures", series: "Black & White", releaseDate: "2013/11/06"},
         // CLASSIC
-        {id: "base1", name: "Base Set", series: "Classic", releaseDate: "1999/01/09", images: {symbol: "https://images.pokemontcg.io/base1/symbol.png"}},
-        {id: "base4", name: "Base Set 2", series: "Classic", releaseDate: "2000/02/24", images: {symbol: "https://images.pokemontcg.io/base4/symbol.png"}},
-        {id: "gym1", name: "Gym Heroes", series: "Classic", releaseDate: "2000/08/14", images: {symbol: "https://images.pokemontcg.io/gym1/symbol.png"}}
+        {id: "base1", name: "Base Set", series: "Classic", releaseDate: "1999/01/09"},
+        {id: "base4", name: "Base Set 2", series: "Classic", releaseDate: "2000/02/24"},
+        {id: "gym1", name: "Gym Heroes", series: "Classic", releaseDate: "2000/08/14"}
     ];
 
     createApp({
@@ -318,8 +319,6 @@
                 cards: [], filter: '', showSearch: false, query: '', 
                 rawSetData: [], loading: false, isUpdating: false,
                 allSets: PRELOADED_SETS,
-                
-                // 3-STEP SELECTION STATE
                 eras: ["Scarlet & Violet", "Sword & Shield", "Sun & Moon", "XY", "Black & White", "Classic"],
                 selectedEra: "",
                 selectedSet: ""
@@ -336,41 +335,30 @@
                 return this.cards.filter(c => c.name.toLowerCase().includes(this.filter.toLowerCase()));
             },
             totalProfit() { return this.cards.reduce((sum, c) => sum + this.getProfit(c), 0); },
+            totalCost() { return this.cards.reduce((sum, c) => sum + (c.raw || 0) + (c.fee || 0), 0); },
             
-            // Step 2 Filter: Only show sets from Selected Era
             filteredSets() {
                 if (!this.selectedEra) return [];
                 return this.allSets.filter(s => s.series === this.selectedEra || (this.selectedEra === "Classic" && s.series === "Base"));
             },
-
-            // Step 3 Filter: Filter the loaded set by query
             filteredResults() {
                 let res = this.rawSetData;
                 if(this.query) {
                     const q = this.query.toLowerCase();
                     res = res.filter(item => item.name.toLowerCase().includes(q) || item.number.includes(q));
                 }
-                // Sort by Number default for ease of finding
                 return res.sort((a,b) => parseInt(a.number) - parseInt(b.number));
             }
         },
         watch: {
-            // When user picks a set, download immediately
             selectedSet(newVal) {
-                if(newVal) {
-                    this.query = '';
-                    this.fetchEntireSet(newVal);
-                } else {
-                    this.rawSetData = [];
-                }
+                if(newVal) { this.query = ''; this.fetchEntireSet(newVal); } else { this.rawSetData = []; }
             },
-            // Clear set selection if era changes
             selectedEra() { this.selectedSet = ""; this.rawSetData = []; }
         },
         methods: {
             formatNumber(n) { return (n||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}); },
             save() { localStorage.setItem('gladiator_v26', JSON.stringify(this.cards)); },
-            
             getValue(c) {
                 if(c.target == 10) return c.psa10;
                 if(c.target == 9) return c.psa9;
@@ -384,51 +372,38 @@
                 this.save();
             },
             getProfit(c) { return this.getValue(c) - ((c.raw || 0) + (c.fee || 0)); },
-
-            // Background fetch to ensure we have ALL sets eventually, not just preloaded
+            
             async loadSetsBackground() {
                 try {
-                    const res = await fetch('https://api.pokemontcg.io/v2/sets?select=id,name,series,releaseDate,images&orderBy=-releaseDate&pageSize=150');
+                    const res = await fetch('https://api.pokemontcg.io/v2/sets?select=id,name,series,releaseDate&orderBy=-releaseDate&pageSize=150');
                     const data = await res.json();
-                    
-                    // Smart Merge: Don't duplicate preloaded sets
                     const incoming = data.data;
                     const combined = [...this.allSets];
-                    
                     incoming.forEach(inc => {
                         if(!combined.find(c => c.id === inc.id)) {
-                            // Normalize series names if needed
                             if(inc.series === "Base") inc.series = "Classic"; 
                             combined.push(inc);
                         }
                     });
                     this.allSets = combined;
-                } catch(e) { console.log("Background sync silent fail"); }
+                } catch(e) {}
             },
-
             async fetchEntireSet(setId) {
                 this.loading = true;
                 this.rawSetData = [];
                 try {
-                    const fields = 'id,name,set,number,images,tcgplayer,rarity';
-                    const url = `https://api.pokemontcg.io/v2/cards?q=set.id:${setId}&pageSize=250&select=${fields}&orderBy=number`; 
+                    const url = `https://api.pokemontcg.io/v2/cards?q=set.id:${setId}&pageSize=250&select=id,name,set,number,images,tcgplayer,rarity&orderBy=number`; 
                     const res = await fetch(url);
                     const data = await res.json();
                     this.rawSetData = data.data || [];
                     this.$nextTick(() => this.$refs.searchBox.focus());
-                } catch(e) {
-                    alert("Error loading set. Check connection.");
-                } finally { 
-                    this.loading = false; 
-                }
+                } catch(e) { alert("Connection Error"); } finally { this.loading = false; }
             },
-
             async updatePrices() {
                 this.isUpdating = true;
                 const cardsWithIds = this.cards.filter(c => c.id);
-                const chunkSize = 20; 
-                for (let i = 0; i < cardsWithIds.length; i += chunkSize) {
-                    const chunk = cardsWithIds.slice(i, i + chunkSize);
+                for (let i = 0; i < cardsWithIds.length; i += 20) {
+                    const chunk = cardsWithIds.slice(i, i + 20);
                     const ids = chunk.map(c => `id:${c.id}`).join(' OR ');
                     try {
                         const res = await fetch(`https://api.pokemontcg.io/v2/cards?q=${ids}&select=id,tcgplayer`);
@@ -449,23 +424,13 @@
                 }
                 this.save();
                 this.isUpdating = false;
-                alert("Prices Updated!");
             },
-
             getPrice(item) {
                 if(!item.tcgplayer?.prices) return 0;
                 const p = item.tcgplayer.prices;
                 return p.holofoil?.market || p.normal?.market || p.reverseHolofoil?.market || p.unlimitedHolofoil?.market || 0;
             },
-
-            openSearch() { 
-                this.showSearch = true; 
-                this.selectedEra = ""; 
-                this.selectedSet = ""; 
-                this.query = ""; 
-                this.rawSetData = []; 
-            },
-            
+            openSearch() { this.showSearch = true; this.selectedEra = ""; this.selectedSet = ""; this.query = ""; this.rawSetData = []; },
             add(item) {
                 const rawPrice = this.getPrice(item);
                 const newCard = {
@@ -473,20 +438,15 @@
                     condition: '', raw: rawPrice, fee: 15, target: 10,
                     psa10: parseFloat((rawPrice * 3.2).toFixed(2)),
                     psa9: parseFloat((rawPrice * 1.1).toFixed(2)),
-                    psa8: parseFloat((rawPrice * 0.85).toFixed(2)),
+                    psa8: parseFloat((rawPrice * 0.85).toFixed(2))
                 };
                 this.cards.push(newCard);
                 this.save();
                 this.showSearch = false;
             },
-            
             remove(i) { if(confirm('Delete?')) { this.cards.splice(i,1); this.save(); } },
-            
             exportExcel() {
-                const data = this.cards.map(c => ({
-                    Card: c.name, Set: c.set, Raw: c.raw, Cost: c.fee, 
-                    Grade: c.target, Est_Value: this.getValue(c), Profit: this.getProfit(c)
-                }));
+                const data = this.cards.map(c => ({ Card: c.name, Set: c.set, Raw: c.raw, Cost: c.fee, Grade: c.target, Est_Value: this.getValue(c), Profit: this.getProfit(c) }));
                 const ws = XLSX.utils.json_to_sheet(data);
                 const wb = XLSX.utils.book_new();
                 XLSX.utils.book_append_sheet(wb, ws, "Gladiator");
