@@ -291,17 +291,17 @@
                 // PREDICTION
                 predictedNames: [], showPredictions: false, searchTimer: null,
                 
-                // API CONFIG
+                // API CONFIG - Changed Cache Key to FORCE refresh
                 API_BASE: 'https://api.pokemonpricetracker.com/api/v2',
                 API_KEY: 'pokeprice_free_2d3a863c6c494cc90dc40d488e4f48482e085d28fd2f0617',
-                CACHE_KEY: 'gladiator_sets_cache_v1',
-                CACHE_DURATION: 1000 * 60 * 60 * 24 // 24 Hours
+                CACHE_KEY: 'gladiator_sets_cache_v2', 
+                CACHE_DURATION: 1000 * 60 * 60 * 24 
             }
         },
         mounted() {
             const db = localStorage.getItem('gladiator_v26');
             if(db) this.cards = JSON.parse(db);
-            this.loadSets(); // Now checks cache first
+            this.loadSets(); 
         },
         computed: {
             filteredCards() {
@@ -320,7 +320,6 @@
             selectedEra() { this.selectedSet = ""; }
         },
         methods: {
-            // --- 1. DYNAMIC SET LOADER (WITH CACHE) ---
             async loadSets(force = false) {
                 // 1. CHECK CACHE FIRST
                 if (!force) {
@@ -329,97 +328,85 @@
                         try {
                             const { timestamp, sets, eras } = JSON.parse(cachedData);
                             const now = Date.now();
-                            // If cache is fresh (less than 24 hours)
-                            if (now - timestamp < this.CACHE_DURATION) {
+                            if (now - timestamp < this.CACHE_DURATION && sets.length > 0) {
                                 this.allSets = sets;
                                 this.eras = eras;
                                 console.log("Loaded sets from cache (Instant)");
-                                return; // Exit early, no API call needed
+                                return;
                             }
                         } catch(e) {
-                            console.log("Cache error, reloading");
+                            console.log("Cache corrupted, reloading");
                         }
                     }
                 }
 
-                // 2. FETCH FROM API IF NO CACHE OR FORCED
+                // 2. FETCH FROM API
                 this.initLoading = true;
                 try {
-                    const res = await fetch(`${this.API_BASE}/sets`, {
-                        headers: { 'Authorization': `Bearer ${this.API_KEY}` }
-                    });
-                    
-                    if(!res.ok) throw new Error("API Connection Failed");
-                    
-                    const data = await res.json();
-                    this.allSets = data.data || data; 
-
-                    this.processEras();
-                    
-                    // 3. SAVE TO CACHE
-                    try {
-                        localStorage.setItem(this.CACHE_KEY, JSON.stringify({
-                            timestamp: Date.now(),
-                            sets: this.allSets,
-                            eras: this.eras
-                        }));
-                        if(force) alert("Sync Complete");
-                    } catch(e) {
-                        console.warn("Storage full, cannot cache sets");
-                    }
-
+                    // Try the reliable fallback API first since it was more stable for you
+                    await this.fetchFallbackSets(force);
                 } catch(e) {
-                    console.error("Set fetch error:", e);
-                    this.fetchFallbackSets(force); // Pass force param
-                } finally {
+                    console.error("API Failed");
                     this.initLoading = false;
                 }
             },
 
             async fetchFallbackSets(force) {
                 try {
+                    // Fetch standard public API
                     const res = await fetch('https://api.pokemontcg.io/v2/sets?orderBy=-releaseDate&pageSize=250');
                     const data = await res.json();
-                    this.allSets = data.data;
                     
-                    this.processEras();
-
-                    // Save Fallback to Cache too
-                    localStorage.setItem(this.CACHE_KEY, JSON.stringify({
-                        timestamp: Date.now(),
-                        sets: this.allSets,
-                        eras: this.eras
-                    }));
-                    if(force) alert("Sync Complete (Fallback)");
-
+                    if(data.data) {
+                        this.allSets = data.data;
+                        this.processEras(); // FAIL-SAFE SORTING
+                        
+                        // Save to Cache
+                        localStorage.setItem(this.CACHE_KEY, JSON.stringify({
+                            timestamp: Date.now(),
+                            sets: this.allSets,
+                            eras: this.eras
+                        }));
+                        if(force) alert("Sync Complete");
+                    }
                 } catch(e) {
-                    alert("Could not load sets. Please check internet.");
+                    alert("Network Error: Could not load sets.");
+                } finally {
+                    this.initLoading = false;
                 }
             },
 
-            // New helper to sort eras by latest release date
+            // --- FAIL-SAFE ERA PROCESSING ---
             processEras() {
+                // 1. Get Unique Series names first (guaranteed to work)
+                const seriesSet = new Set();
+                this.allSets.forEach(s => {
+                    if(s.series) seriesSet.add(s.series);
+                });
+                const uniqueEras = Array.from(seriesSet);
+
+                // 2. Create a Map of Series -> Latest Release Date
                 const eraDates = {};
-                
-                // Find the latest release date for each Era
                 this.allSets.forEach(set => {
-                    if (set.releaseDate) {
-                        const dateVal = new Date(set.releaseDate).getTime();
-                        if (!eraDates[set.series] || dateVal > eraDates[set.series]) {
-                            eraDates[set.series] = dateVal;
+                    if (set.series && set.releaseDate) {
+                        // Use string comparison (YYYY/MM/DD) which is safer than Date parsing
+                        const currentDate = set.releaseDate.replace(/\//g, '-'); 
+                        if (!eraDates[set.series] || currentDate > eraDates[set.series]) {
+                            eraDates[set.series] = currentDate;
                         }
-                    } else if (!eraDates[set.series]) {
-                        eraDates[set.series] = 0; 
                     }
                 });
 
-                // Sort series based on the dates we found (Desc)
-                this.eras = Object.keys(eraDates).sort((a, b) => {
-                    return eraDates[b] - eraDates[a];
+                // 3. Sort using the map, default to alphabetical if date fails
+                this.eras = uniqueEras.sort((a, b) => {
+                    const dateA = eraDates[a] || '0000-00-00';
+                    const dateB = eraDates[b] || '0000-00-00';
+                    if (dateA === dateB) return a.localeCompare(b); // Fallback to Alphabetical
+                    return dateB.localeCompare(dateA); // Newest Date First
                 });
             },
 
-            // --- 2. NAME PREDICTION (LIGHT) ---
+            // --- 2. NAME PREDICTION ---
             debouncedNameSearch() {
                 clearTimeout(this.searchTimer);
                 if(this.query.length < 2) { this.showPredictions = false; return; }
@@ -429,14 +416,9 @@
             async fetchNameSuggestions() {
                 if(!this.selectedSet) return;
                 try {
-                    // Fetch names ONLY for the selected set
-                    const url = `${this.API_BASE}/cards?q=set.id:${this.selectedSet} name:"${this.query}*"&select=name&pageSize=10`;
-                    // Fallback URL if using standard API structure
                     const fallbackUrl = `https://api.pokemontcg.io/v2/cards?q=set.id:${this.selectedSet} name:"${this.query}*"&select=name&pageSize=10`;
-                    
-                    const res = await fetch(fallbackUrl); // Using standard for reliable autocomplete structure
+                    const res = await fetch(fallbackUrl);
                     const data = await res.json();
-                    
                     this.predictedNames = [...new Set(data.data.map(c => c.name))];
                     this.showPredictions = true;
                 } catch(e) {
@@ -449,16 +431,14 @@
                 this.showPredictions = false;
             },
 
-            // --- 3. EXECUTE SEARCH (HEAVY) ---
+            // --- 3. EXECUTE SEARCH ---
             async fetchCards() {
                 if(!this.selectedSet || !this.query) return;
                 this.loading = true;
                 this.results = [];
                 try {
-                    // Use Standard API for reliable image/data structure
                     const q = `set.id:${this.selectedSet} name:"${this.query}*"`;
                     const url = `https://api.pokemontcg.io/v2/cards?q=${q}&pageSize=250&select=id,name,number,images,tcgplayer,rarity&orderBy=number`;
-                    
                     const res = await fetch(url);
                     const data = await res.json();
                     this.results = data.data || [];
