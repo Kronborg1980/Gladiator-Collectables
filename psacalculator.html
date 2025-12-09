@@ -3,155 +3,226 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gladiator Collectibles - Analyzer</title>
+    <title>Gladiator | Pro Asset Tracker</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
+    
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
+    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Lato:wght@400;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
 
     <style>
-        :root { --bg: #050505; --gold: #D4AF37; --panel: #111; }
-        body { font-family: 'Lato', sans-serif; background: var(--bg); color: #e2e8f0; }
-        h1, .brand { font-family: 'Cinzel', serif; }
-        [v-cloak] { display: none; }
-        
-        /* Table Inputs */
-        .table-input {
-            background: transparent; border: 1px solid transparent; color: inherit; 
-            width: 100%; text-align: right; padding: 4px; font-family: monospace; border-radius: 4px;
+        :root {
+            --bg-dark: #09090b;
+            --panel-bg: #18181b;
+            --gold-accent: #D4AF37;
+            --gold-dim: #92751a;
+            --text-main: #e2e8f0;
+            --border-color: #27272a;
         }
-        .table-input:hover { border-color: #333; background: #0a0a0a; }
-        .table-input:focus { border-color: var(--gold); outline: none; background: #000; }
 
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: var(--bg-dark);
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(212, 175, 55, 0.05), transparent 25%), 
+                radial-gradient(circle at 85% 30%, rgba(212, 175, 55, 0.03), transparent 25%);
+            color: var(--text-main);
+            min-height: 100vh;
+        }
+
+        /* TYPOGRAPHY */
+        .font-brand { font-family: 'Cinzel', serif; }
+
+        /* UI COMPONENTS */
+        .glass-panel {
+            background: rgba(24, 24, 27, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        }
+
+        .gold-gradient-text {
+            background: linear-gradient(135deg, #FFE5B4 0%, #D4AF37 50%, #8a6e1c 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        /* INPUTS */
+        .pro-input {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border-color);
+            color: #fff;
+            transition: all 0.2s ease;
+        }
+        .pro-input:focus {
+            border-color: var(--gold-accent);
+            box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.1);
+            outline: none;
+        }
         
-        .gold-glow { text-shadow: 0 0 10px rgba(212, 175, 55, 0.3); }
+        /* TABLE */
+        .table-row-hover:hover {
+            background: rgba(212, 175, 55, 0.03);
+        }
+        
+        /* SCROLLBAR */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #0f0f11; }
+        ::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #52525b; }
+
+        [v-cloak] { display: none; }
     </style>
 </head>
-<body class="min-h-screen p-4">
+<body class="p-4 md:p-8">
 
-<div id="app" v-cloak class="max-w-[1900px] mx-auto">
+<div id="app" v-cloak class="max-w-7xl mx-auto space-y-6">
     
-    <div class="flex flex-col md:flex-row justify-between items-end mb-6 border-b border-[#222] pb-4">
+    <div class="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6">
         <div>
-            <h1 class="text-4xl font-bold text-[#D4AF37] uppercase tracking-wider gold-glow">
-                <i class="fa-solid fa-helmet-safety mr-2"></i>Gladiator
-            </h1>
-            <p class="text-xs text-slate-500 tracking-[0.4em] uppercase">Grading Analyzer</p>
-        </div>
-        
-        <div class="flex gap-8 mt-4 md:mt-0">
-            <div class="text-right">
-                <div class="text-[10px] uppercase text-slate-500">Cards Analyzed</div>
-                <div class="text-2xl font-bold">{{ cards.length }}</div>
+            <div class="flex items-center gap-3 mb-1">
+                <i class="fa-solid fa-layer-group text-[#D4AF37] text-2xl"></i>
+                <h1 class="text-3xl font-bold font-brand tracking-wide text-white">Gladiator <span class="text-[#D4AF37]">Assets</span></h1>
             </div>
-            <div class="text-right">
-                <div class="text-[10px] uppercase text-slate-500">Total Profit</div>
-                <div class="text-2xl font-bold" :class="totalProfit >= 0 ? 'text-[#D4AF37]' : 'text-red-500'">
+            <p class="text-slate-500 text-sm font-medium tracking-wide">Professional Grading ROI Calculator</p>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-4 w-full lg:w-auto">
+            <div class="glass-panel rounded-xl p-4 flex flex-col justify-center border-l-4 border-slate-600">
+                <span class="text-[10px] uppercase tracking-widest text-slate-400 font-bold">Inventory</span>
+                <span class="text-2xl font-bold text-white mt-1">{{ cards.length }} <span class="text-xs font-normal text-slate-500">Items</span></span>
+            </div>
+            
+            <div class="glass-panel rounded-xl p-4 flex flex-col justify-center border-l-4 border-blue-600/50">
+                <span class="text-[10px] uppercase tracking-widest text-slate-400 font-bold">Total Cost</span>
+                <span class="text-2xl font-bold text-blue-400 mt-1">${{ formatNumber(totalCost) }}</span>
+            </div>
+
+            <div class="glass-panel rounded-xl p-4 flex flex-col justify-center border-l-4" 
+                 :class="totalProfit >= 0 ? 'border-[#D4AF37]' : 'border-red-600'">
+                <span class="text-[10px] uppercase tracking-widest text-slate-400 font-bold">Proj. Net Profit</span>
+                <span class="text-2xl font-bold mt-1" :class="totalProfit >= 0 ? 'gold-gradient-text' : 'text-red-500'">
                     ${{ formatNumber(totalProfit) }}
-                </div>
+                </span>
             </div>
         </div>
     </div>
 
-    <div class="flex flex-wrap gap-4 mb-4 items-center bg-[#111] p-3 rounded border border-[#222]">
-        <div class="relative flex-1 min-w-[200px]">
-            <i class="fa-solid fa-search absolute left-3 top-2.5 text-slate-600"></i>
-            <input v-model="filter" placeholder="FILTER YOUR LIST..." class="w-full bg-black border border-[#333] rounded py-2 pl-9 pr-4 text-xs font-bold uppercase focus:border-[#D4AF37] outline-none transition">
+    <div class="glass-panel rounded-xl p-4 flex flex-col md:flex-row gap-4 items-center justify-between">
+        <div class="relative w-full md:w-96 group">
+            <i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-[#D4AF37] transition-colors"></i>
+            <input v-model="filter" type="text" placeholder="Search by name, set, or notes..." 
+                class="w-full pro-input pl-10 pr-4 py-2.5 rounded-lg text-sm font-medium">
         </div>
-        
-        <div class="flex gap-2">
-            <button @click="exportExcel" class="px-4 py-2 bg-[#1a1a1a] hover:bg-[#222] border border-[#333] text-green-500 text-[10px] font-bold uppercase rounded transition">
-                <i class="fa-solid fa-file-excel mr-1"></i> Excel
-            </button>
-            <button @click="exportPDF" class="px-4 py-2 bg-[#1a1a1a] hover:bg-[#222] border border-[#333] text-red-500 text-[10px] font-bold uppercase rounded transition">
-                <i class="fa-solid fa-file-pdf mr-1"></i> PDF
-            </button>
-            <button @click="backup" class="px-4 py-2 bg-[#1a1a1a] hover:bg-[#222] border border-[#333] text-blue-500 text-[10px] font-bold uppercase rounded transition">
-                <i class="fa-solid fa-download mr-1"></i> Save
-            </button>
-            <label class="px-4 py-2 bg-[#1a1a1a] hover:bg-[#222] border border-[#333] text-purple-500 text-[10px] font-bold uppercase rounded transition cursor-pointer">
-                <i class="fa-solid fa-upload mr-1"></i> Load
-                <input type="file" @change="restore" class="hidden" accept=".json">
-            </label>
-            <button @click="openSearch" class="px-6 py-2 bg-[#D4AF37] hover:bg-white text-black font-bold text-xs uppercase rounded shadow-[0_0_15px_rgba(212,175,55,0.2)] transition">
-                <i class="fa-solid fa-plus mr-1"></i> Add Card
+
+        <div class="flex flex-wrap gap-2 w-full md:w-auto justify-end">
+            <div class="flex bg-black/30 rounded-lg p-1 border border-[#27272a]">
+                <button @click="exportExcel" class="px-3 py-1.5 rounded-md text-xs font-bold text-slate-400 hover:text-green-400 hover:bg-white/5 transition" title="Export Excel">
+                    <i class="fa-solid fa-file-excel"></i>
+                </button>
+                <button @click="exportPDF" class="px-3 py-1.5 rounded-md text-xs font-bold text-slate-400 hover:text-red-400 hover:bg-white/5 transition" title="Export PDF">
+                    <i class="fa-solid fa-file-pdf"></i>
+                </button>
+                <div class="w-[1px] bg-[#333] my-1 mx-1"></div>
+                <button @click="backup" class="px-3 py-1.5 rounded-md text-xs font-bold text-slate-400 hover:text-blue-400 hover:bg-white/5 transition" title="Backup File">
+                    <i class="fa-solid fa-download"></i>
+                </button>
+                <label class="px-3 py-1.5 rounded-md text-xs font-bold text-slate-400 hover:text-purple-400 hover:bg-white/5 transition cursor-pointer" title="Restore File">
+                    <i class="fa-solid fa-upload"></i>
+                    <input type="file" @change="restore" class="hidden" accept=".json">
+                </label>
+            </div>
+
+            <button @click="openSearch" class="bg-[#D4AF37] hover:bg-[#c49f27] text-[#09090b] px-5 py-2 rounded-lg font-bold text-sm shadow-lg shadow-yellow-900/20 transition-all active:scale-95 flex items-center gap-2">
+                <i class="fa-solid fa-plus"></i>
+                <span>Add Card</span>
             </button>
         </div>
     </div>
 
-    <div class="bg-[#111] rounded border border-[#222] overflow-hidden">
+    <div class="glass-panel rounded-xl overflow-hidden shadow-2xl">
         <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse">
+            <table class="w-full text-left border-collapse min-w-[1000px]">
                 <thead>
-                    <tr class="bg-black text-[#666] text-[10px] uppercase tracking-widest border-b border-[#222]">
-                        <th class="p-3 w-12">Img</th>
-                        <th class="p-3">Card Name</th>
-                        <th class="p-3 text-right w-28">Raw Price</th>
-                        <th class="p-3 text-right w-28">Grading Cost</th>
-                        <th class="p-3 text-center w-24">Pre-Grade</th>
-                        <th class="p-3 text-right w-24">Exp. Value</th>
-                        <th class="p-3 text-center w-32">Decision</th>
-                        <th class="p-3 text-right w-28">Profit</th>
-                        <th class="p-3 w-10"></th>
+                    <tr class="bg-[#111113] border-b border-[#27272a]">
+                        <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider w-16">Img</th>
+                        <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Asset Details</th>
+                        <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right w-32">Raw Cost</th>
+                        <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right w-32">Grade Fee</th>
+                        <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-center w-28">Exp. Grade</th>
+                        <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right w-32">Est. Value</th>
+                        <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-center w-36">Decision</th>
+                        <th class="p-4 text-xs font-bold text-slate-500 uppercase tracking-wider text-right w-32">Profit</th>
+                        <th class="p-4 w-12"></th>
                     </tr>
                 </thead>
-                <tbody class="text-sm divide-y divide-[#1a1a1a]">
-                    <tr v-for="(c, i) in filteredCards" :key="i" class="hover:bg-[#161616] group transition-colors">
-                        <td class="p-2">
-                            <div class="w-8 h-10 bg-black rounded border border-[#333] overflow-hidden relative">
+                <tbody class="divide-y divide-[#27272a]">
+                    <tr v-for="(c, i) in filteredCards" :key="i" class="table-row-hover transition-colors group">
+                        
+                        <td class="p-4">
+                            <div class="w-10 h-14 bg-[#000] rounded-md border border-[#333] overflow-hidden relative shadow-sm group-hover:border-[#D4AF37] transition-colors">
                                 <img v-if="c.img" :src="c.img" class="absolute w-full h-full object-cover">
                             </div>
                         </td>
-                        
-                        <td class="p-3">
-                            <div class="font-bold text-slate-200">{{ c.name }}</div>
-                            <div class="text-[10px] text-slate-500 uppercase">{{ c.set }}</div>
+
+                        <td class="p-4">
+                            <div class="font-bold text-slate-200 text-sm mb-0.5">{{ c.name }}</div>
+                            <div class="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">{{ c.set }}</div>
                         </td>
 
-                        <td class="p-2">
-                            <input v-model.number="c.raw" @change="save" type="number" class="table-input text-slate-400">
+                        <td class="p-4 text-right">
+                            <div class="relative">
+                                <span class="absolute left-2 top-1.5 text-slate-500 text-xs">$</span>
+                                <input v-model.number="c.raw" @change="save" type="number" 
+                                    class="w-full bg-[#18181b] border border-[#333] rounded px-2 py-1 text-right text-sm font-mono text-slate-300 focus:border-[#D4AF37] outline-none transition">
+                            </div>
                         </td>
 
-                        <td class="p-2">
-                            <input v-model.number="c.fee" @change="save" type="number" class="table-input text-slate-400">
+                        <td class="p-4 text-right">
+                            <div class="relative">
+                                <span class="absolute left-2 top-1.5 text-slate-500 text-xs">$</span>
+                                <input v-model.number="c.fee" @change="save" type="number" 
+                                    class="w-full bg-[#18181b] border border-[#333] rounded px-2 py-1 text-right text-sm font-mono text-slate-300 focus:border-[#D4AF37] outline-none transition">
+                            </div>
                         </td>
 
-                        <td class="p-2 text-center">
-                            <select v-model="c.grade" @change="save" class="bg-transparent border border-transparent hover:border-[#333] text-[#D4AF37] font-bold text-xs p-1 rounded cursor-pointer outline-none">
+                        <td class="p-4 text-center">
+                            <select v-model="c.grade" @change="save" 
+                                class="bg-[#000] border border-[#333] text-[#D4AF37] text-xs font-bold py-1.5 px-3 rounded shadow-sm cursor-pointer outline-none focus:border-[#D4AF37]">
                                 <option value="10">PSA 10</option>
                                 <option value="9">PSA 9</option>
                                 <option value="8">PSA 8</option>
                             </select>
                         </td>
 
-                        <td class="p-3 text-right font-mono text-xs text-slate-600">
-                            ${{ formatNumber(getValue(c)) }}
+                        <td class="p-4 text-right">
+                            <span class="font-mono text-sm text-slate-400">${{ formatNumber(getValue(c)) }}</span>
                         </td>
 
-                        <td class="p-3 text-center">
-                            <div v-if="getProfit(c) > 0" class="inline-block px-3 py-1 bg-green-900/30 text-green-400 border border-green-900 rounded text-[10px] font-bold uppercase tracking-wider shadow-[0_0_10px_rgba(74,222,128,0.1)]">
-                                <i class="fa-solid fa-check mr-1"></i> Grade It
-                            </div>
-                            <div v-else class="inline-block px-3 py-1 bg-red-900/30 text-red-400 border border-red-900 rounded text-[10px] font-bold uppercase tracking-wider">
-                                <i class="fa-solid fa-xmark mr-1"></i> Don't
-                            </div>
-                        </td>
-
-                        <td class="p-3 text-right font-mono font-bold text-base">
-                            <span :class="getProfit(c) > 0 ? 'text-[#D4AF37]' : 'text-red-500'">
-                                ${{ formatNumber(getProfit(c)) }}
+                        <td class="p-4 text-center">
+                            <span v-if="getProfit(c) > 0" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-bold uppercase tracking-wider shadow-[0_0_10px_rgba(16,185,129,0.1)]">
+                                <i class="fa-solid fa-check"></i> Grade
+                            </span>
+                            <span v-else class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-500/10 border border-red-500/20 text-red-400 text-[10px] font-bold uppercase tracking-wider">
+                                <i class="fa-solid fa-xmark"></i> Hold
                             </span>
                         </td>
 
-                        <td class="p-3 text-center">
-                            <button @click="remove(i)" class="text-slate-700 hover:text-red-500 transition opacity-0 group-hover:opacity-100">
+                        <td class="p-4 text-right">
+                            <span class="font-mono font-bold text-sm" :class="getProfit(c) >= 0 ? 'text-[#D4AF37]' : 'text-red-500'">
+                                {{ getProfit(c) >= 0 ? '+' : '' }}${{ formatNumber(getProfit(c)) }}
+                            </span>
+                        </td>
+
+                        <td class="p-4 text-center">
+                            <button @click="remove(i)" class="text-slate-600 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100">
                                 <i class="fa-solid fa-trash"></i>
                             </button>
                         </td>
@@ -160,44 +231,61 @@
             </table>
         </div>
         
-        <div v-if="cards.length === 0" class="p-16 text-center text-slate-700">
-            <i class="fa-solid fa-magnifying-glass-chart text-5xl mb-4 opacity-50"></i>
-            <p class="uppercase text-xs tracking-widest">No cards in analyzer</p>
-            <button @click="openSearch" class="mt-4 text-[#D4AF37] text-xs hover:underline">Add one now</button>
+        <div v-if="cards.length === 0" class="flex flex-col items-center justify-center py-20 text-slate-600">
+            <div class="bg-[#18181b] p-6 rounded-full border border-[#27272a] mb-4">
+                <i class="fa-solid fa-magnifying-glass-chart text-4xl text-[#333]"></i>
+            </div>
+            <h3 class="text-slate-300 font-bold font-brand text-lg mb-1">Your Armory is Empty</h3>
+            <p class="text-sm mb-6">Start by adding cards to analyze your grading margins.</p>
+            <button @click="openSearch" class="text-[#D4AF37] hover:text-white text-xs font-bold uppercase tracking-widest border-b border-[#D4AF37] pb-0.5">
+                Add First Card
+            </button>
         </div>
     </div>
 
-    <div v-if="showSearch" class="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-start justify-center pt-20 z-50 p-4">
-        <div class="w-full max-w-3xl bg-[#111] border border-[#333] rounded-lg shadow-2xl flex flex-col max-h-[80vh]">
+    <div v-if="showSearch" class="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-start justify-center pt-16 z-50 p-4 transition-all">
+        <div class="w-full max-w-4xl bg-[#111] border border-[#333] rounded-2xl shadow-2xl flex flex-col max-h-[85vh] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
             
-            <div class="p-4 border-b border-[#222] relative">
-                <input ref="searchBox" v-model="query" type="text" placeholder="SEARCH DATABASE (e.g. Charizard 151)..." 
-                    class="w-full bg-black border border-[#333] p-4 text-lg font-mono text-[#D4AF37] focus:border-[#D4AF37] rounded outline-none placeholder-slate-700">
-                <button @click="showSearch=false" class="absolute right-6 top-6 text-slate-500 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
-                
-                <div class="flex justify-between mt-2 text-[10px] text-slate-500 uppercase tracking-wider">
-                    <span>{{ loading ? 'Searching...' : 'Results: ' + results.length }}</span>
-                    <span>Powered by PokemonTCG.io</span>
-                </div>
+            <div class="p-5 border-b border-[#222] bg-[#0c0c0c] flex items-center gap-4">
+                <i class="fa-solid fa-search text-slate-500"></i>
+                <input ref="searchBox" v-model="query" type="text" placeholder="Type Pokemon Name (e.g. 'Gengar VMAX')..." 
+                    class="bg-transparent text-xl font-medium text-white placeholder-slate-600 outline-none w-full font-brand">
+                <button @click="showSearch=false" class="text-slate-500 hover:text-white transition">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
             </div>
 
-            <div class="flex-1 overflow-y-auto p-4 bg-[#050505]">
-                <div v-if="results.length > 0" class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div class="flex-1 overflow-y-auto p-6 bg-[#09090b]">
+                <div v-if="results.length > 0" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
                     <div v-for="item in results" :key="item.id" @click="add(item)" 
-                         class="group cursor-pointer bg-[#111] border border-[#222] p-2 rounded hover:border-[#D4AF37] hover:bg-[#1a1a1a] transition relative">
-                        <div class="aspect-[0.71] bg-black rounded overflow-hidden relative mb-2">
+                         class="group cursor-pointer bg-[#141414] rounded-xl border border-[#27272a] p-3 hover:border-[#D4AF37] hover:bg-[#1a1a1a] transition-all hover:-translate-y-1 shadow-lg">
+                        
+                        <div class="aspect-[0.71] bg-[#000] rounded-lg overflow-hidden relative mb-3 border border-[#222]">
                             <img :src="item.images.small" loading="lazy" class="w-full h-full object-cover">
+                            <div class="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/90 to-transparent p-2 pt-6">
+                                <p class="text-[#D4AF37] text-xs font-mono font-bold text-center">${{ getPrice(item) }}</p>
+                            </div>
                         </div>
-                        <div class="font-bold text-xs text-slate-300 truncate">{{ item.name }}</div>
-                        <div class="text-[9px] text-slate-500 uppercase truncate">{{ item.set.name }}</div>
-                        <div class="absolute top-2 right-2 bg-black/80 text-[#D4AF37] text-[10px] px-1 rounded font-mono">
-                            ${{ getPrice(item) }}
+                        
+                        <div class="text-center px-1">
+                            <h4 class="font-bold text-xs text-slate-200 truncate group-hover:text-white mb-0.5">{{ item.name }}</h4>
+                            <p class="text-[10px] text-slate-500 uppercase tracking-wide truncate">{{ item.set.name }}</p>
                         </div>
                     </div>
                 </div>
-                <div v-else-if="!loading && query.length > 2" class="text-center py-10 text-slate-600 text-xs uppercase">
-                    No results found
+
+                <div v-else-if="!loading" class="flex flex-col items-center justify-center h-full py-12 text-slate-600">
+                    <i class="fa-solid fa-bolt text-4xl mb-4 opacity-20"></i>
+                    <p class="text-sm font-medium">Type at least 3 characters to search the database.</p>
                 </div>
+
+                <div v-if="loading" class="flex justify-center py-12">
+                    <i class="fa-solid fa-circle-notch fa-spin text-[#D4AF37] text-2xl"></i>
+                </div>
+            </div>
+            
+            <div class="p-3 bg-[#0c0c0c] border-t border-[#222] text-center">
+                <p class="text-[10px] text-slate-600 uppercase tracking-widest">Live Market Data from PokemonTCG.io</p>
             </div>
         </div>
     </div>
@@ -216,49 +304,47 @@
                 query: '',
                 results: [],
                 loading: false,
-                timer: null
+                searchTimer: null
             }
         },
         mounted() {
-            const db = localStorage.getItem('gladiator_v11');
+            const db = localStorage.getItem('gladiator_v12');
             if(db) this.cards = JSON.parse(db);
         },
         computed: {
             filteredCards() {
                 if(!this.filter) return this.cards;
-                return this.cards.filter(c => c.name.toLowerCase().includes(this.filter.toLowerCase()));
+                const f = this.filter.toLowerCase();
+                return this.cards.filter(c => c.name.toLowerCase().includes(f) || c.set.toLowerCase().includes(f));
             },
-            totalProfit() {
-                return this.cards.reduce((sum, c) => sum + this.getProfit(c), 0);
-            }
+            totalCost() { return this.cards.reduce((sum, c) => sum + (c.raw || 0) + (c.fee || 0), 0); },
+            totalProfit() { return this.cards.reduce((sum, c) => sum + this.getProfit(c), 0); }
         },
         watch: {
             query(val) {
-                clearTimeout(this.timer);
-                if(val.length < 3) { this.results = []; return; }
+                clearTimeout(this.searchTimer);
+                if(val.length < 3) { this.results = []; this.loading = false; return; }
                 this.loading = true;
-                this.timer = setTimeout(() => this.fetchAPI(val), 500);
+                this.searchTimer = setTimeout(() => this.fetchAPI(val), 500);
             }
         },
         methods: {
             formatNumber(n) { return (n||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}); },
-            save() { localStorage.setItem('gladiator_v11', JSON.stringify(this.cards)); },
+            save() { localStorage.setItem('gladiator_v12', JSON.stringify(this.cards)); },
             
-            // MATH
+            // MATH ENGINE
             getValue(c) {
                 if(c.grade == 10) return c.val10;
                 if(c.grade == 9) return c.val9;
                 return c.val8;
             },
-            getProfit(c) {
-                return this.getValue(c) - (c.raw + c.fee);
-            },
+            getProfit(c) { return this.getValue(c) - ((c.raw||0) + (c.fee||0)); },
 
-            // SEARCH API
+            // API ENGINE
             async fetchAPI(q) {
                 try {
                     const clean = q.replace(/[^a-zA-Z0-9 ]/g, '');
-                    const res = await fetch(`https://api.pokemontcg.io/v2/cards?q=name:"${clean}*"&orderBy=-set.releaseDate&pageSize=20`);
+                    const res = await fetch(`https://api.pokemontcg.io/v2/cards?q=name:"${clean}*"&orderBy=-set.releaseDate&pageSize=24`);
                     const data = await res.json();
                     this.results = data.data || [];
                 } catch(e) {} finally { this.loading = false; }
@@ -271,7 +357,7 @@
                 return 0;
             },
 
-            // ACTIONS
+            // CORE ACTIONS
             openSearch() { 
                 this.showSearch = true; 
                 this.query = ''; 
@@ -285,9 +371,9 @@
                     set: item.set.name,
                     img: item.images.small,
                     raw: price,
-                    fee: 15, // Default Grading Cost
-                    grade: 10, // Default Pre-Grade
-                    // Algorithms for estimated graded value
+                    fee: 15,
+                    grade: 10,
+                    // Auto-Estimate Algorithm
                     val10: parseFloat((price * 3.2).toFixed(2)),
                     val9: parseFloat((price * 1.1).toFixed(2)),
                     val8: parseFloat((price * 0.8).toFixed(2))
@@ -297,35 +383,42 @@
                 this.showSearch = false;
             },
             remove(i) {
-                if(confirm('Remove this card?')) {
-                    this.cards.splice(i,1);
-                    this.save();
-                }
+                if(confirm('Archive this asset?')) { this.cards.splice(i,1); this.save(); }
             },
 
-            // EXPORT / IMPORT
+            // EXPORT SUITE
             exportExcel() {
                 const data = this.cards.map(c => ({
-                    Name: c.name, Set: c.set, Raw_Price: c.raw, Grade_Cost: c.fee,
-                    Pre_Grade: c.grade, Est_Value: this.getValue(c), 
-                    Profit: this.getProfit(c), Should_Grade: this.getProfit(c) > 0 ? "YES" : "NO"
+                    Asset: c.name, Set: c.set, Raw_Cost: c.raw, Grade_Fee: c.fee,
+                    Target_Grade: c.grade, Est_Value: this.getValue(c), 
+                    Net_Profit: this.getProfit(c), Decision: this.getProfit(c) > 0 ? "GRADE" : "HOLD"
                 }));
                 const ws = XLSX.utils.json_to_sheet(data);
                 const wb = XLSX.utils.book_new();
-                XLSX.utils.book_append_sheet(wb, ws, "Analysis");
-                XLSX.writeFile(wb, "Gladiator_Analysis.xlsx");
+                XLSX.utils.book_append_sheet(wb, ws, "Portfolio");
+                XLSX.writeFile(wb, "Gladiator_Portfolio.xlsx");
             },
             exportPDF() {
                 const { jsPDF } = window.jspdf;
                 const doc = new jsPDF();
-                doc.text("GLADIATOR GRADING ANALYSIS", 14, 20);
+                doc.setFont("helvetica", "bold");
+                doc.setTextColor(212, 175, 55); 
+                doc.text("GLADIATOR ASSET REPORT", 14, 20);
+                
+                doc.setFontSize(10);
+                doc.setTextColor(100);
+                doc.text(`Generated: ${new Date().toLocaleDateString()} | Items: ${this.cards.length}`, 14, 28);
+
                 const rows = this.cards.map(c => [
                     c.name, `$${c.raw}`, `$${c.fee}`, c.grade, 
                     `$${this.getProfit(c).toFixed(2)}`, this.getProfit(c) > 0 ? "YES" : "NO"
                 ]);
+                
                 doc.autoTable({
-                    startY: 30, head: [['Card', 'Raw', 'Fee', 'Grd', 'Profit', 'Decision']],
-                    body: rows, theme: 'grid'
+                    startY: 35, head: [['Asset', 'Raw', 'Fee', 'Grd', 'Profit', 'Action']],
+                    body: rows, theme: 'grid',
+                    headStyles: { fillColor: [20, 20, 20], textColor: [212, 175, 55] },
+                    styles: { fontSize: 8, cellPadding: 3 }
                 });
                 doc.save("Gladiator_Report.pdf");
             },
