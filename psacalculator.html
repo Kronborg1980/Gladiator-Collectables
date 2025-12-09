@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gladiator | Pro Dashboard</title>
+    <title>Gladiator | Market Tracker</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
@@ -19,7 +19,6 @@
             --bg-dark: #050505;
             --panel: #101010;
             --gold: #D4AF37;       
-            --gold-light: #F2C94C;  
             --text-main: #e2e8f0;
             --border: #222;
         }
@@ -46,7 +45,7 @@
 
         /* GLASS PANELS */
         .glass-panel {
-            background: rgba(16, 16, 16, 0.7);
+            background: rgba(16, 16, 16, 0.75);
             backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.05);
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
@@ -71,6 +70,10 @@
         ::-webkit-scrollbar-thumb:hover { background: var(--gold); }
 
         [v-cloak] { display: none; }
+        
+        /* Loading Spin */
+        @keyframes spin-slow { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .animate-spin-slow { animation: spin-slow 2s linear infinite; }
     </style>
 </head>
 <body class="p-6 flex flex-col h-screen">
@@ -109,18 +112,18 @@
 
             <div class="w-[1px] h-8 bg-[#222] mx-1"></div>
 
-            <button @click="exportExcel" class="w-10 h-10 flex items-center justify-center bg-[#1a1a1a] hover:bg-[#222] text-slate-400 hover:text-green-500 rounded-lg transition border border-transparent hover:border-[#333]" title="Export Excel">
-                <i class="fa-solid fa-file-excel"></i>
+            <button @click="updatePrices" :disabled="isUpdating" 
+                class="flex items-center gap-2 px-4 py-3 bg-[#151515] hover:bg-[#222] text-slate-300 hover:text-green-400 text-xs font-bold uppercase rounded-lg transition border border-[#333] disabled:opacity-50 disabled:cursor-not-allowed">
+                <i class="fa-solid fa-arrows-rotate" :class="{'animate-spin': isUpdating}"></i> 
+                <span>{{ isUpdating ? 'Updating...' : 'Update Prices' }}</span>
             </button>
-            <button @click="exportPDF" class="w-10 h-10 flex items-center justify-center bg-[#1a1a1a] hover:bg-[#222] text-slate-400 hover:text-red-500 rounded-lg transition border border-transparent hover:border-[#333]" title="Export PDF">
-                <i class="fa-solid fa-file-pdf"></i>
-            </button>
-            <button @click="backup" class="w-10 h-10 flex items-center justify-center bg-[#1a1a1a] hover:bg-[#222] text-slate-400 hover:text-blue-500 rounded-lg transition border border-transparent hover:border-[#333]" title="Save Backup">
-                <i class="fa-solid fa-download"></i>
-            </button>
-            <label class="w-10 h-10 flex items-center justify-center bg-[#1a1a1a] hover:bg-[#222] text-slate-400 hover:text-purple-500 rounded-lg transition border border-transparent hover:border-[#333] cursor-pointer" title="Load Backup">
-                <i class="fa-solid fa-upload"></i> <input type="file" @change="restore" class="hidden">
-            </label>
+
+            <div class="w-[1px] h-8 bg-[#222] mx-1"></div>
+
+            <button @click="exportExcel" class="w-10 h-10 flex items-center justify-center bg-[#1a1a1a] hover:bg-[#222] text-slate-400 hover:text-green-500 rounded-lg transition border border-transparent hover:border-[#333]" title="Export Excel"><i class="fa-solid fa-file-excel"></i></button>
+            <button @click="exportPDF" class="w-10 h-10 flex items-center justify-center bg-[#1a1a1a] hover:bg-[#222] text-slate-400 hover:text-red-500 rounded-lg transition border border-transparent hover:border-[#333]" title="Export PDF"><i class="fa-solid fa-file-pdf"></i></button>
+            <button @click="backup" class="w-10 h-10 flex items-center justify-center bg-[#1a1a1a] hover:bg-[#222] text-slate-400 hover:text-blue-500 rounded-lg transition border border-transparent hover:border-[#333]" title="Backup"><i class="fa-solid fa-download"></i></button>
+            <label class="w-10 h-10 flex items-center justify-center bg-[#1a1a1a] hover:bg-[#222] text-slate-400 hover:text-purple-500 rounded-lg transition border border-transparent hover:border-[#333] cursor-pointer" title="Restore"><i class="fa-solid fa-upload"></i> <input type="file" @change="restore" class="hidden"></label>
             
             <div class="w-[1px] h-8 bg-[#222] mx-1"></div>
             
@@ -233,15 +236,11 @@
                     <h2 class="text-xl font-bold font-brand text-[#D4AF37] uppercase tracking-wide">Add New Asset</h2>
                     <button @click="showSearch=false" class="text-slate-600 hover:text-white transition"><i class="fa-solid fa-xmark text-2xl"></i></button>
                 </div>
-
                 <div class="flex gap-4">
                     <div class="relative flex-1">
                         <i class="fa-solid fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"></i>
-                        <input ref="searchBox" v-model="query" 
-                            placeholder="Type Name (e.g. 'Gengar VMAX')..." 
-                            class="w-full bg-black border border-[#333] text-white rounded-lg pl-12 pr-4 py-3 outline-none focus:border-[#D4AF37] transition font-mono uppercase text-sm">
+                        <input ref="searchBox" v-model="query" placeholder="Type Name (e.g. 'Gengar VMAX')..." class="w-full bg-black border border-[#333] text-white rounded-lg pl-12 pr-4 py-3 outline-none focus:border-[#D4AF37] transition font-mono uppercase text-sm">
                     </div>
-
                     <div class="relative w-48">
                         <i class="fa-solid fa-sort absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"></i>
                         <select v-model="sortBy" @change="sortResults" class="w-full bg-black border border-[#333] text-slate-300 text-xs font-bold rounded-lg pl-9 pr-8 py-3 outline-none focus:border-[#D4AF37] uppercase cursor-pointer appearance-none">
@@ -257,25 +256,18 @@
             </div>
 
             <div class="flex-1 overflow-y-auto p-6 bg-[#050505]">
-                
                 <div v-if="loading" class="flex flex-col items-center justify-center h-40">
                     <i class="fa-solid fa-circle-notch fa-spin text-3xl text-[#D4AF37] mb-3"></i>
                     <span class="text-xs uppercase tracking-widest text-slate-500">Scanning Market...</span>
                 </div>
-
                 <div v-else-if="results.length" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                    <div v-for="item in results" :key="item.id" @click="add(item)" 
-                         class="group cursor-pointer bg-[#111] border border-[#222] p-2 rounded-xl hover:border-[#D4AF37] hover:bg-[#161616] transition-all relative overflow-hidden shadow-lg hover:-translate-y-1">
-                        
+                    <div v-for="item in results" :key="item.id" @click="add(item)" class="group cursor-pointer bg-[#111] border border-[#222] p-2 rounded-xl hover:border-[#D4AF37] hover:bg-[#161616] transition-all relative overflow-hidden shadow-lg hover:-translate-y-1">
                         <div class="aspect-[0.7] bg-black rounded-lg overflow-hidden border border-[#222] mb-3 relative">
                             <img :src="item.images.small" loading="lazy" class="w-full h-full object-cover">
                             <div class="absolute bottom-0 inset-x-0 bg-black/90 p-1.5 flex justify-center">
-                                <span class="text-[#D4AF37] font-mono font-bold text-xs tracking-wider">
-                                    ${{ getPrice(item) }}
-                                </span>
+                                <span class="text-[#D4AF37] font-mono font-bold text-xs tracking-wider">${{ getPrice(item) }}</span>
                             </div>
                         </div>
-
                         <div class="text-center px-1 pb-1">
                             <div class="text-xs font-bold text-slate-200 truncate group-hover:text-white">{{ item.name }}</div>
                             <div class="flex justify-between items-center text-[9px] text-slate-500 uppercase tracking-widest mt-1">
@@ -285,7 +277,6 @@
                         </div>
                     </div>
                 </div>
-
                 <div v-else-if="query.length > 2" class="text-center py-20 text-slate-700">
                     <i class="fa-solid fa-ghost text-4xl mb-4 opacity-30"></i>
                     <p class="text-xs uppercase tracking-widest">No results found</p>
@@ -303,11 +294,11 @@
         data() {
             return {
                 cards: [], filter: '', showSearch: false, query: '', 
-                results: [], loading: false, timer: null, sortBy: 'date_desc'
+                results: [], loading: false, timer: null, sortBy: 'date_desc', isUpdating: false
             }
         },
         mounted() {
-            const db = localStorage.getItem('gladiator_v18');
+            const db = localStorage.getItem('gladiator_v19');
             if(db) this.cards = JSON.parse(db);
         },
         computed: {
@@ -327,18 +318,13 @@
         },
         methods: {
             formatNumber(n) { return (n||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}); },
-            save() { localStorage.setItem('gladiator_v18', JSON.stringify(this.cards)); },
+            save() { localStorage.setItem('gladiator_v19', JSON.stringify(this.cards)); },
             
-            // --- MATH & LOGIC ---
-            
-            // Get value based on currently selected Grade
             getValue(c) {
                 if(c.target == 10) return c.psa10;
                 if(c.target == 9) return c.psa9;
                 return c.psa8;
             },
-
-            // Update specific value when user edits "Est. Value" input
             updateValue(c, newVal) {
                 const v = parseFloat(newVal);
                 if(c.target == 10) c.psa10 = v;
@@ -346,37 +332,62 @@
                 else c.psa8 = v;
                 this.save();
             },
+            getProfit(c) { return this.getValue(c) - ((c.raw || 0) + (c.fee || 0)); },
 
-            getProfit(c) {
-                return this.getValue(c) - ((c.raw || 0) + (c.fee || 0));
-            },
-
-            // --- API & SEARCH ---
+            // --- API ACTIONS ---
             async fetchAPI(input) {
                 try {
                     const terms = input.trim().split(/\s+/);
-                    const queryParts = terms.map(term => {
-                        const t = term.replace(/[^a-zA-Z0-9]/g, '');
-                        return `(name:"*${t}*" OR set.name:"*${t}*")`;
-                    });
-                    
-                    // We fetch by release date default to get data
+                    const queryParts = terms.map(t => `(name:"*${t.replace(/[^a-zA-Z0-9]/g, '')}*" OR set.name:"*${t.replace(/[^a-zA-Z0-9]/g, '')}*")`);
                     const url = `https://api.pokemontcg.io/v2/cards?q=${queryParts.join(' ')}&pageSize=50`;
-
                     const res = await fetch(url);
                     const data = await res.json();
-                    
-                    let rawResults = data.data || [];
-                    this.results = this.applySort(rawResults);
-                    
+                    this.results = this.applySort(data.data || []);
                 } catch(e) {} finally { this.loading = false; }
             },
 
-            sortResults() {
-                // Re-sort existing results client-side instantly
-                if(this.results.length > 0) {
-                    this.results = this.applySort([...this.results]);
+            // --- MASS UPDATE ---
+            async updatePrices() {
+                this.isUpdating = true;
+                const cardsWithIds = this.cards.filter(c => c.id);
+                if(cardsWithIds.length === 0) {
+                    alert("No trackable cards found. Add new cards to enable live updates.");
+                    this.isUpdating = false;
+                    return;
                 }
+
+                // Batch in chunks of 10 to avoid URL length limits
+                const chunkSize = 10;
+                for (let i = 0; i < cardsWithIds.length; i += chunkSize) {
+                    const chunk = cardsWithIds.slice(i, i + chunkSize);
+                    const ids = chunk.map(c => `id:${c.id}`).join(' OR ');
+                    
+                    try {
+                        const res = await fetch(`https://api.pokemontcg.io/v2/cards?q=${ids}`);
+                        const data = await res.json();
+                        
+                        // Map new prices back to inventory
+                        data.data.forEach(apiCard => {
+                            const match = this.cards.find(c => c.id === apiCard.id);
+                            if(match) {
+                                const newPrice = this.getPrice(apiCard);
+                                match.raw = newPrice;
+                                // Auto-Recalculate Estimates based on new Raw
+                                match.psa10 = parseFloat((newPrice * 3.2).toFixed(2));
+                                match.psa9 = parseFloat((newPrice * 1.1).toFixed(2));
+                                match.psa8 = parseFloat((newPrice * 0.85).toFixed(2));
+                            }
+                        });
+                    } catch(e) { console.error("Update failed for chunk", e); }
+                }
+                
+                this.save();
+                this.isUpdating = false;
+                alert("Market Prices Updated Successfully!");
+            },
+
+            sortResults() {
+                if(this.results.length > 0) this.results = this.applySort([...this.results]);
             },
 
             applySort(list) {
@@ -385,8 +396,6 @@
                     const priceB = this.getPrice(b);
                     const dateA = new Date(a.set.releaseDate);
                     const dateB = new Date(b.set.releaseDate);
-                    
-                    // Sorting Logic
                     switch(this.sortBy) {
                         case 'price_desc': return priceB - priceA;
                         case 'price_asc': return priceA - priceB;
@@ -404,19 +413,17 @@
                 return p.holofoil?.market || p.normal?.market || p.reverseHolofoil?.market || p.unlimitedHolofoil?.market || 0;
             },
 
-            // --- ACTIONS ---
             openSearch() { this.showSearch = true; this.query = ''; this.results = []; this.$nextTick(() => this.$refs.searchBox.focus()); },
             
             add(item) {
                 const rawPrice = this.getPrice(item);
                 const newCard = {
+                    id: item.id, // VITAL FOR UPDATES
                     name: item.name, set: item.set.name, img: item.images.small,
                     condition: 'NM', raw: rawPrice, fee: 15, target: 10,
-                    // Estimates
                     psa10: parseFloat((rawPrice * 3.2).toFixed(2)),
                     psa9: parseFloat((rawPrice * 1.1).toFixed(2)),
                     psa8: parseFloat((rawPrice * 0.85).toFixed(2)),
-                    sentDate: '', owner: '', finalGrade: ''
                 };
                 this.cards.push(newCard);
                 this.save();
@@ -452,12 +459,9 @@
                 });
                 doc.save("Gladiator_Report.pdf");
             },
-
             backup() {
                 const blob = new Blob([JSON.stringify(this.cards)], {type: "application/json"});
-                const a = document.createElement('a');
-                a.href = URL.createObjectURL(blob); a.download = "gladiator_backup.json";
-                a.click();
+                const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = "gladiator_backup.json"; a.click();
             },
             restore(e) {
                 const reader = new FileReader();
