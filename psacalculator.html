@@ -90,12 +90,8 @@
     </header>
 
     <div class="px-8 py-4 bg-[#0a0a0a] border-b border-[#222] shrink-0">
-        <div class="flex flex-col md:flex-row gap-4 justify-between items-center">
-            <div class="relative w-full md:max-w-md group">
-                <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-[#555] group-focus-within:text-white transition"></i>
-                <input v-model="filter" placeholder="Search by name, set, or notes..." class="search-input w-full rounded-lg pl-11 pr-4 py-3 text-sm">
-            </div>
-
+        <div class="flex flex-col md:flex-row gap-4 justify-end items-center">
+            
             <div class="flex items-center gap-3">
                 <div class="flex bg-[#111] rounded-lg border border-[#27272a] p-1">
                     <button @click="loadSets(true)" class="w-10 h-10 flex items-center justify-center text-[#777] hover:text-white hover:bg-[#222] rounded transition" title="Force Sync API"><i class="fa-solid fa-sync" :class="{'fa-spin': initLoading}"></i></button>
@@ -309,7 +305,7 @@
                 // PREDICTION
                 predictedNames: [], showPredictions: false, searchTimer: null,
                 
-                // API CONFIG - Updated Cache to v3
+                // API CONFIG
                 CACHE_KEY: 'gladiator_sets_cache_v3', 
                 CACHE_DURATION: 1000 * 60 * 60 * 24 * 7 // 7 Days Cache
             }
@@ -321,6 +317,7 @@
         },
         computed: {
             filteredCards() {
+                // Filter logic remains in case you want to use it later, but UI input is removed
                 if(!this.filter) return this.cards;
                 return this.cards.filter(c => c.name.toLowerCase().includes(this.filter.toLowerCase()));
             },
@@ -492,8 +489,6 @@
                 this.selectedSet = ""; 
                 this.query = ""; 
                 this.results = []; 
-                
-                // Try reloading if the list is empty when opening
                 if(this.eras.length === 0) this.loadSets();
             },
             add(item) {
