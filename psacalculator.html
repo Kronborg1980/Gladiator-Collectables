@@ -322,8 +322,6 @@
             async loadSets() {
                 this.initLoading = true;
                 try {
-                    // Fetching Sets from the new API
-                    // If endpoint differs, adjust here. Assuming standard REST structure or search.
                     const res = await fetch(`${this.API_BASE}/sets`, {
                         headers: { 'Authorization': `Bearer ${this.API_KEY}` }
                     });
@@ -331,15 +329,13 @@
                     if(!res.ok) throw new Error("API Connection Failed");
                     
                     const data = await res.json();
-                    this.allSets = data.data || data; // Handle API response structure
+                    this.allSets = data.data || data; 
 
-                    // Extract Eras dynamically
-                    const uniqueSeries = [...new Set(this.allSets.map(s => s.series))];
-                    this.eras = uniqueSeries.sort();
+                    // --- UPDATED SORTING LOGIC ---
+                    this.processEras();
                     
                 } catch(e) {
                     console.error("Set fetch error:", e);
-                    // Fallback to standard open API if the key/endpoint fails, so app doesn't break
                     this.fetchFallbackSets();
                 } finally {
                     this.initLoading = false;
@@ -347,12 +343,35 @@
             },
 
             async fetchFallbackSets() {
-                // Fallback to standard PokemonTCG.io if primary fails
                 const res = await fetch('https://api.pokemontcg.io/v2/sets?orderBy=-releaseDate&pageSize=250');
                 const data = await res.json();
                 this.allSets = data.data;
-                const uniqueSeries = [...new Set(this.allSets.map(s => s.series))];
-                this.eras = uniqueSeries.sort();
+                
+                // --- UPDATED SORTING LOGIC ---
+                this.processEras();
+            },
+
+            // New helper to sort eras by latest release date
+            processEras() {
+                const eraDates = {};
+                
+                // Find the latest release date for each Era
+                this.allSets.forEach(set => {
+                    if (set.releaseDate) {
+                        const dateVal = new Date(set.releaseDate).getTime();
+                        if (!eraDates[set.series] || dateVal > eraDates[set.series]) {
+                            eraDates[set.series] = dateVal;
+                        }
+                    } else if (!eraDates[set.series]) {
+                        // fallback if no date (put it at bottom mostly)
+                        eraDates[set.series] = 0; 
+                    }
+                });
+
+                // Sort series based on the dates we found (Desc)
+                this.eras = Object.keys(eraDates).sort((a, b) => {
+                    return eraDates[b] - eraDates[a];
+                });
             },
 
             // --- 2. NAME PREDICTION (LIGHT) ---
