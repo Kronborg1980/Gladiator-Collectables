@@ -198,11 +198,26 @@
 
     <Transition name="modal">
     <div v-if="showSearch" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div class="bg-[#09090b] w-full max-w-4xl h-[85vh] rounded-xl border border-[#222] shadow-2xl flex flex-col overflow-hidden">
+        <div class="bg-[#09090b] w-full max-w-4xl h-[85vh] rounded-xl border border-[#222] shadow-2xl flex flex-col overflow-hidden relative">
+            
+            <div v-if="initLoading || initError" class="absolute inset-0 z-50 bg-[#09090b] flex flex-col items-center justify-center">
+                <div v-if="initLoading" class="text-center">
+                    <i class="fa-solid fa-circle-notch fa-spin text-5xl text-[#D4AF37] mb-6"></i>
+                    <h3 class="text-2xl font-brand font-bold text-white tracking-[0.2em] mb-2">INITIALIZING POKÉDEX</h3>
+                    <p class="text-xs text-[#666] uppercase tracking-widest animate-pulse">Establishing Connection...</p>
+                </div>
+                <div v-else class="text-center">
+                    <i class="fa-solid fa-triangle-exclamation text-5xl text-red-500 mb-6"></i>
+                    <h3 class="text-xl font-brand font-bold text-white tracking-[0.2em] mb-2">CONNECTION FAILED</h3>
+                    <p class="text-xs text-[#666] uppercase tracking-widest mb-6">Could not access the Pokemon Database.</p>
+                    <button @click="loadSets(true)" class="bg-[#D4AF37] hover:bg-[#EAB308] text-black font-bold px-6 py-2 rounded uppercase text-xs tracking-wider">Retry Connection</button>
+                    <button @click="showSearch=false" class="block mt-4 text-[#555] hover:text-white text-xs uppercase underline">Close Window</button>
+                </div>
+            </div>
+
             <div class="p-6 border-b border-[#222] flex justify-between items-center bg-[#0c0c0c]">
                 <div class="flex items-center gap-3">
                     <h2 class="font-brand font-bold text-xl text-[#FACC15] tracking-widest">POKÉDEX ARCHIVE</h2>
-                    <span v-if="initLoading" class="text-[10px] text-[#555] animate-pulse font-bold">Linking to Pokedex...</span>
                 </div>
                 <button @click="showSearch=false" class="text-[#555] hover:text-white transition"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
@@ -280,7 +295,10 @@
         data() {
             return {
                 cards: [], filter: '', showSearch: false, query: '', 
-                results: [], loading: false, isUpdating: false, initLoading: false,
+                results: [], loading: false, isUpdating: false, 
+                
+                // LOADING STATES
+                initLoading: false, initError: false,
                 
                 // DATA
                 allSets: [], eras: [],
@@ -292,7 +310,6 @@
                 predictedNames: [], showPredictions: false, searchTimer: null,
                 
                 // API CONFIG - Updated Cache to v3
-                API_BASE: 'https://api.pokemonpricetracker.com/api/v2',
                 CACHE_KEY: 'gladiator_sets_cache_v3', 
                 CACHE_DURATION: 1000 * 60 * 60 * 24 * 7 // 7 Days Cache
             }
@@ -320,6 +337,8 @@
         },
         methods: {
             async loadSets(force = false) {
+                this.initError = false;
+
                 // 1. CHECK CACHE FIRST
                 if (!force) {
                     const cachedData = localStorage.getItem(this.CACHE_KEY);
@@ -337,12 +356,21 @@
                     }
                 }
 
-                // 2. FETCH FROM API (OPTIMIZED)
+                // 2. FETCH FROM API WITH TIMEOUT
                 this.initLoading = true;
+                
+                // Create a timeout promise that rejects after 8 seconds
+                const timeout = new Promise((_, reject) => {
+                    setTimeout(() => reject(new Error("Request timed out")), 8000);
+                });
+
                 try {
-                    // Optimized Call: select ONLY id, name, series, releaseDate
-                    // This creates a tiny packet size compared to the full data
-                    const res = await fetch('https://api.pokemontcg.io/v2/sets?orderBy=-releaseDate&select=id,name,series,releaseDate&pageSize=250');
+                    // Optimized Call
+                    const apiCall = fetch('https://api.pokemontcg.io/v2/sets?orderBy=-releaseDate&select=id,name,series,releaseDate&pageSize=250');
+                    
+                    // Race API call vs Timeout
+                    const res = await Promise.race([apiCall, timeout]);
+                    
                     const data = await res.json();
                     
                     if(data.data) {
@@ -358,7 +386,8 @@
                         if(force) alert("Pokedex Updated");
                     }
                 } catch(e) {
-                    alert("Network Error: Could not load Pokedex.");
+                    console.error("Connection failed:", e);
+                    this.initError = true; // Shows the Retry Screen
                 } finally {
                     this.initLoading = false;
                 }
@@ -457,7 +486,16 @@
                 const p = item.tcgplayer.prices;
                 return p.holofoil?.market || p.normal?.market || p.reverseHolofoil?.market || 0;
             },
-            openSearch() { this.showSearch = true; this.selectedEra = ""; this.selectedSet = ""; this.query = ""; this.results = []; },
+            openSearch() { 
+                this.showSearch = true; 
+                this.selectedEra = ""; 
+                this.selectedSet = ""; 
+                this.query = ""; 
+                this.results = []; 
+                
+                // Try reloading if the list is empty when opening
+                if(this.eras.length === 0) this.loadSets();
+            },
             add(item) {
                 const rawPrice = this.getPrice(item);
                 const setObj = this.allSets.find(s=>s.id === this.selectedSet);
