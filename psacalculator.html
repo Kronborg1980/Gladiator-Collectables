@@ -201,8 +201,8 @@
         <div class="bg-[#09090b] w-full max-w-4xl h-[85vh] rounded-xl border border-[#222] shadow-2xl flex flex-col overflow-hidden">
             <div class="p-6 border-b border-[#222] flex justify-between items-center bg-[#0c0c0c]">
                 <div class="flex items-center gap-3">
-                    <h2 class="font-brand font-bold text-xl text-[#FACC15] tracking-widest">ARMORY ACCESS</h2>
-                    <span v-if="initLoading" class="text-[10px] text-[#555] animate-pulse font-bold">Connecting to API...</span>
+                    <h2 class="font-brand font-bold text-xl text-[#FACC15] tracking-widest">POKÉDEX ARCHIVE</h2>
+                    <span v-if="initLoading" class="text-[10px] text-[#555] animate-pulse font-bold">Linking to Pokedex...</span>
                 </div>
                 <button @click="showSearch=false" class="text-[#555] hover:text-white transition"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
@@ -245,7 +245,7 @@
             <div class="flex-1 overflow-y-auto p-6 bg-[#050505]">
                 <div v-if="loading" class="h-full flex flex-col items-center justify-center text-[#D4AF37]">
                     <i class="fa-solid fa-circle-notch fa-spin text-3xl mb-4"></i>
-                    <div class="text-xs font-bold uppercase tracking-widest">Searching API...</div>
+                    <div class="text-xs font-bold uppercase tracking-widest">Scanning Wild Pokémon...</div>
                 </div>
 
                 <div v-else-if="results.length > 0" class="grid grid-cols-2 md:grid-cols-5 gap-4">
@@ -263,7 +263,7 @@
 
                 <div v-else class="h-full flex flex-col items-center justify-center text-[#333]">
                     <i class="fa-solid fa-crosshairs text-5xl mb-4 text-[#222]"></i>
-                    <p class="text-xs font-bold uppercase tracking-widest text-[#555]">Ready to Search</p>
+                    <p class="text-xs font-bold uppercase tracking-widest text-[#555]">Ready to Catch</p>
                 </div>
             </div>
         </div>
@@ -291,11 +291,10 @@
                 // PREDICTION
                 predictedNames: [], showPredictions: false, searchTimer: null,
                 
-                // API CONFIG - Changed Cache Key to FORCE refresh
+                // API CONFIG - Updated Cache to v3
                 API_BASE: 'https://api.pokemonpricetracker.com/api/v2',
-                API_KEY: 'pokeprice_free_2d3a863c6c494cc90dc40d488e4f48482e085d28fd2f0617',
-                CACHE_KEY: 'gladiator_sets_cache_v2', 
-                CACHE_DURATION: 1000 * 60 * 60 * 24 
+                CACHE_KEY: 'gladiator_sets_cache_v3', 
+                CACHE_DURATION: 1000 * 60 * 60 * 24 * 7 // 7 Days Cache
             }
         },
         mounted() {
@@ -334,32 +333,21 @@
                                 console.log("Loaded sets from cache (Instant)");
                                 return;
                             }
-                        } catch(e) {
-                            console.log("Cache corrupted, reloading");
-                        }
+                        } catch(e) { console.log("Cache corrupted, reloading"); }
                     }
                 }
 
-                // 2. FETCH FROM API
+                // 2. FETCH FROM API (OPTIMIZED)
                 this.initLoading = true;
                 try {
-                    // Try the reliable fallback API first since it was more stable for you
-                    await this.fetchFallbackSets(force);
-                } catch(e) {
-                    console.error("API Failed");
-                    this.initLoading = false;
-                }
-            },
-
-            async fetchFallbackSets(force) {
-                try {
-                    // Fetch standard public API
-                    const res = await fetch('https://api.pokemontcg.io/v2/sets?orderBy=-releaseDate&pageSize=250');
+                    // Optimized Call: select ONLY id, name, series, releaseDate
+                    // This creates a tiny packet size compared to the full data
+                    const res = await fetch('https://api.pokemontcg.io/v2/sets?orderBy=-releaseDate&select=id,name,series,releaseDate&pageSize=250');
                     const data = await res.json();
                     
                     if(data.data) {
                         this.allSets = data.data;
-                        this.processEras(); // FAIL-SAFE SORTING
+                        this.processEras();
                         
                         // Save to Cache
                         localStorage.setItem(this.CACHE_KEY, JSON.stringify({
@@ -367,10 +355,10 @@
                             sets: this.allSets,
                             eras: this.eras
                         }));
-                        if(force) alert("Sync Complete");
+                        if(force) alert("Pokedex Updated");
                     }
                 } catch(e) {
-                    alert("Network Error: Could not load sets.");
+                    alert("Network Error: Could not load Pokedex.");
                 } finally {
                     this.initLoading = false;
                 }
@@ -378,18 +366,13 @@
 
             // --- FAIL-SAFE ERA PROCESSING ---
             processEras() {
-                // 1. Get Unique Series names first (guaranteed to work)
                 const seriesSet = new Set();
-                this.allSets.forEach(s => {
-                    if(s.series) seriesSet.add(s.series);
-                });
+                this.allSets.forEach(s => { if(s.series) seriesSet.add(s.series); });
                 const uniqueEras = Array.from(seriesSet);
 
-                // 2. Create a Map of Series -> Latest Release Date
                 const eraDates = {};
                 this.allSets.forEach(set => {
                     if (set.series && set.releaseDate) {
-                        // Use string comparison (YYYY/MM/DD) which is safer than Date parsing
                         const currentDate = set.releaseDate.replace(/\//g, '-'); 
                         if (!eraDates[set.series] || currentDate > eraDates[set.series]) {
                             eraDates[set.series] = currentDate;
@@ -397,12 +380,11 @@
                     }
                 });
 
-                // 3. Sort using the map, default to alphabetical if date fails
                 this.eras = uniqueEras.sort((a, b) => {
                     const dateA = eraDates[a] || '0000-00-00';
                     const dateB = eraDates[b] || '0000-00-00';
-                    if (dateA === dateB) return a.localeCompare(b); // Fallback to Alphabetical
-                    return dateB.localeCompare(dateA); // Newest Date First
+                    if (dateA === dateB) return a.localeCompare(b);
+                    return dateB.localeCompare(dateA); 
                 });
             },
 
@@ -416,6 +398,7 @@
             async fetchNameSuggestions() {
                 if(!this.selectedSet) return;
                 try {
+                    // Optimized: Only fetch names
                     const fallbackUrl = `https://api.pokemontcg.io/v2/cards?q=set.id:${this.selectedSet} name:"${this.query}*"&select=name&pageSize=10`;
                     const res = await fetch(fallbackUrl);
                     const data = await res.json();
@@ -443,7 +426,7 @@
                     const data = await res.json();
                     this.results = data.data || [];
                 } catch(e) {
-                    alert("Search error.");
+                    alert("Wild Pokemon fled (Search Error).");
                 } finally {
                     this.loading = false;
                 }
@@ -489,7 +472,7 @@
                 this.save();
                 this.showSearch = false;
             },
-            remove(i) { if(confirm('Delete?')) { this.cards.splice(i,1); this.save(); } },
+            remove(i) { if(confirm('Release Pokemon?')) { this.cards.splice(i,1); this.save(); } },
             exportExcel() {
                 const data = this.cards.map(c => ({ Card: c.name, Set: c.set, Raw: c.raw, Cost: c.fee, Grade: c.target, Est_Value: this.getValue(c), Profit: this.getProfit(c) }));
                 const ws = XLSX.utils.json_to_sheet(data);
