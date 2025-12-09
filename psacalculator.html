@@ -242,7 +242,7 @@
         data() {
             return {
                 cards: [], filter: '', showSearch: false, query: '', 
-                results: [], loading: false, timer: null, sortBy: 'date_desc', isUpdating: false,
+                results: [], loading: false, timer: null, sortBy: 'price_desc', isUpdating: false,
                 sets: [], selectedSet: ''
             }
         },
@@ -280,35 +280,31 @@
             },
             getProfit(c) { return this.getValue(c) - ((c.raw || 0) + (c.fee || 0)); },
 
-            // --- API: FETCH ALL SETS ---
             async loadSets() {
                 const cached = localStorage.getItem('gladiator_all_sets');
                 if (cached) {
                     this.sets = JSON.parse(cached);
                 } else {
                     try {
-                        // Fetch entire set list (up to 250)
-                        const res = await fetch('https://api.pokemontcg.io/v2/sets?orderBy=-releaseDate&pageSize=250');
+                        const res = await fetch('https://api.pokemontcg.io/v2/sets?select=id,name,releaseDate,images&orderBy=-releaseDate&pageSize=200');
                         const data = await res.json();
                         this.sets = data.data;
                         localStorage.setItem('gladiator_all_sets', JSON.stringify(this.sets));
-                    } catch(e) {
-                        console.error("Set load failed", e);
-                    }
+                    } catch(e) { console.error("Set load failed", e); }
                 }
             },
 
             triggerSearch() {
                 clearTimeout(this.timer);
                 
-                // If a set is selected, we can search immediately (empty query allowed)
-                // If no set, we need at least 3 chars to prevent lag
+                // Don't search for tiny strings unless a set is selected
                 if(this.selectedSet || this.query.length >= 3) {
                     this.loading = true;
-                    // Debounce slightly to allow typing
-                    this.timer = setTimeout(() => this.fetchAPI(), 400);
+                    // Increased debounce slightly to 500ms to prevent request spamming
+                    this.timer = setTimeout(() => this.fetchAPI(), 500);
                 } else {
                     this.results = [];
+                    this.loading = false;
                 }
             },
 
@@ -316,48 +312,68 @@
                 try {
                     let q = '';
                     
-                    // Name Filter (Prefix Search for speed)
+                    // --- OPTIMIZATION 1: SMART QUERY ---
+                    // Only put the wildcard (*) on the LAST word. 
+                    // Searching name:Char* name:V* is slow. Searching name:Charizard name:V* is fast.
                     if (this.query.length >= 1) {
                         const terms = this.query.trim().split(/\s+/);
-                        const nameQ = terms.map(t => `name:"${t.replace(/[^a-zA-Z0-9]/g, '')}*"`).join(' ');
+                        const nameQ = terms.map((t, index) => {
+                            const cleanTerm = t.replace(/[^a-zA-Z0-9-]/g, '');
+                            // Only add wildcard to the last term
+                            return index === terms.length - 1 
+                                ? `name:"${cleanTerm}*"` 
+                                : `name:"${cleanTerm}"`; 
+                        }).join(' ');
                         q += nameQ;
                     }
 
-                    // Strict Set Filter
                     if (this.selectedSet) {
                         q += ` set.id:${this.selectedSet}`;
                     }
 
-                    // Don't search if query is empty and no set selected
                     if(!q.trim()) { this.loading = false; return; }
 
-                    const url = `https://api.pokemontcg.io/v2/cards?q=${q}&pageSize=24`; 
+                    // --- OPTIMIZATION 2: FIELD SELECTION ---
+                    // heavily reduces payload size by only asking for what we need
+                    const fields = 'id,name,set,number,images,tcgplayer';
+                    const url = `https://api.pokemontcg.io/v2/cards?q=${q}&pageSize=24&select=${fields}`; 
+                    
                     const res = await fetch(url);
                     const data = await res.json();
                     
                     let rawResults = data.data || [];
                     this.results = this.applySort(rawResults);
-                } catch(e) {} finally { this.loading = false; }
+                } catch(e) {
+                    console.error(e);
+                } finally { 
+                    this.loading = false; 
+                }
             },
 
             async updatePrices() {
                 this.isUpdating = true;
                 const cardsWithIds = this.cards.filter(c => c.id);
-                const chunkSize = 12;
+                // Increased chunk size slightly as we are requesting less data
+                const chunkSize = 20; 
+                
                 for (let i = 0; i < cardsWithIds.length; i += chunkSize) {
                     const chunk = cardsWithIds.slice(i, i + chunkSize);
                     const ids = chunk.map(c => `id:${c.id}`).join(' OR ');
                     try {
-                        const res = await fetch(`https://api.pokemontcg.io/v2/cards?q=${ids}`);
+                        // Only fetch TCGPlayer data for updates
+                        const res = await fetch(`https://api.pokemontcg.io/v2/cards?q=${ids}&select=id,tcgplayer`);
                         const data = await res.json();
                         data.data.forEach(apiCard => {
                             const match = this.cards.find(c => c.id === apiCard.id);
                             if(match) {
                                 const newPrice = this.getPrice(apiCard);
-                                match.raw = newPrice;
-                                match.psa10 = parseFloat((newPrice * 3.2).toFixed(2));
-                                match.psa9 = parseFloat((newPrice * 1.1).toFixed(2));
-                                match.psa8 = parseFloat((newPrice * 0.85).toFixed(2));
+                                if(newPrice > 0) {
+                                    match.raw = newPrice;
+                                    // Auto-update estimated grades based on multipliers
+                                    match.psa10 = parseFloat((newPrice * 3.2).toFixed(2));
+                                    match.psa9 = parseFloat((newPrice * 1.1).toFixed(2));
+                                    match.psa8 = parseFloat((newPrice * 0.85).toFixed(2));
+                                }
                             }
                         });
                     } catch(e) {}
@@ -372,8 +388,10 @@
                 return list.sort((a, b) => {
                     const priceA = this.getPrice(a);
                     const priceB = this.getPrice(b);
-                    const dateA = new Date(a.set.releaseDate);
-                    const dateB = new Date(b.set.releaseDate);
+                    // Handle missing dates gracefully
+                    const dateA = a.set.releaseDate ? new Date(a.set.releaseDate) : new Date(0);
+                    const dateB = b.set.releaseDate ? new Date(b.set.releaseDate) : new Date(0);
+                    
                     switch(this.sortBy) {
                         case 'price_desc': return priceB - priceA;
                         case 'price_asc': return priceA - priceB;
