@@ -185,15 +185,9 @@
                     <i class="fa-solid fa-coins"></i> Net Value: ${{ formatNumber(totalValue) }}
                 </div>
             </div>
-            <div class="flex gap-4">
-                <div v-if="currentView === 'armory'" class="relative">
-                    <input v-model="collectionFilter" placeholder="Filter Collection..." class="glass-input !py-2 !w-64">
-                    <i class="fa-solid fa-filter absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"></i>
-                </div>
-                <button @click="openSearch" class="bg-[#00f2ff] hover:bg-white text-black text-xs font-bold px-6 py-3 rounded-lg shadow-[0_0_20px_rgba(0,242,255,0.3)] transition active:scale-95 flex items-center gap-2">
-                    <i class="fa-solid fa-plus"></i> Add Card
-                </button>
-            </div>
+            <button @click="openSearch" class="bg-[#00f2ff] hover:bg-white text-black text-xs font-bold px-6 py-3 rounded-lg shadow-[0_0_20px_rgba(0,242,255,0.3)] transition active:scale-95 flex items-center gap-2">
+                <i class="fa-solid fa-plus"></i> Add Card
+            </button>
         </header>
 
         <div v-if="currentView === 'dashboard'" class="flex-1 glass-panel overflow-y-auto p-8">
@@ -357,44 +351,47 @@
                 <div class="px-8 py-8 bg-[#080a10] grid grid-cols-1 md:grid-cols-4 gap-6 border-b border-white/5">
                     <div><label class="text-[10px] text-gray-500 font-bold uppercase mb-2 block tracking-widest">1. Era</label><select v-model="selectedEra" class="glass-input"><option value="">Select Era</option><option v-for="era in eras" :value="era">{{ era }}</option></select></div>
                     <div><label class="text-[10px] text-gray-500 font-bold uppercase mb-2 block tracking-widest">2. Set</label><select v-model="selectedSet" :disabled="!selectedEra" class="glass-input disabled:opacity-30"><option value="">Select Set</option><option v-for="s in filteredSets" :value="s.id">{{ s.name }}</option></select></div>
-                    <div><label class="text-[10px] text-gray-500 font-bold uppercase mb-2 block tracking-widest">3. Name</label><input v-model="query" @keyup.enter="fetchCards(1)" :disabled="!selectedSet" placeholder="e.g. Charizard" class="glass-input disabled:opacity-30 lowercase placeholder:uppercase"></div>
+                    <div><label class="text-[10px] text-gray-500 font-bold uppercase mb-2 block tracking-widest">3. Name</label><input v-model="query" @keyup.enter="performSearch" :disabled="!selectedSet" placeholder="e.g. Charizard" class="glass-input disabled:opacity-30 lowercase placeholder:uppercase"></div>
                     <div><label class="text-[10px] text-[#00f2ff] font-bold uppercase mb-2 block tracking-widest">4. Add To</label><select v-model="targetBinder" class="glass-input border-[#00f2ff] text-[#00f2ff]"><option value="master">All Cards (Master)</option><option v-for="b in binders" :value="b.id">{{ b.name }}</option></select></div>
                 </div>
                 
                 <div class="px-8 py-4 bg-[#050505] flex justify-end border-b border-white/5">
-                    <button @click="fetchCards(1)" :disabled="isSearching" class="bg-[#00f2ff] hover:bg-white text-black text-xs font-bold px-10 py-3 rounded shadow-lg uppercase tracking-widest transition transform active:scale-95 disabled:opacity-50 disabled:scale-100 flex items-center gap-2">
+                    <button @click="performSearch" :disabled="isSearching" class="bg-[#00f2ff] hover:bg-white text-black text-xs font-bold px-10 py-3 rounded shadow-lg uppercase tracking-widest transition transform active:scale-95 disabled:opacity-50 disabled:scale-100 flex items-center gap-2">
                         <i v-if="isSearching" class="fa-solid fa-circle-notch fa-spin"></i>
                         {{ isSearching ? 'Scanning...' : 'Search' }}
                     </button>
                 </div>
                 
                 <div class="flex-1 overflow-y-auto p-8 bg-[#050508] relative">
+                     <div v-if="filteredSearchList.length > 0" class="flex justify-between items-center mb-4">
+                        <span class="text-[10px] text-gray-500 font-bold uppercase">Results: {{ filteredSearchList.length }}</span>
+                        <div class="flex gap-2">
+                            <button @click="searchPage > 1 ? searchPage-- : null" :disabled="searchPage === 1" class="pagination-btn">< Prev</button>
+                            <span class="text-xs font-bold text-[#00f2ff] px-2">Page {{ searchPage }} of {{ totalSearchPages }}</span>
+                            <button @click="searchPage < totalSearchPages ? searchPage++ : null" :disabled="searchPage === totalSearchPages" class="pagination-btn">Next ></button>
+                        </div>
+                     </div>
+
                     <div v-if="isSearching" class="absolute inset-0 flex flex-col items-center justify-center bg-black/80 z-20 backdrop-blur-sm">
                         <i class="fa-solid fa-satellite-dish text-6xl text-[#00f2ff] mb-4 animate-pulse"></i>
                         <p class="uppercase font-bold tracking-[0.3em] text-xs text-[#00f2ff]">Acquiring Data...</p>
                     </div>
 
-                    <div v-if="!isSearching && searchResults.length === 0" class="h-full flex flex-col items-center justify-center opacity-30">
+                    <div v-if="!isSearching && filteredSearchList.length === 0" class="h-full flex flex-col items-center justify-center opacity-30">
                         <i class="fa-solid fa-magnifying-glass text-6xl mb-4 text-white"></i>
                         <p class="uppercase font-bold tracking-widest text-xs">Ready to Search</p>
                     </div>
                     
                     <div v-else>
                         <div class="grid grid-cols-2 md:grid-cols-5 gap-6 mb-6">
-                            <div v-for="card in searchResults" :key="card.id" @click="addCard(card)" class="bg-[#0a0f18] p-3 rounded-xl cursor-pointer hover:border-[#00f2ff] border border-white/5 group relative transition duration-200">
+                            <div v-for="card in paginatedSearchResults" :key="card.id" @click="addCard(card)" class="bg-[#0a0f18] p-3 rounded-xl cursor-pointer hover:border-[#00f2ff] border border-white/5 group relative transition duration-200">
                                 <img :src="card.images.small" class="w-full rounded-lg mb-3 shadow-lg">
                                 <div class="text-center text-xs font-bold text-white truncate">{{ card.name }}</div>
                                 <div class="absolute top-2 right-2 bg-black/90 backdrop-blur text-[#00f2ff] text-[9px] font-bold px-2 py-1 rounded border border-[#00f2ff] shadow-lg">${{ getCardPrice(card) }}</div>
-                                <div v-if="addedIds.includes(card.id)" class="absolute inset-0 bg-green-500/80 flex items-center justify-center rounded-xl font-bold text-black uppercase tracking-widest text-xs animate-pulse">
+                                <div v-if="addedIds.includes(card.id)" class="absolute inset-0 bg-green-500/90 flex items-center justify-center rounded-xl font-bold text-black uppercase tracking-widest text-xs animate-pulse">
                                     ACQUIRED <i class="fa-solid fa-check ml-2"></i>
                                 </div>
                             </div>
-                        </div>
-                        
-                        <div class="flex justify-center gap-4 items-center pt-4 border-t border-white/10">
-                            <button @click="searchPage > 1 ? fetchCards(searchPage - 1) : null" :disabled="searchPage === 1" class="pagination-btn"><i class="fa-solid fa-chevron-left"></i> Prev</button>
-                            <span class="text-xs font-bold text-[#00f2ff]">Page {{ searchPage }}</span>
-                            <button @click="fetchCards(searchPage + 1)" class="pagination-btn">Next <i class="fa-solid fa-chevron-right"></i></button>
                         </div>
                     </div>
                 </div>
@@ -472,20 +469,18 @@
                 user: null, currentView: 'dashboard', currentBinder: null, 
                 localBinders: [], localCards: [], cloudBinders: [], cloudCards: [],
                 showSearch: false, detailCard: null, setsLoading: false, isSearching: false,
-                allSets: [], eras: [], selectedEra: "", selectedSet: "", query: "", targetBinder: 'master', searchResults: [],
+                allSets: [], eras: [], selectedEra: "", selectedSet: "", query: "", targetBinder: 'master', 
+                searchResults: [], 
+                // Caching
                 cacheKey: 'gladiator_sets_v6',
-                collectionFilter: '',
                 
-                // SORT & PAGINATION
-                sortBy: 'profit', 
-                sortDesc: true,   
-                currentPage: 1,
-                itemsPerPage: 10,
+                // MAIN PAGINATION
+                sortBy: 'profit', sortDesc: true, currentPage: 1, itemsPerPage: 10,
                 
                 // SEARCH PAGINATION
-                searchPage: 1,
+                searchPage: 1, searchPerPage: 10,
                 addedIds: [],
-                selectedIds: [] // For bulk delete
+                selectedIds: []
             }
         },
         mounted() {
@@ -504,12 +499,7 @@
             headerTitle() { return this.currentBinder ? this.currentBinder.name : "All Cards"; },
             
             displayCards() { 
-                let list = this.currentBinder ? this.cards.filter(c => c.binderId === this.currentBinder.id) : this.cards; 
-                // Filter by search input
-                if(this.collectionFilter) {
-                    list = list.filter(c => c.name.toLowerCase().includes(this.collectionFilter.toLowerCase()));
-                }
-                return list;
+                return this.currentBinder ? this.cards.filter(c => c.binderId === this.currentBinder.id) : this.cards; 
             },
             
             isAllSelected() {
@@ -538,11 +528,23 @@
                 });
             },
 
-            // --- LOCAL PAGINATION ---
+            // --- MAIN PAGINATION ---
             totalPages() { return Math.ceil(this.sortedCards.length / this.itemsPerPage); },
             paginatedCards() {
                 const start = (this.currentPage - 1) * this.itemsPerPage;
                 return this.sortedCards.slice(start, start + this.itemsPerPage);
+            },
+
+            // --- SEARCH PAGINATION ---
+            filteredSearchList() {
+                // Filter the raw results by name if query exists (Local Filtering)
+                if(!this.query) return this.searchResults;
+                return this.searchResults.filter(c => c.name.toLowerCase().includes(this.query.toLowerCase()));
+            },
+            totalSearchPages() { return Math.ceil(this.filteredSearchList.length / this.searchPerPage); },
+            paginatedSearchResults() {
+                const start = (this.searchPage - 1) * this.searchPerPage;
+                return this.filteredSearchList.slice(start, start + this.searchPerPage);
             },
 
             totalCardsCount() { return this.cards.length; },
@@ -554,13 +556,9 @@
             loginWithGoogle() { if(auth) auth.signInWithPopup(provider).catch(e => alert(e.message)); },
             logout() { if(auth) auth.signOut(); },
 
-            // --- BULK DELETE ---
             toggleSelectAll() {
-                if (this.isAllSelected) {
-                    this.selectedIds = [];
-                } else {
-                    this.selectedIds = this.displayCards.map(c => c.uid);
-                }
+                if (this.isAllSelected) this.selectedIds = [];
+                else this.selectedIds = this.displayCards.map(c => c.uid);
             },
             deleteSelected() {
                 if(!confirm(`Delete ${this.selectedIds.length} cards?`)) return;
@@ -572,20 +570,14 @@
                 this.saveData();
             },
 
-            // --- SORT & PAGE METHODS ---
             setSort(key) {
-                if(this.sortBy === key) {
-                    this.sortDesc = !this.sortDesc; // Toggle
-                } else {
-                    this.sortBy = key;
-                    this.sortDesc = true; 
-                }
+                if(this.sortBy === key) this.sortDesc = !this.sortDesc;
+                else { this.sortBy = key; this.sortDesc = true; }
                 this.currentPage = 1; 
             },
             nextPage() { if(this.currentPage < this.totalPages) this.currentPage++; },
             prevPage() { if(this.currentPage > 1) this.currentPage--; },
 
-            // --- DATA ---
             loadLocalData() {
                 const b = localStorage.getItem('glad_binders'); if(b) this.localBinders = JSON.parse(b);
                 const c = localStorage.getItem('glad_cards'); if(c) this.localCards = JSON.parse(c);
@@ -618,15 +610,13 @@
                     id: c.id, name: c.name, set: this.allSets.find(s=>s.id === this.selectedSet)?.name || 'Set', 
                     image: c.images.small, number: c.number, 
                     market: market, 
-                    rawCost: market, // AUTO-FILL
-                    fee: 15,         // AUTO-FILL
-                    targetGrade: 10, // AUTO-FILL
+                    rawCost: market, fee: 15, targetGrade: 10,
                     binderId: this.targetBinder === 'master' ? null : this.targetBinder
                 };
                 if(this.user) db.collection('users').doc(this.user.uid).collection('cards').add(cardData);
                 else { cardData.uid = Date.now().toString(); this.localCards.push(cardData); this.saveData(); }
                 
-                // VISUAL FEEDBACK (No Alert)
+                // VISUAL FEEDBACK
                 this.addedIds.push(c.id);
                 setTimeout(() => { this.addedIds = this.addedIds.filter(id => id !== c.id); }, 1500);
             },
@@ -650,7 +640,7 @@
 
             selectBinder(b) { this.currentView = 'armory'; this.currentBinder = b; this.currentPage = 1; },
             getBinderCount(id) { return this.cards.filter(c => c.binderId === id).length; },
-            openSearch() { this.showSearch = true; this.searchResults = []; this.searchPage = 1; },
+            openSearch() { this.showSearch = true; this.searchResults = []; this.searchPage = 1; this.query = ''; },
             openCardDetail(c) { this.detailCard = c; },
             formatNumber(n) { return (n||0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}); },
             getCardPrice(c) { return c.tcgplayer?.prices?.holofoil?.market || c.tcgplayer?.prices?.normal?.market || 0; },
@@ -669,18 +659,39 @@
                 localStorage.setItem(this.cacheKey, JSON.stringify({sets: this.allSets, eras: this.eras}));
                 this.setsLoading = false;
             },
-            async fetchCards(page = 1) {
+            
+            // --- SMART CACHING SEARCH ---
+            async performSearch() {
+                // We use "One-Time Fetch" logic
+                // If we haven't fetched this set's raw data yet, fetch it ALL once and cache it.
+                // Then filter locally.
                 if(!this.selectedSet) return;
-                this.isSearching = true; 
-                this.searchPage = page; // Track API Page
-                let q = `set.id:${this.selectedSet}`; if(this.query) q += ` name:"${this.query}*"`;
-                try {
-                    const res = await fetch(`https://api.pokemontcg.io/v2/cards?q=${q}&pageSize=10&page=${page}&select=id,name,number,images,tcgplayer`);
-                    const data = await res.json();
-                    this.searchResults = data.data || [];
-                } catch(e) { console.error(e); } 
-                finally { this.isSearching = false; }
-            }
+                this.isSearching = true;
+
+                const setKey = `glad_set_${this.selectedSet}`;
+                const cachedSet = localStorage.getItem(setKey);
+
+                if(cachedSet) {
+                    this.searchResults = JSON.parse(cachedSet);
+                    this.isSearching = false;
+                    this.searchPage = 1;
+                } else {
+                    try {
+                        // Fetch everything in the set (up to 250 is usually enough for one fetch)
+                        const res = await fetch(`https://api.pokemontcg.io/v2/cards?q=set.id:${this.selectedSet}&pageSize=250&select=id,name,number,images,tcgplayer`);
+                        const data = await res.json();
+                        this.searchResults = data.data || [];
+                        
+                        // Save to cache to make next search instant
+                        try { localStorage.setItem(setKey, JSON.stringify(this.searchResults)); } catch(e) {}
+                        
+                        this.searchPage = 1;
+                    } catch(e) { console.error(e); } 
+                    finally { this.isSearching = false; }
+                }
+            },
+            // Legacy wrapper for template compatibility
+            fetchCards(p) { this.performSearch(); }
         }
     }).mount('#app');
 </script>
