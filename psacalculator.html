@@ -3,80 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gladiator Collectibles</title>
+    <title>Gladiator Collectibles - Analyzer</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
-    
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-    
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
-    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.29/jspdf.plugin.autotable.min.js"></script>
-    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Lato:wght@400;700;900&display=swap" rel="stylesheet">
 
     <style>
-        /* GLADIATOR THEME */
-        :root { --bg-color: #050505; --gold: #D4AF37; }
-        
-        body { 
-            font-family: 'Lato', sans-serif; 
-            background-color: var(--bg-color); 
-            background-image: radial-gradient(circle at top center, #1a1a1a 0%, #000000 80%);
-            color: #e2e8f0; 
-        }
-        
-        h1, h2, h3, .brand { font-family: 'Cinzel', serif; }
-        
+        :root { --bg: #050505; --gold: #D4AF37; --panel: #111; }
+        body { font-family: 'Lato', sans-serif; background: var(--bg); color: #e2e8f0; }
+        h1, .brand { font-family: 'Cinzel', serif; }
         [v-cloak] { display: none; }
-
-        .panel {
-            background: rgba(18, 18, 18, 0.95);
-            border: 1px solid rgba(212, 175, 55, 0.3);
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.8);
-        }
-
-        .gold-text { 
-            background: linear-gradient(to right, #bf953f, #fcf6ba, #b38728, #fbf5b7);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-        }
-
-        input, select, textarea {
-            background-color: #0a0a0a !important;
-            border: 1px solid #333 !important;
-            color: white !important;
-            outline: none;
-        }
-        input:focus { border-color: var(--gold) !important; }
         
-        .card-ratio { position: relative; padding-bottom: 139%; overflow: hidden; background: #111; border-radius: 4px; }
-        .card-ratio img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; }
+        /* Table Inputs */
+        .table-input {
+            background: transparent; border: 1px solid transparent; color: inherit; 
+            width: 100%; text-align: right; padding: 4px; font-family: monospace; border-radius: 4px;
+        }
+        .table-input:hover { border-color: #333; background: #0a0a0a; }
+        .table-input:focus { border-color: var(--gold); outline: none; background: #000; }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+        
+        .gold-glow { text-shadow: 0 0 10px rgba(212, 175, 55, 0.3); }
     </style>
 </head>
-<body class="min-h-screen p-4 md:p-8">
+<body class="min-h-screen p-4">
 
-<div id="app" v-cloak class="max-w-[1800px] mx-auto">
+<div id="app" v-cloak class="max-w-[1900px] mx-auto">
     
-    <input type="file" ref="fileInput" @change="handleImport" class="hidden" accept=".json">
-
-    <div class="flex flex-col md:flex-row justify-between items-end mb-8 border-b border-[#333] pb-6">
+    <div class="flex flex-col md:flex-row justify-between items-end mb-6 border-b border-[#222] pb-4">
         <div>
-            <h1 class="text-3xl md:text-5xl font-bold gold-text mb-2 uppercase tracking-wider">
-                <i class="fa-solid fa-helmet-safety mr-3"></i>Gladiator
+            <h1 class="text-4xl font-bold text-[#D4AF37] uppercase tracking-wider gold-glow">
+                <i class="fa-solid fa-helmet-safety mr-2"></i>Gladiator
             </h1>
-            <p class="text-slate-500 text-xs tracking-[0.3em] uppercase ml-1">Collectibles Manager</p>
+            <p class="text-xs text-slate-500 tracking-[0.4em] uppercase">Grading Analyzer</p>
         </div>
-        <div class="flex gap-8 mt-6 md:mt-0">
+        
+        <div class="flex gap-8 mt-4 md:mt-0">
             <div class="text-right">
-                <div class="text-[10px] text-slate-500 uppercase">Count</div>
+                <div class="text-[10px] uppercase text-slate-500">Cards Analyzed</div>
                 <div class="text-2xl font-bold">{{ cards.length }}</div>
             </div>
             <div class="text-right">
-                <div class="text-[10px] text-slate-500 uppercase">Profit</div>
+                <div class="text-[10px] uppercase text-slate-500">Total Profit</div>
                 <div class="text-2xl font-bold" :class="totalProfit >= 0 ? 'text-[#D4AF37]' : 'text-red-500'">
                     ${{ formatNumber(totalProfit) }}
                 </div>
@@ -84,164 +60,143 @@
         </div>
     </div>
 
-    <div class="flex flex-wrap gap-4 mb-6 justify-between items-center bg-[#0a0a0a] p-4 rounded border border-[#333]">
-        <div class="relative w-full md:w-auto">
-            <i class="fa-solid fa-search absolute left-3 top-3 text-slate-600"></i>
-            <input type="text" v-model="search" placeholder="FILTER INVENTORY..." 
-                class="pl-10 pr-4 py-2 w-full md:w-64 rounded-sm text-xs tracking-wider uppercase border border-[#333] focus:border-[#D4AF37]">
+    <div class="flex flex-wrap gap-4 mb-4 items-center bg-[#111] p-3 rounded border border-[#222]">
+        <div class="relative flex-1 min-w-[200px]">
+            <i class="fa-solid fa-search absolute left-3 top-2.5 text-slate-600"></i>
+            <input v-model="filter" placeholder="FILTER YOUR LIST..." class="w-full bg-black border border-[#333] rounded py-2 pl-9 pr-4 text-xs font-bold uppercase focus:border-[#D4AF37] outline-none transition">
         </div>
         
-        <div class="flex flex-wrap gap-2">
-            <button @click="exportPDF" class="bg-[#111] hover:bg-[#222] border border-[#333] text-red-400 px-4 py-2 rounded-sm text-[10px] font-bold uppercase tracking-widest flex items-center gap-2 transition">
-                <i class="fa-solid fa-file-pdf"></i> PDF
+        <div class="flex gap-2">
+            <button @click="exportExcel" class="px-4 py-2 bg-[#1a1a1a] hover:bg-[#222] border border-[#333] text-green-500 text-[10px] font-bold uppercase rounded transition">
+                <i class="fa-solid fa-file-excel mr-1"></i> Excel
             </button>
-            
-            <button @click="exportExcel" class="bg-[#111] hover:bg-[#222] border border-[#333] text-green-500 px-4 py-2 rounded-sm text-[10px] font-bold uppercase tracking-widest flex items-center gap-2 transition">
-                <i class="fa-solid fa-file-excel"></i> Excel
+            <button @click="exportPDF" class="px-4 py-2 bg-[#1a1a1a] hover:bg-[#222] border border-[#333] text-red-500 text-[10px] font-bold uppercase rounded transition">
+                <i class="fa-solid fa-file-pdf mr-1"></i> PDF
             </button>
-
-            <div class="w-[1px] h-8 bg-[#333] mx-2"></div>
-
-            <button @click="backupData" class="bg-[#111] hover:bg-[#222] border border-[#333] text-blue-400 px-4 py-2 rounded-sm text-[10px] font-bold uppercase tracking-widest flex items-center gap-2 transition">
-                <i class="fa-solid fa-download"></i> Backup
+            <button @click="backup" class="px-4 py-2 bg-[#1a1a1a] hover:bg-[#222] border border-[#333] text-blue-500 text-[10px] font-bold uppercase rounded transition">
+                <i class="fa-solid fa-download mr-1"></i> Save
             </button>
-
-            <button @click="triggerImport" class="bg-[#111] hover:bg-[#222] border border-[#333] text-purple-400 px-4 py-2 rounded-sm text-[10px] font-bold uppercase tracking-widest flex items-center gap-2 transition">
-                <i class="fa-solid fa-upload"></i> Restore
-            </button>
-
-            <button @click="openModal" class="ml-2 bg-[#D4AF37] hover:bg-white text-black px-6 py-2 rounded-sm font-bold tracking-wider uppercase flex items-center gap-2 shadow-lg hover:shadow-[#D4AF37]/50 transition text-xs">
-                <i class="fa-solid fa-plus"></i> Add Card
+            <label class="px-4 py-2 bg-[#1a1a1a] hover:bg-[#222] border border-[#333] text-purple-500 text-[10px] font-bold uppercase rounded transition cursor-pointer">
+                <i class="fa-solid fa-upload mr-1"></i> Load
+                <input type="file" @change="restore" class="hidden" accept=".json">
+            </label>
+            <button @click="openSearch" class="px-6 py-2 bg-[#D4AF37] hover:bg-white text-black font-bold text-xs uppercase rounded shadow-[0_0_15px_rgba(212,175,55,0.2)] transition">
+                <i class="fa-solid fa-plus mr-1"></i> Add Card
             </button>
         </div>
     </div>
 
-    <div class="panel rounded-lg overflow-hidden min-h-[400px]">
-        <div v-if="cards.length === 0" class="p-20 text-center text-slate-600">
-            <i class="fa-solid fa-box-open text-6xl mb-4"></i>
-            <p class="text-sm uppercase tracking-widest">Inventory Empty</p>
-        </div>
-
-        <div v-else class="overflow-x-auto">
+    <div class="bg-[#111] rounded border border-[#222] overflow-hidden">
+        <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse">
                 <thead>
-                    <tr class="bg-black text-[#D4AF37] text-[10px] uppercase tracking-widest border-b border-[#333]">
-                        <th class="p-4">Card</th>
-                        <th class="p-4 text-right">Raw $</th>
-                        <th class="p-4 text-center">Grade?</th>
-                        <th class="p-4 text-right text-slate-500">PSA 10</th>
-                        <th class="p-4 text-right text-white">Profit</th>
-                        <th class="p-4 text-center">Status</th>
-                        <th class="p-4"></th>
+                    <tr class="bg-black text-[#666] text-[10px] uppercase tracking-widest border-b border-[#222]">
+                        <th class="p-3 w-12">Img</th>
+                        <th class="p-3">Card Name</th>
+                        <th class="p-3 text-right w-28">Raw Price</th>
+                        <th class="p-3 text-right w-28">Grading Cost</th>
+                        <th class="p-3 text-center w-24">Pre-Grade</th>
+                        <th class="p-3 text-right w-24">Exp. Value</th>
+                        <th class="p-3 text-center w-32">Decision</th>
+                        <th class="p-3 text-right w-28">Profit</th>
+                        <th class="p-3 w-10"></th>
                     </tr>
                 </thead>
-                <tbody class="text-sm divide-y divide-[#222]">
-                    <tr v-for="(card, index) in filteredCards" :key="index" class="hover:bg-[#1a1a1a] transition">
-                        <td class="p-4 flex items-center gap-3">
-                            <div class="w-8 h-12 bg-[#111] rounded overflow-hidden border border-[#333] shrink-0">
-                                <img v-if="card.image" :src="card.image" class="w-full h-full object-cover">
-                            </div>
-                            <div>
-                                <div class="font-bold text-slate-200">{{ card.name }}</div>
-                                <div class="text-[10px] text-slate-500 uppercase">{{ card.set }}</div>
+                <tbody class="text-sm divide-y divide-[#1a1a1a]">
+                    <tr v-for="(c, i) in filteredCards" :key="i" class="hover:bg-[#161616] group transition-colors">
+                        <td class="p-2">
+                            <div class="w-8 h-10 bg-black rounded border border-[#333] overflow-hidden relative">
+                                <img v-if="c.img" :src="c.img" class="absolute w-full h-full object-cover">
                             </div>
                         </td>
-                        <td class="p-4 text-right text-slate-400 font-mono">${{ card.raw }}</td>
-                        <td class="p-4 text-center">
-                            <select v-model="card.target" @change="save" class="bg-black border border-[#333] text-[#D4AF37] text-[10px] font-bold py-1 px-2 rounded cursor-pointer">
+                        
+                        <td class="p-3">
+                            <div class="font-bold text-slate-200">{{ c.name }}</div>
+                            <div class="text-[10px] text-slate-500 uppercase">{{ c.set }}</div>
+                        </td>
+
+                        <td class="p-2">
+                            <input v-model.number="c.raw" @change="save" type="number" class="table-input text-slate-400">
+                        </td>
+
+                        <td class="p-2">
+                            <input v-model.number="c.fee" @change="save" type="number" class="table-input text-slate-400">
+                        </td>
+
+                        <td class="p-2 text-center">
+                            <select v-model="c.grade" @change="save" class="bg-transparent border border-transparent hover:border-[#333] text-[#D4AF37] font-bold text-xs p-1 rounded cursor-pointer outline-none">
                                 <option value="10">PSA 10</option>
                                 <option value="9">PSA 9</option>
                                 <option value="8">PSA 8</option>
                             </select>
                         </td>
-                        <td class="p-4 text-right text-xs text-slate-600 font-mono">${{ card.psa10 }}</td>
-                        <td class="p-4 text-right font-mono font-bold">
-                            <span :class="getProfit(card) > 0 ? 'text-[#D4AF37]' : 'text-red-500'">
-                                ${{ formatNumber(getProfit(card)) }}
+
+                        <td class="p-3 text-right font-mono text-xs text-slate-600">
+                            ${{ formatNumber(getValue(c)) }}
+                        </td>
+
+                        <td class="p-3 text-center">
+                            <div v-if="getProfit(c) > 0" class="inline-block px-3 py-1 bg-green-900/30 text-green-400 border border-green-900 rounded text-[10px] font-bold uppercase tracking-wider shadow-[0_0_10px_rgba(74,222,128,0.1)]">
+                                <i class="fa-solid fa-check mr-1"></i> Grade It
+                            </div>
+                            <div v-else class="inline-block px-3 py-1 bg-red-900/30 text-red-400 border border-red-900 rounded text-[10px] font-bold uppercase tracking-wider">
+                                <i class="fa-solid fa-xmark mr-1"></i> Don't
+                            </div>
+                        </td>
+
+                        <td class="p-3 text-right font-mono font-bold text-base">
+                            <span :class="getProfit(c) > 0 ? 'text-[#D4AF37]' : 'text-red-500'">
+                                ${{ formatNumber(getProfit(c)) }}
                             </span>
                         </td>
-                         <td class="p-4 text-center">
-                             <select v-model="card.status" @change="save" class="bg-transparent text-[10px] text-slate-400 border-none cursor-pointer text-center uppercase tracking-wider">
-                                <option value="Inventory">Inventory</option>
-                                <option value="Grading">At PSA</option>
-                                <option value="Sold">Sold</option>
-                            </select>
-                        </td>
-                        <td class="p-4 text-right">
-                            <button @click="remove(index)" class="text-slate-700 hover:text-red-500"><i class="fa-solid fa-times"></i></button>
+
+                        <td class="p-3 text-center">
+                            <button @click="remove(i)" class="text-slate-700 hover:text-red-500 transition opacity-0 group-hover:opacity-100">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
                         </td>
                     </tr>
                 </tbody>
             </table>
         </div>
+        
+        <div v-if="cards.length === 0" class="p-16 text-center text-slate-700">
+            <i class="fa-solid fa-magnifying-glass-chart text-5xl mb-4 opacity-50"></i>
+            <p class="uppercase text-xs tracking-widest">No cards in analyzer</p>
+            <button @click="openSearch" class="mt-4 text-[#D4AF37] text-xs hover:underline">Add one now</button>
+        </div>
     </div>
 
-    <div v-if="showModal" class="fixed inset-0 bg-black/95 backdrop-blur-md flex items-center justify-center z-50 p-4">
-        <div class="panel rounded-lg w-full max-w-4xl h-[90vh] flex flex-col relative overflow-hidden">
-            <div class="p-4 border-b border-[#333] bg-[#0a0a0a] flex justify-between items-center shrink-0">
-                <h2 class="text-xl text-[#D4AF37] brand uppercase">Search Database</h2>
-                <div class="flex gap-4 items-center">
-                    <button @click="enableManual" class="text-[10px] uppercase text-slate-500 hover:text-white underline">Manual Entry</button>
-                    <button @click="showModal = false" class="text-slate-500 hover:text-white"><i class="fa-solid fa-times text-xl"></i></button>
-                </div>
-            </div>
+    <div v-if="showSearch" class="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-start justify-center pt-20 z-50 p-4">
+        <div class="w-full max-w-3xl bg-[#111] border border-[#333] rounded-lg shadow-2xl flex flex-col max-h-[80vh]">
             
-            <div v-if="!isManual && !selected" class="p-6 bg-[#0a0a0a] shrink-0 border-b border-[#333]">
-                <input ref="searchInput" v-model="query" type="text" 
-                    class="w-full p-4 text-lg text-[#D4AF37] font-mono border-b border-[#333] focus:border-[#D4AF37] placeholder-slate-700 bg-transparent" 
-                    placeholder="TYPE POKEMON NAME (e.g. Pikachu)..." autofocus>
-                <div class="mt-2 text-xs text-slate-500 flex justify-between">
-                    <span>Searching automatically...</span>
-                    <span v-if="loading" class="text-[#D4AF37]"><i class="fa-solid fa-circle-notch fa-spin"></i> Consulting Oracle...</span>
+            <div class="p-4 border-b border-[#222] relative">
+                <input ref="searchBox" v-model="query" type="text" placeholder="SEARCH DATABASE (e.g. Charizard 151)..." 
+                    class="w-full bg-black border border-[#333] p-4 text-lg font-mono text-[#D4AF37] focus:border-[#D4AF37] rounded outline-none placeholder-slate-700">
+                <button @click="showSearch=false" class="absolute right-6 top-6 text-slate-500 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+                
+                <div class="flex justify-between mt-2 text-[10px] text-slate-500 uppercase tracking-wider">
+                    <span>{{ loading ? 'Searching...' : 'Results: ' + results.length }}</span>
+                    <span>Powered by PokemonTCG.io</span>
                 </div>
             </div>
 
-            <div class="flex-1 overflow-y-auto bg-[#050505] p-6">
-                <div v-if="!isManual && !selected">
-                    <div v-if="results.length > 0" class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <div v-for="item in results" :key="item.id" @click="select(item)" 
-                             class="group cursor-pointer bg-[#111] p-2 rounded border border-[#333] hover:border-[#D4AF37] hover:-translate-y-1 transition">
-                            <div class="card-ratio mb-2 border border-black">
-                                <img :src="item.images.small" loading="lazy">
-                            </div>
-                            <div class="text-xs font-bold text-slate-300 truncate">{{ item.name }}</div>
-                            <div class="text-[10px] text-slate-500 uppercase">{{ item.set.name }}</div>
+            <div class="flex-1 overflow-y-auto p-4 bg-[#050505]">
+                <div v-if="results.length > 0" class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    <div v-for="item in results" :key="item.id" @click="add(item)" 
+                         class="group cursor-pointer bg-[#111] border border-[#222] p-2 rounded hover:border-[#D4AF37] hover:bg-[#1a1a1a] transition relative">
+                        <div class="aspect-[0.71] bg-black rounded overflow-hidden relative mb-2">
+                            <img :src="item.images.small" loading="lazy" class="w-full h-full object-cover">
+                        </div>
+                        <div class="font-bold text-xs text-slate-300 truncate">{{ item.name }}</div>
+                        <div class="text-[9px] text-slate-500 uppercase truncate">{{ item.set.name }}</div>
+                        <div class="absolute top-2 right-2 bg-black/80 text-[#D4AF37] text-[10px] px-1 rounded font-mono">
+                            ${{ getPrice(item) }}
                         </div>
                     </div>
                 </div>
-
-                <div v-else class="max-w-2xl mx-auto animate-fade-in">
-                    <button @click="reset" class="mb-4 text-xs text-slate-500 hover:text-white uppercase"><i class="fa-solid fa-arrow-left"></i> Back</button>
-                    <div class="flex gap-6 flex-col md:flex-row">
-                        <div v-if="form.image" class="w-32 shrink-0 mx-auto">
-                            <img :src="form.image" class="rounded border border-[#333] shadow-lg">
-                        </div>
-                        <div class="flex-1 space-y-4">
-                            <div>
-                                <label class="text-[10px] uppercase text-slate-500">Name</label>
-                                <input v-model="form.name" class="w-full p-2 border border-[#333] rounded bg-black">
-                            </div>
-                            <div class="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label class="text-[10px] uppercase text-slate-500">Raw Price</label>
-                                    <input v-model.number="form.raw" type="number" class="w-full p-2 border border-[#333] rounded bg-black text-[#D4AF37]">
-                                </div>
-                                <div>
-                                    <label class="text-[10px] uppercase text-slate-500">Grading Fee</label>
-                                    <input v-model.number="form.fee" type="number" class="w-full p-2 border border-[#333] rounded bg-black">
-                                </div>
-                            </div>
-                            <div class="p-4 bg-[#111] rounded border border-[#333]">
-                                <div class="text-[10px] text-center text-slate-500 uppercase mb-2">Estimated Values</div>
-                                <div class="grid grid-cols-3 gap-2 text-center">
-                                    <div><label class="text-[9px] block text-green-500">PSA 10</label><input v-model.number="form.psa10" type="number" class="w-full p-1 bg-black border border-[#333] text-center text-xs"></div>
-                                    <div><label class="text-[9px] block text-yellow-500">PSA 9</label><input v-model.number="form.psa9" type="number" class="w-full p-1 bg-black border border-[#333] text-center text-xs"></div>
-                                    <div><label class="text-[9px] block text-red-500">PSA 8</label><input v-model.number="form.psa8" type="number" class="w-full p-1 bg-black border border-[#333] text-center text-xs"></div>
-                                </div>
-                            </div>
-                            <button @click="add" class="w-full bg-[#D4AF37] hover:bg-white hover:text-black text-black font-bold py-3 rounded uppercase tracking-widest transition">Add to Inventory</button>
-                        </div>
-                    </div>
+                <div v-else-if="!loading && query.length > 2" class="text-center py-10 text-slate-600 text-xs uppercase">
+                    No results found
                 </div>
             </div>
         </div>
@@ -255,180 +210,142 @@
     createApp({
         data() {
             return {
-                search: '',
                 cards: [],
-                showModal: false,
-                isManual: false,
-                selected: false,
-                loading: false,
+                filter: '',
+                showSearch: false,
                 query: '',
                 results: [],
-                searchTimer: null, // Timer for debounce
-                form: { name: '', raw: 0, fee: 20, target: 10, psa10: 0, psa9: 0, psa8: 0, image: '', set: '', status: 'Inventory' }
+                loading: false,
+                timer: null
             }
         },
         mounted() {
-            try {
-                const data = localStorage.getItem('gladiator_db');
-                if (data) this.cards = JSON.parse(data);
-                if (!Array.isArray(this.cards)) this.cards = [];
-            } catch (e) { this.cards = []; }
-        },
-        watch: {
-            // Live Search Watcher with Debounce
-            query(newVal) {
-                clearTimeout(this.searchTimer);
-                
-                if (newVal.length < 3) {
-                    this.results = [];
-                    this.loading = false;
-                    return;
-                }
-
-                this.loading = true;
-                
-                // Wait 500ms after user stops typing
-                this.searchTimer = setTimeout(() => {
-                    this.performSearch(newVal);
-                }, 500);
-            }
+            const db = localStorage.getItem('gladiator_v11');
+            if(db) this.cards = JSON.parse(db);
         },
         computed: {
             filteredCards() {
-                if (!this.search) return this.cards;
-                return this.cards.filter(c => c.name.toLowerCase().includes(this.search.toLowerCase()));
+                if(!this.filter) return this.cards;
+                return this.cards.filter(c => c.name.toLowerCase().includes(this.filter.toLowerCase()));
             },
-            totalProfit() { return this.cards.reduce((acc, c) => acc + this.getProfit(c), 0); }
+            totalProfit() {
+                return this.cards.reduce((sum, c) => sum + this.getProfit(c), 0);
+            }
+        },
+        watch: {
+            query(val) {
+                clearTimeout(this.timer);
+                if(val.length < 3) { this.results = []; return; }
+                this.loading = true;
+                this.timer = setTimeout(() => this.fetchAPI(val), 500);
+            }
         },
         methods: {
-            formatNumber(num) { return (num || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); },
-            save() { localStorage.setItem('gladiator_db', JSON.stringify(this.cards)); },
-            getProfit(c) {
-                let val = (c.target == 10) ? c.psa10 : (c.target == 9 ? c.psa9 : c.psa8);
-                return (val || 0) - ((c.raw || 0) + (c.fee || 0));
-            },
+            formatNumber(n) { return (n||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}); },
+            save() { localStorage.setItem('gladiator_v11', JSON.stringify(this.cards)); },
             
-            // EXPORT EXCEL
-            exportExcel() {
-                const ws = XLSX.utils.json_to_sheet(this.cards.map(c => ({
-                    Name: c.name, Set: c.set, Raw_Cost: c.raw, Grade_Cost: c.fee, 
-                    Target_Grade: c.target, PSA10: c.psa10, PSA9: c.psa9, 
-                    Profit: this.getProfit(c), Status: c.status
-                })));
-                const wb = XLSX.utils.book_new();
-                XLSX.utils.book_append_sheet(wb, ws, "Inventory");
-                XLSX.writeFile(wb, "Gladiator_Report.xlsx");
+            // MATH
+            getValue(c) {
+                if(c.grade == 10) return c.val10;
+                if(c.grade == 9) return c.val9;
+                return c.val8;
+            },
+            getProfit(c) {
+                return this.getValue(c) - (c.raw + c.fee);
             },
 
-            // EXPORT PDF
+            // SEARCH API
+            async fetchAPI(q) {
+                try {
+                    const clean = q.replace(/[^a-zA-Z0-9 ]/g, '');
+                    const res = await fetch(`https://api.pokemontcg.io/v2/cards?q=name:"${clean}*"&orderBy=-set.releaseDate&pageSize=20`);
+                    const data = await res.json();
+                    this.results = data.data || [];
+                } catch(e) {} finally { this.loading = false; }
+            },
+            getPrice(item) {
+                if(item.tcgplayer?.prices) {
+                    const p = item.tcgplayer.prices;
+                    return p.holofoil?.market || p.normal?.market || p.reverseHolofoil?.market || 0;
+                }
+                return 0;
+            },
+
+            // ACTIONS
+            openSearch() { 
+                this.showSearch = true; 
+                this.query = ''; 
+                this.results = [];
+                this.$nextTick(() => this.$refs.searchBox.focus());
+            },
+            add(item) {
+                const price = this.getPrice(item);
+                const newCard = {
+                    name: item.name,
+                    set: item.set.name,
+                    img: item.images.small,
+                    raw: price,
+                    fee: 15, // Default Grading Cost
+                    grade: 10, // Default Pre-Grade
+                    // Algorithms for estimated graded value
+                    val10: parseFloat((price * 3.2).toFixed(2)),
+                    val9: parseFloat((price * 1.1).toFixed(2)),
+                    val8: parseFloat((price * 0.8).toFixed(2))
+                };
+                this.cards.push(newCard);
+                this.save();
+                this.showSearch = false;
+            },
+            remove(i) {
+                if(confirm('Remove this card?')) {
+                    this.cards.splice(i,1);
+                    this.save();
+                }
+            },
+
+            // EXPORT / IMPORT
+            exportExcel() {
+                const data = this.cards.map(c => ({
+                    Name: c.name, Set: c.set, Raw_Price: c.raw, Grade_Cost: c.fee,
+                    Pre_Grade: c.grade, Est_Value: this.getValue(c), 
+                    Profit: this.getProfit(c), Should_Grade: this.getProfit(c) > 0 ? "YES" : "NO"
+                }));
+                const ws = XLSX.utils.json_to_sheet(data);
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, "Analysis");
+                XLSX.writeFile(wb, "Gladiator_Analysis.xlsx");
+            },
             exportPDF() {
                 const { jsPDF } = window.jspdf;
                 const doc = new jsPDF();
-                
-                doc.setFont("helvetica", "bold");
-                doc.text("GLADIATOR COLLECTIBLES REPORT", 14, 20);
-                doc.setFontSize(10);
-                doc.setFont("helvetica", "normal");
-                doc.text(`Total Items: ${this.cards.length} | Generated: ${new Date().toLocaleDateString()}`, 14, 28);
-
-                const tableData = this.cards.map(c => [
-                    c.name, c.set, `$${c.raw}`, c.target, `$${this.getProfit(c).toFixed(2)}`, c.status
+                doc.text("GLADIATOR GRADING ANALYSIS", 14, 20);
+                const rows = this.cards.map(c => [
+                    c.name, `$${c.raw}`, `$${c.fee}`, c.grade, 
+                    `$${this.getProfit(c).toFixed(2)}`, this.getProfit(c) > 0 ? "YES" : "NO"
                 ]);
-
                 doc.autoTable({
-                    startY: 35,
-                    head: [['Card Name', 'Set', 'Raw $', 'Grd', 'Profit', 'Status']],
-                    body: tableData,
-                    theme: 'grid',
-                    styles: { fontSize: 8 },
-                    headStyles: { fillColor: [212, 175, 55] } 
+                    startY: 30, head: [['Card', 'Raw', 'Fee', 'Grd', 'Profit', 'Decision']],
+                    body: rows, theme: 'grid'
                 });
-
                 doc.save("Gladiator_Report.pdf");
             },
-
-            // BACKUP (Save JSON)
-            backupData() {
-                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(this.cards));
-                const node = document.createElement('a');
-                node.setAttribute("href", dataStr);
-                node.setAttribute("download", "gladiator_backup.json");
-                document.body.appendChild(node);
-                node.click();
-                node.remove();
+            backup() {
+                const blob = new Blob([JSON.stringify(this.cards)], {type: "application/json"});
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url; a.download = "gladiator_backup.json";
+                a.click();
             },
-
-            // RESTORE (Import JSON)
-            triggerImport() { this.$refs.fileInput.click(); },
-            handleImport(e) {
-                const file = e.target.files[0];
-                if (!file) return;
+            restore(e) {
                 const reader = new FileReader();
-                reader.onload = (e) => {
-                    try {
-                        const imported = JSON.parse(e.target.result);
-                        if (Array.isArray(imported)) {
-                            if(confirm("Restore this backup? Current data will be replaced.")) {
-                                this.cards = imported;
-                                this.save();
-                                alert("Database Restored Successfully!");
-                            }
-                        } else alert("Invalid Backup File");
-                    } catch (err) { alert("Error reading file"); }
+                reader.onload = e => {
+                    this.cards = JSON.parse(e.target.result);
+                    this.save();
                 };
-                reader.readAsText(file);
-                e.target.value = ''; 
-            },
-
-            // SEARCH LOGIC
-            openModal() { 
-                this.showModal = true; 
-                this.reset();
-                this.$nextTick(() => { if(this.$refs.searchInput) this.$refs.searchInput.focus(); });
-            },
-            reset() {
-                this.isManual = false; this.selected = false; this.query = ''; this.results = [];
-                this.form = { name: '', raw: 0, fee: 20, target: 10, psa10: 0, psa9: 0, psa8: 0, image: '', set: '', status: 'Inventory' };
-            },
-            enableManual() { this.isManual = true; this.selected = true; },
-            
-            async performSearch(queryText) {
-                try {
-                    // Sanitize Input (Remove quotes to prevent API errors)
-                    const cleanQuery = queryText.replace(/[^a-zA-Z0-9 ]/g, '');
-                    
-                    const res = await fetch(`https://api.pokemontcg.io/v2/cards?q=name:"${cleanQuery}*"&orderBy=-set.releaseDate&pageSize=20`);
-                    
-                    if (!res.ok) throw new Error("API Limit");
-                    
-                    const data = await res.json();
-                    this.results = data.data || [];
-                } catch (e) {
-                    // Silent fail for rate limits, but stop loading
-                    console.log("Search paused or limit reached");
-                } finally {
-                    this.loading = false;
-                }
-            },
-            
-            select(item) {
-                this.selected = true;
-                let price = 0;
-                if (item.tcgplayer?.prices) {
-                    const p = item.tcgplayer.prices;
-                    price = p.holofoil?.market || p.normal?.market || p.reverseHolofoil?.market || 0;
-                }
-                this.form = {
-                    name: item.name, raw: price, fee: 20, target: 10,
-                    psa10: parseFloat((price * 3.2).toFixed(2)), psa9: parseFloat((price * 1.1).toFixed(2)), psa8: parseFloat((price * 0.8).toFixed(2)),
-                    image: item.images.small, set: item.set.name, status: 'Inventory'
-                };
-            },
-            add() { this.cards.push({...this.form}); this.save(); this.showModal = false; },
-            remove(i) { if (confirm("Delete this card?")) { this.cards.splice(i, 1); this.save(); } }
+                reader.readAsText(e.target.files[0]);
+            }
         }
     }).mount('#app');
 </script>
-
 </body>
 </html>
