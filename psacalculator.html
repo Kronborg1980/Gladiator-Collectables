@@ -187,12 +187,12 @@
             </div>
             
             <div v-if="!isManual && !selected" class="p-6 bg-[#0a0a0a] shrink-0 border-b border-[#333]">
-                <input ref="searchInput" v-model="query" @keyup.enter="searchAPI" type="text" 
+                <input ref="searchInput" v-model="query" type="text" 
                     class="w-full p-4 text-lg text-[#D4AF37] font-mono border-b border-[#333] focus:border-[#D4AF37] placeholder-slate-700 bg-transparent" 
-                    placeholder="TYPE POKEMON NAME..." autofocus>
+                    placeholder="TYPE POKEMON NAME (e.g. Pikachu)..." autofocus>
                 <div class="mt-2 text-xs text-slate-500 flex justify-between">
-                    <span>Press ENTER to search</span>
-                    <span v-if="loading" class="text-[#D4AF37]"><i class="fa-solid fa-circle-notch fa-spin"></i> Searching...</span>
+                    <span>Searching automatically...</span>
+                    <span v-if="loading" class="text-[#D4AF37]"><i class="fa-solid fa-circle-notch fa-spin"></i> Consulting Oracle...</span>
                 </div>
             </div>
 
@@ -263,6 +263,7 @@
                 loading: false,
                 query: '',
                 results: [],
+                searchTimer: null, // Timer for debounce
                 form: { name: '', raw: 0, fee: 20, target: 10, psa10: 0, psa9: 0, psa8: 0, image: '', set: '', status: 'Inventory' }
             }
         },
@@ -272,6 +273,25 @@
                 if (data) this.cards = JSON.parse(data);
                 if (!Array.isArray(this.cards)) this.cards = [];
             } catch (e) { this.cards = []; }
+        },
+        watch: {
+            // Live Search Watcher with Debounce
+            query(newVal) {
+                clearTimeout(this.searchTimer);
+                
+                if (newVal.length < 3) {
+                    this.results = [];
+                    this.loading = false;
+                    return;
+                }
+
+                this.loading = true;
+                
+                // Wait 500ms after user stops typing
+                this.searchTimer = setTimeout(() => {
+                    this.performSearch(newVal);
+                }, 500);
+            }
         },
         computed: {
             filteredCards() {
@@ -321,7 +341,7 @@
                     body: tableData,
                     theme: 'grid',
                     styles: { fontSize: 8 },
-                    headStyles: { fillColor: [212, 175, 55] } // Gold Header
+                    headStyles: { fillColor: [212, 175, 55] } 
                 });
 
                 doc.save("Gladiator_Report.pdf");
@@ -357,10 +377,10 @@
                     } catch (err) { alert("Error reading file"); }
                 };
                 reader.readAsText(file);
-                e.target.value = ''; // Reset input
+                e.target.value = ''; 
             },
 
-            // SEARCH & MODAL LOGIC
+            // SEARCH LOGIC
             openModal() { 
                 this.showModal = true; 
                 this.reset();
@@ -371,16 +391,26 @@
                 this.form = { name: '', raw: 0, fee: 20, target: 10, psa10: 0, psa9: 0, psa8: 0, image: '', set: '', status: 'Inventory' };
             },
             enableManual() { this.isManual = true; this.selected = true; },
-            async searchAPI() {
-                if (this.query.length < 3) return;
-                this.loading = true; this.results = [];
+            
+            async performSearch(queryText) {
                 try {
-                    const cleanQuery = this.query.replace(/[^\w\s]/gi, '');
-                    const res = await fetch(`https://api.pokemontcg.io/v2/cards?q=name:"*${cleanQuery}*"&orderBy=-set.releaseDate&pageSize=20`);
+                    // Sanitize Input (Remove quotes to prevent API errors)
+                    const cleanQuery = queryText.replace(/[^a-zA-Z0-9 ]/g, '');
+                    
+                    const res = await fetch(`https://api.pokemontcg.io/v2/cards?q=name:"${cleanQuery}*"&orderBy=-set.releaseDate&pageSize=20`);
+                    
+                    if (!res.ok) throw new Error("API Limit");
+                    
                     const data = await res.json();
                     this.results = data.data || [];
-                } catch (e) { alert("Network error. Try Manual Entry."); } finally { this.loading = false; }
+                } catch (e) {
+                    // Silent fail for rate limits, but stop loading
+                    console.log("Search paused or limit reached");
+                } finally {
+                    this.loading = false;
+                }
             },
+            
             select(item) {
                 this.selected = true;
                 let price = 0;
