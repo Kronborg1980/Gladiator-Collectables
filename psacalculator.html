@@ -20,16 +20,16 @@
         .font-brand { font-family: 'Cinzel', serif; }
         .text-gold-gradient { background: linear-gradient(to right, #D4AF37, #FFE5B4, #D4AF37); -webkit-background-clip: text; background-clip: text; color: transparent; }
         .glass-panel { background: rgba(16, 16, 16, 0.85); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.05); }
-        .pro-input { background: transparent; border-bottom: 1px solid transparent; color: #aaa; transition: all 0.2s; padding: 2px 0; width: 100%; }
+        .pro-input { background: transparent; border-bottom: 1px solid transparent; color: #aaa; transition: all 0.2s; padding: 4px 0; width: 100%; font-size: 14px; }
         .pro-input:hover { border-bottom-color: #333; color: white; }
         .pro-input:focus { border-bottom-color: var(--gold); outline: none; color: white; }
-        .pro-input.number { font-family: 'Courier New', monospace; font-weight: 600; }
-        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        .pro-input.number { font-family: 'Courier New', monospace; font-weight: 700; font-size: 15px; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: #000; }
-        ::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
         ::-webkit-scrollbar-thumb:hover { background: var(--gold); }
         [v-cloak] { display: none; }
-        select option { background-color: #000; color: #fff; padding: 8px; }
+        select option { background-color: #000; color: #fff; padding: 12px; font-size: 14px; }
     </style>
 </head>
 <body class="flex flex-col h-screen overflow-hidden">
@@ -38,48 +38,49 @@
     
     <div class="hidden md:flex flex-col lg:flex-row justify-between items-end gap-6 p-6 pb-4 shrink-0">
         <div class="flex items-center gap-6">
-            <div class="w-20 h-20 bg-black rounded-xl border border-[#222] flex items-center justify-center shadow-[0_0_25px_rgba(212,175,55,0.1)] p-3 relative group">
+            <div class="w-24 h-24 bg-black rounded-xl border border-[#222] flex items-center justify-center shadow-[0_0_25px_rgba(212,175,55,0.1)] p-4 relative group">
                 <div class="absolute inset-0 bg-[#D4AF37] opacity-0 group-hover:opacity-5 rounded-xl transition"></div>
                 <img src="https://raw.githubusercontent.com/Kronborg1980/Gladiator-Collectables/main/logogla.webp" class="w-full h-full object-contain">
             </div>
             <div>
-                <h1 class="text-4xl font-bold font-brand text-white tracking-wide uppercase drop-shadow-lg">
+                <h1 class="text-5xl font-bold font-brand text-white tracking-wide uppercase drop-shadow-lg">
                     Gladiator <span class="text-gold-gradient">Collectibles</span>
                 </h1>
-                <div class="flex gap-6 mt-2">
-                    <div class="text-xs uppercase tracking-[0.15em] text-slate-500 font-bold">
-                        Assets: <span class="text-white">{{ cards.length }}</span>
+                <div class="flex gap-8 mt-3">
+                    <div class="text-sm uppercase tracking-[0.15em] text-slate-500 font-bold">
+                        Assets: <span class="text-white text-base">{{ cards.length }}</span>
                     </div>
-                    <div class="text-xs uppercase tracking-[0.15em] text-slate-500 font-bold">
-                        Profit: <span :class="totalProfit >= 0 ? 'text-[#D4AF37]' : 'text-red-500'">${{ formatNumber(totalProfit) }}</span>
+                    <div class="text-sm uppercase tracking-[0.15em] text-slate-500 font-bold">
+                        Profit: <span class="text-base" :class="totalProfit >= 0 ? 'text-[#D4AF37]' : 'text-red-500'">${{ formatNumber(totalProfit) }}</span>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="flex flex-wrap items-center gap-3 bg-[#111] p-2 rounded-xl border border-[#222] shadow-xl">
+        <div class="flex flex-wrap items-center gap-3 bg-[#111] p-3 rounded-xl border border-[#222] shadow-xl">
             <div class="relative group">
-                <i class="fa-solid fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-600 group-focus-within:text-[#D4AF37] transition"></i>
-                <input v-model="filter" placeholder="FILTER INV..." class="bg-black border border-[#222] text-white text-xs font-bold rounded-lg pl-10 pr-4 py-3 w-32 focus:w-48 focus:border-[#D4AF37] outline-none transition-all uppercase placeholder-slate-700 tracking-wider">
+                <i class="fa-solid fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-[#D4AF37] transition text-lg"></i>
+                <input v-model="filter" placeholder="FILTER INV..." class="bg-black border border-[#222] text-white text-sm font-bold rounded-lg pl-12 pr-4 py-3 w-40 focus:w-56 focus:border-[#D4AF37] outline-none transition-all uppercase placeholder-slate-600 tracking-wider">
             </div>
-            <div class="w-[1px] h-8 bg-[#222] mx-1"></div>
-            <button @click="updatePrices" :disabled="isUpdating" class="w-10 h-10 flex items-center justify-center bg-[#1a1a1a] hover:bg-[#222] text-slate-400 hover:text-green-400 rounded-lg transition border border-transparent hover:border-[#333]" title="Update Prices"><i class="fa-solid fa-arrows-rotate" :class="{'animate-spin': isUpdating}"></i></button>
-            <button @click="exportExcel" class="w-10 h-10 flex items-center justify-center bg-[#1a1a1a] hover:bg-[#222] text-slate-400 hover:text-green-500 rounded-lg transition border border-transparent hover:border-[#333]" title="Excel"><i class="fa-solid fa-file-excel"></i></button>
-            <button @click="backup" class="w-10 h-10 flex items-center justify-center bg-[#1a1a1a] hover:bg-[#222] text-slate-400 hover:text-blue-500 rounded-lg transition border border-transparent hover:border-[#333]" title="Save"><i class="fa-solid fa-download"></i></button>
-            <label class="w-10 h-10 flex items-center justify-center bg-[#1a1a1a] hover:bg-[#222] text-slate-400 hover:text-purple-500 rounded-lg transition border border-transparent hover:border-[#333] cursor-pointer" title="Load"><i class="fa-solid fa-upload"></i> <input type="file" @change="restore" class="hidden"></label>
-            <div class="w-[1px] h-8 bg-[#222] mx-1"></div>
-            <button @click="openSearch" class="flex items-center gap-2 px-6 py-3 bg-[#D4AF37] hover:bg-[#fff] text-black text-xs font-bold uppercase rounded-lg shadow-lg transition transform active:scale-95 tracking-wider"><i class="fa-solid fa-plus"></i> Add</button>
+            <div class="w-[1px] h-10 bg-[#222] mx-2"></div>
+            <button @click="updatePrices" :disabled="isUpdating" class="w-12 h-12 flex items-center justify-center bg-[#1a1a1a] hover:bg-[#222] text-slate-400 hover:text-green-400 rounded-lg transition border border-transparent hover:border-[#333]" title="Update Prices"><i class="fa-solid fa-arrows-rotate text-xl" :class="{'animate-spin': isUpdating}"></i></button>
+            <button @click="exportExcel" class="w-12 h-12 flex items-center justify-center bg-[#1a1a1a] hover:bg-[#222] text-slate-400 hover:text-green-500 rounded-lg transition border border-transparent hover:border-[#333]" title="Excel"><i class="fa-solid fa-file-excel text-xl"></i></button>
+            <button @click="exportPDF" class="w-12 h-12 flex items-center justify-center bg-[#1a1a1a] hover:bg-[#222] text-slate-400 hover:text-red-500 rounded-lg transition border border-transparent hover:border-[#333]" title="PDF"><i class="fa-solid fa-file-pdf text-xl"></i></button>
+            <button @click="backup" class="w-12 h-12 flex items-center justify-center bg-[#1a1a1a] hover:bg-[#222] text-slate-400 hover:text-blue-500 rounded-lg transition border border-transparent hover:border-[#333]" title="Save"><i class="fa-solid fa-download text-xl"></i></button>
+            <label class="w-12 h-12 flex items-center justify-center bg-[#1a1a1a] hover:bg-[#222] text-slate-400 hover:text-purple-500 rounded-lg transition border border-transparent hover:border-[#333] cursor-pointer" title="Load"><i class="fa-solid fa-upload text-xl"></i> <input type="file" @change="restore" class="hidden"></label>
+            <div class="w-[1px] h-10 bg-[#222] mx-2"></div>
+            <button @click="openSearch" class="flex items-center gap-2 px-8 py-3 bg-[#D4AF37] hover:bg-[#fff] text-black text-sm font-bold uppercase rounded-lg shadow-lg transition transform active:scale-95 tracking-wider"><i class="fa-solid fa-plus"></i> Add</button>
         </div>
     </div>
     
     <div class="md:hidden flex justify-between items-center p-4 bg-[#080808] border-b border-[#222] shrink-0 z-20">
         <div class="flex items-center gap-3">
-            <img src="https://raw.githubusercontent.com/Kronborg1980/Gladiator-Collectables/main/logogla.webp" class="w-10 h-10 object-contain">
-            <h1 class="font-brand font-bold text-lg text-white">Gladiator</h1>
+            <img src="https://raw.githubusercontent.com/Kronborg1980/Gladiator-Collectables/main/logogla.webp" class="w-12 h-12 object-contain">
+            <h1 class="font-brand font-bold text-xl text-white">Gladiator</h1>
         </div>
         <div class="text-right">
              <div class="text-[10px] uppercase text-slate-500 font-bold tracking-widest">Net Profit</div>
-             <div class="font-mono font-bold text-[#D4AF37]">${{ formatNumber(totalProfit) }}</div>
+             <div class="font-mono font-bold text-[#D4AF37] text-lg">${{ formatNumber(totalProfit) }}</div>
         </div>
     </div>
 
@@ -87,160 +88,165 @@
         
         <div class="md:hidden h-full overflow-y-auto p-4 space-y-4 pb-24">
             <div class="flex gap-2 mb-4">
-                <input v-model="filter" placeholder="Search..." class="flex-1 bg-[#111] border border-[#222] p-3 rounded text-sm text-white outline-none">
-                <button @click="openSearch" class="bg-[#D4AF37] text-black px-4 rounded font-bold"><i class="fa-solid fa-plus"></i></button>
+                <input v-model="filter" placeholder="Search..." class="flex-1 bg-[#111] border border-[#222] p-4 rounded-xl text-base text-white outline-none focus:border-[#D4AF37]">
+                <button @click="openSearch" class="bg-[#D4AF37] text-black px-6 rounded-xl font-bold text-lg"><i class="fa-solid fa-plus"></i></button>
             </div>
-            <div v-for="(c, i) in filteredCards" :key="i" class="bg-[#111] border border-[#222] rounded-xl p-4 shadow-lg relative overflow-hidden">
-                <div class="flex gap-4 items-start">
-                    <div class="w-16 h-24 bg-black rounded border border-[#333] shrink-0">
-                        <img v-if="c.img" :src="c.img" class="w-full h-full object-cover">
+            
+            <div v-for="(c, i) in filteredCards" :key="i" class="bg-[#111] border border-[#222] rounded-2xl p-5 shadow-lg relative overflow-hidden">
+                <div class="flex gap-5 items-start">
+                    <div class="w-24 h-36 bg-black rounded-lg border border-[#333] shrink-0 shadow-lg">
+                        <img v-if="c.img" :src="c.img" class="w-full h-full object-cover rounded-lg">
                     </div>
                     <div class="flex-1 min-w-0">
-                        <div class="font-bold text-slate-200 text-sm truncate">{{ c.name }}</div>
-                        <div class="text-[10px] text-slate-500 uppercase tracking-widest mb-2">{{ c.set }}</div>
-                        <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded text-[10px] font-bold uppercase tracking-wider border" :class="getProfit(c) >= 0 ? 'bg-green-900/20 text-green-400 border-green-500/30' : 'bg-red-900/20 text-red-400 border-red-500/30'">Profit: ${{ Math.round(getProfit(c)) }}</div>
+                        <div class="font-bold text-white text-lg leading-tight mb-1">{{ c.name }}</div>
+                        <div class="text-xs text-slate-500 uppercase tracking-widest mb-3 font-semibold">{{ c.set }}</div>
+                        <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider border" :class="getProfit(c) >= 0 ? 'bg-green-900/20 text-green-400 border-green-500/30' : 'bg-red-900/20 text-red-400 border-red-500/30'">
+                            Profit: ${{ Math.round(getProfit(c)) }}
+                        </div>
                     </div>
-                    <button @click="remove(i)" class="text-slate-600 hover:text-red-500"><i class="fa-solid fa-trash"></i></button>
+                    <button @click="remove(i)" class="w-10 h-10 flex items-center justify-center bg-[#222] rounded-full text-slate-400 hover:text-red-500"><i class="fa-solid fa-trash"></i></button>
                 </div>
-                <div class="mt-4 grid grid-cols-2 gap-4 text-xs">
-                    <div><label class="text-[9px] text-slate-600 uppercase">Condition</label><input v-model="c.condition" class="pro-input w-full text-slate-300"></div>
-                    <div><label class="text-[9px] text-[#D4AF37] uppercase">Target Grade</label><select v-model="c.target" class="w-full bg-transparent text-[#D4AF37] font-bold outline-none"><option value="10">PSA 10</option><option value="9">PSA 9</option><option value="8">PSA 8</option></select></div>
-                    <div><label class="text-[9px] text-slate-600 uppercase">Raw Cost</label><div class="flex text-slate-400">$<input v-model.number="c.raw" type="number" class="pro-input"></div></div>
-                    <div><label class="text-[9px] text-slate-600 uppercase">Est. Value</label><div class="flex text-white font-bold">$<input :value="getValue(c)" @input="updateValue(c, $event.target.value)" type="number" class="pro-input"></div></div>
+                <div class="mt-5 grid grid-cols-2 gap-x-6 gap-y-4">
+                    <div><label class="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Condition</label><input v-model="c.condition" class="pro-input w-full text-slate-300"></div>
+                    <div><label class="text-[10px] text-[#D4AF37] uppercase font-bold tracking-wider">Target</label><select v-model="c.target" class="w-full bg-transparent text-[#D4AF37] font-bold text-sm outline-none py-1"><option value="10">PSA 10</option><option value="9">PSA 9</option><option value="8">PSA 8</option></select></div>
+                    <div><label class="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Raw Cost</label><div class="flex text-slate-300 text-base font-mono">$<input v-model.number="c.raw" type="number" class="pro-input"></div></div>
+                    <div><label class="text-[10px] text-slate-500 uppercase font-bold tracking-wider">Est. Value</label><div class="flex text-white text-base font-bold font-mono">$<input :value="getValue(c)" @input="updateValue(c, $event.target.value)" type="number" class="pro-input"></div></div>
                 </div>
             </div>
-            <div v-if="cards.length === 0" class="text-center py-10 text-slate-600"><p>No Assets Found</p></div>
+            <div v-if="cards.length === 0" class="text-center py-20 text-slate-600"><p class="text-lg">No Assets Found</p></div>
         </div>
 
         <div class="hidden md:flex flex-col h-full glass-panel rounded-2xl shadow-2xl">
             <div class="overflow-auto flex-1">
                 <table class="w-full text-left border-collapse">
-                    <thead class="sticky top-0 z-10 bg-[#080808] shadow-md">
-                        <tr class="text-[10px] text-slate-500 uppercase tracking-[0.1em] border-b border-[#222] h-10">
-                            <th class="pl-4 w-12 text-center">Img</th>
-                            <th class="px-2">Asset Details</th>
-                            <th class="px-2 w-32">Condition</th>
-                            <th class="px-2 text-right w-24">Raw $</th>
-                            <th class="px-2 text-right w-24">Cost $</th>
-                            <th class="px-2 text-center w-28 text-[#D4AF37]">Target</th>
-                            <th class="px-2 text-right w-28 text-white">Est. Value</th>
-                            <th class="px-2 text-right w-28">Net Profit</th>
-                            <th class="px-2 text-center w-24">Action</th>
-                            <th class="px-2 w-10"></th>
+                    <thead class="sticky top-0 z-10 bg-[#080808] shadow-lg">
+                        <tr class="text-xs text-slate-500 uppercase tracking-[0.1em] border-b border-[#222] h-14 font-bold">
+                            <th class="pl-6 w-24 text-center">Img</th>
+                            <th class="px-4">Asset Details</th>
+                            <th class="px-4 w-40">Condition</th>
+                            <th class="px-4 text-right w-28">Raw $</th>
+                            <th class="px-4 text-right w-28">Cost $</th>
+                            <th class="px-4 text-center w-32 text-[#D4AF37]">Target</th>
+                            <th class="px-4 text-right w-32 text-white">Est. Value</th>
+                            <th class="px-4 text-right w-32">Net Profit</th>
+                            <th class="px-4 text-center w-32">Action</th>
+                            <th class="px-4 w-16"></th>
                         </tr>
                     </thead>
-                    <tbody class="text-xs divide-y divide-[#1a1a1a]">
-                        <tr v-for="(c, i) in filteredCards" :key="i" class="hover:bg-[#111] group transition-colors">
-                            <td class="p-2 text-center">
-                                <div class="w-8 h-11 mx-auto rounded border border-[#333] bg-black overflow-hidden relative group-hover:border-[#D4AF37] transition"><img v-if="c.img" :src="c.img" class="absolute inset-0 w-full h-full object-cover"></div>
+                    <tbody class="text-sm divide-y divide-[#1a1a1a]">
+                        <tr v-for="(c, i) in filteredCards" :key="i" class="hover:bg-[#111] group transition-colors h-24">
+                            <td class="p-3 text-center align-middle">
+                                <div class="w-16 h-22 mx-auto rounded-lg border border-[#333] bg-black overflow-hidden relative group-hover:border-[#D4AF37] transition shadow-md hover:scale-110 duration-200 z-0 hover:z-10">
+                                    <img v-if="c.img" :src="c.img" class="absolute inset-0 w-full h-full object-cover">
+                                </div>
                             </td>
-                            <td class="p-2">
-                                <div class="font-bold text-slate-200 truncate w-48" :title="c.name">{{ c.name }}</div>
-                                <div class="text-[9px] font-semibold text-slate-500 uppercase tracking-wide">{{ c.set }}</div>
+                            <td class="p-4 align-middle">
+                                <div class="font-bold text-slate-200 text-base truncate w-64" :title="c.name">{{ c.name }}</div>
+                                <div class="text-xs font-bold text-slate-500 uppercase tracking-wide mt-1">{{ c.set }}</div>
                             </td>
-                            <td class="p-2"><input v-model="c.condition" type="text" placeholder="Notes..." class="pro-input w-full"></td>
-                            <td class="p-2"><input v-model.number="c.raw" type="number" class="pro-input number w-full text-right text-slate-400"></td>
-                            <td class="p-2"><input v-model.number="c.fee" type="number" class="pro-input number w-full text-right text-slate-500"></td>
-                            <td class="p-2 text-center">
-                                <select v-model="c.target" class="bg-transparent border-none text-[#D4AF37] font-bold text-[10px] cursor-pointer outline-none text-center hover:bg-[#1a1a1a] rounded">
+                            <td class="p-4 align-middle"><input v-model="c.condition" type="text" placeholder="Notes..." class="pro-input w-full text-sm"></td>
+                            <td class="p-4 align-middle"><input v-model.number="c.raw" type="number" class="pro-input number w-full text-right text-slate-400"></td>
+                            <td class="p-4 align-middle"><input v-model.number="c.fee" type="number" class="pro-input number w-full text-right text-slate-500"></td>
+                            <td class="p-4 text-center align-middle">
+                                <select v-model="c.target" class="bg-transparent border-none text-[#D4AF37] font-bold text-sm cursor-pointer outline-none text-center hover:bg-[#1a1a1a] rounded py-2 px-2">
                                     <option value="10">PSA 10</option><option value="9">PSA 9</option><option value="8">PSA 8</option>
                                 </select>
                             </td>
-                            <td class="p-2"><input :value="getValue(c)" @input="updateValue(c, $event.target.value)" type="number" class="pro-input number w-full text-right text-white font-bold bg-[#111] rounded px-1"></td>
-                            <td class="p-2 text-right font-mono font-bold"><span :class="getProfit(c) >= 0 ? 'text-[#D4AF37]' : 'text-red-500'">{{ getProfit(c) >= 0 ? '+' : '' }}{{ Math.round(getProfit(c)) }}</span></td>
-                            <td class="p-2 text-center">
-                                <span v-if="getProfit(c) > 0" class="inline-flex items-center gap-1 bg-green-900/10 text-green-400 border border-green-500/20 px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider">GRADE</span>
-                                <span v-else class="inline-flex items-center gap-1 bg-red-900/10 text-red-400 border border-red-500/20 px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider">HOLD</span>
+                            <td class="p-4 align-middle"><input :value="getValue(c)" @input="updateValue(c, $event.target.value)" type="number" class="pro-input number w-full text-right text-white font-bold bg-[#111] rounded px-3 py-2 border border-[#222]"></td>
+                            <td class="p-4 text-right font-mono font-bold text-base align-middle"><span :class="getProfit(c) >= 0 ? 'text-[#D4AF37]' : 'text-red-500'">{{ getProfit(c) >= 0 ? '+' : '' }}{{ Math.round(getProfit(c)) }}</span></td>
+                            <td class="p-4 text-center align-middle">
+                                <span v-if="getProfit(c) > 0" class="inline-flex items-center gap-2 bg-green-900/10 text-green-400 border border-green-500/20 px-3 py-1 rounded text-[10px] font-bold uppercase tracking-wider shadow-sm">GRADE</span>
+                                <span v-else class="inline-flex items-center gap-2 bg-red-900/10 text-red-400 border border-red-500/20 px-3 py-1 rounded text-[10px] font-bold uppercase tracking-wider shadow-sm">HOLD</span>
                             </td>
-                            <td class="p-2 text-center"><button @click="remove(i)" class="text-slate-600 hover:text-red-500 transition opacity-0 group-hover:opacity-100"><i class="fa-solid fa-times"></i></button></td>
+                            <td class="p-4 text-center align-middle"><button @click="remove(i)" class="text-slate-600 hover:text-red-500 transition opacity-0 group-hover:opacity-100 text-lg p-2"><i class="fa-solid fa-times"></i></button></td>
                         </tr>
                     </tbody>
                 </table>
             </div>
              <div v-if="cards.length === 0" class="absolute inset-0 flex items-center justify-center pointer-events-none">
                 <div class="text-center">
-                    <div class="bg-[#111] p-4 rounded-full inline-block mb-3 border border-[#222]"><i class="fa-solid fa-layer-group text-2xl text-[#333]"></i></div>
-                    <h3 class="text-slate-500 font-bold font-brand tracking-widest uppercase text-sm">Inventory Empty</h3>
+                    <div class="bg-[#111] p-6 rounded-full inline-block mb-4 border border-[#222]"><i class="fa-solid fa-layer-group text-4xl text-[#333]"></i></div>
+                    <h3 class="text-slate-500 font-bold font-brand tracking-widest uppercase text-base">Inventory Empty</h3>
                 </div>
             </div>
         </div>
     </div>
 
     <div v-if="showSearch" class="fixed inset-0 bg-black/90 backdrop-blur-md flex items-start justify-center pt-10 z-50 p-4 transition-all">
-        <div class="w-full max-w-5xl bg-[#0a0a0a] border border-[#222] rounded-2xl shadow-2xl flex flex-col max-h-[85vh] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-            <div class="p-4 border-b border-[#222] bg-[#0f0f0f]">
-                <div class="flex items-center justify-between mb-4">
-                    <h2 class="text-lg font-bold font-brand text-[#D4AF37] uppercase tracking-wide">Add Asset</h2>
-                    <button @click="showSearch=false" class="text-slate-500 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+        <div class="w-full max-w-6xl bg-[#0a0a0a] border border-[#222] rounded-2xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div class="p-6 border-b border-[#222] bg-[#0f0f0f]">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-2xl font-bold font-brand text-[#D4AF37] uppercase tracking-wide">Add Asset</h2>
+                    <button @click="showSearch=false" class="text-slate-500 hover:text-white"><i class="fa-solid fa-xmark text-2xl"></i></button>
                 </div>
                 
-                <div class="grid grid-cols-1 md:grid-cols-12 gap-3">
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
                     
                     <div class="md:col-span-3 relative">
-                        <label class="text-[9px] text-[#D4AF37] font-bold ml-1 mb-1 block tracking-wider">STEP 1: ERA</label>
-                        <select v-model="selectedEra" class="w-full bg-[#050505] border border-[#333] text-white text-[10px] font-bold rounded px-3 py-3 outline-none uppercase appearance-none cursor-pointer hover:border-[#D4AF37] focus:border-[#D4AF37] transition shadow-lg">
+                        <label class="text-[10px] text-[#D4AF37] font-bold ml-1 mb-2 block tracking-wider">STEP 1: ERA</label>
+                        <select v-model="selectedEra" class="w-full bg-[#050505] border border-[#333] text-white text-sm font-bold rounded px-4 py-4 outline-none uppercase appearance-none cursor-pointer hover:border-[#D4AF37] focus:border-[#D4AF37] transition shadow-lg">
                             <option value="">-- SELECT ERA --</option>
                             <option v-for="era in eras" :value="era">{{ era }}</option>
                         </select>
-                        <i class="fa-solid fa-chevron-down absolute right-3 bottom-3.5 text-slate-600 text-[10px] pointer-events-none"></i>
+                        <i class="fa-solid fa-chevron-down absolute right-4 bottom-5 text-slate-600 text-xs pointer-events-none"></i>
                     </div>
 
                     <div class="md:col-span-4 relative">
-                        <label class="text-[9px] text-[#D4AF37] font-bold ml-1 mb-1 block tracking-wider">STEP 2: EXPANSION</label>
-                        <select v-model="selectedSet" :disabled="!selectedEra" class="w-full bg-[#050505] border border-[#333] text-white text-[10px] font-bold rounded px-3 py-3 outline-none uppercase appearance-none cursor-pointer hover:border-[#D4AF37] focus:border-[#D4AF37] transition shadow-lg disabled:opacity-30 disabled:cursor-not-allowed">
+                        <label class="text-[10px] text-[#D4AF37] font-bold ml-1 mb-2 block tracking-wider">STEP 2: EXPANSION</label>
+                        <select v-model="selectedSet" :disabled="!selectedEra" class="w-full bg-[#050505] border border-[#333] text-white text-sm font-bold rounded px-4 py-4 outline-none uppercase appearance-none cursor-pointer hover:border-[#D4AF37] focus:border-[#D4AF37] transition shadow-lg disabled:opacity-30 disabled:cursor-not-allowed">
                             <option value="">-- SELECT SET --</option>
                             <option v-for="set in filteredSets" :value="set.id">{{ set.name }} ({{ set.releaseDate.substring(0,4) }})</option>
                         </select>
-                        <i class="fa-solid fa-chevron-down absolute right-3 bottom-3.5 text-slate-600 text-[10px] pointer-events-none"></i>
+                        <i class="fa-solid fa-chevron-down absolute right-4 bottom-5 text-slate-600 text-xs pointer-events-none"></i>
                     </div>
 
                     <div class="md:col-span-5 relative">
-                        <label class="text-[9px] text-[#D4AF37] font-bold ml-1 mb-1 block tracking-wider">STEP 3: POKEMON</label>
-                        <i class="fa-solid fa-search absolute left-3 bottom-3 text-slate-500 text-xs"></i>
-                        <input ref="searchBox" v-model="query" :disabled="!selectedSet" :placeholder="selectedSet ? 'Type Name (e.g. Charizard)...' : 'Waiting for Step 2...'" class="w-full bg-[#050505] border border-[#333] text-white rounded pl-9 pr-2 py-2.5 text-sm outline-none focus:border-[#D4AF37] uppercase disabled:opacity-30 disabled:cursor-not-allowed transition font-bold placeholder-slate-700">
+                        <label class="text-[10px] text-[#D4AF37] font-bold ml-1 mb-2 block tracking-wider">STEP 3: POKEMON</label>
+                        <i class="fa-solid fa-search absolute left-4 bottom-4 text-slate-500 text-sm"></i>
+                        <input ref="searchBox" v-model="query" :disabled="!selectedSet" :placeholder="selectedSet ? 'Type Name (e.g. Charizard)...' : 'Waiting for Step 2...'" class="w-full bg-[#050505] border border-[#333] text-white rounded pl-10 pr-4 py-3.5 text-base outline-none focus:border-[#D4AF37] uppercase disabled:opacity-30 disabled:cursor-not-allowed transition font-bold placeholder-slate-700">
                     </div>
                 </div>
             </div>
             
-            <div class="flex-1 overflow-y-auto p-4 bg-[#050505] relative">
+            <div class="flex-1 overflow-y-auto p-6 bg-[#050505] relative">
                 
                 <div v-if="loading" class="flex flex-col items-center justify-center py-20 gap-3">
-                    <i class="fa-solid fa-circle-notch fa-spin text-3xl text-[#D4AF37]"></i>
-                    <div class="text-xs uppercase tracking-widest text-[#D4AF37] font-bold">Loading Set Data...</div>
+                    <i class="fa-solid fa-circle-notch fa-spin text-4xl text-[#D4AF37]"></i>
+                    <div class="text-sm uppercase tracking-widest text-[#D4AF37] font-bold">Loading Set Data...</div>
                 </div>
                 
-                <div v-else-if="filteredResults.length" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                    <div v-for="item in filteredResults" :key="item.id" @click="add(item)" class="bg-[#111] border border-[#222] p-2 rounded-lg hover:border-[#D4AF37] cursor-pointer group hover:bg-[#161616] transition relative overflow-hidden">
-                        <div class="aspect-[0.7] bg-black rounded overflow-hidden mb-2 relative">
+                <div v-else-if="filteredResults.length" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                    <div v-for="item in filteredResults" :key="item.id" @click="add(item)" class="bg-[#111] border border-[#222] p-3 rounded-xl hover:border-[#D4AF37] cursor-pointer group hover:bg-[#161616] transition relative overflow-hidden shadow-lg">
+                        <div class="aspect-[0.7] bg-black rounded-lg overflow-hidden mb-3 relative">
                             <img :src="item.images.small" loading="lazy" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
-                            <div class="absolute top-1 right-1 w-6 h-6 bg-white/10 rounded-full flex items-center justify-center p-1 backdrop-blur-md">
+                            <div class="absolute top-2 right-2 w-8 h-8 bg-white/10 rounded-full flex items-center justify-center p-1.5 backdrop-blur-md">
                                 <img :src="item.set.images.symbol" class="w-full h-full object-contain">
                             </div>
-                            <div class="absolute bottom-0 inset-x-0 bg-black/90 text-center text-[#D4AF37] font-bold text-xs p-1 border-t border-[#333]">${{ getPrice(item) }}</div>
+                            <div class="absolute bottom-0 inset-x-0 bg-black/90 text-center text-[#D4AF37] font-bold text-sm p-1.5 border-t border-[#333]">${{ getPrice(item) }}</div>
                         </div>
-                        <div class="text-[10px] font-bold text-slate-300 truncate group-hover:text-white">{{ item.name }}</div>
-                        <div class="flex justify-between items-center mt-1">
-                             <div class="text-[9px] text-slate-500 uppercase truncate">#{{ item.number }}</div>
-                             <div class="text-[9px] text-slate-600 uppercase">{{ item.rarity || 'Common' }}</div>
+                        <div class="text-xs font-bold text-slate-300 truncate group-hover:text-white">{{ item.name }}</div>
+                        <div class="flex justify-between items-center mt-1.5">
+                             <div class="text-[10px] text-slate-500 uppercase truncate font-bold">#{{ item.number }}</div>
+                             <div class="text-[10px] text-slate-600 uppercase font-bold">{{ item.rarity || 'Common' }}</div>
                         </div>
                     </div>
                 </div>
                 
                 <div v-else-if="!loading && selectedSet && filteredResults.length === 0" class="flex flex-col items-center justify-center h-full text-slate-600 opacity-50">
-                    <i class="fa-solid fa-ghost text-4xl mb-3"></i>
-                    <p class="text-xs uppercase font-bold">No Pokemon Found</p>
+                    <i class="fa-solid fa-ghost text-5xl mb-4"></i>
+                    <p class="text-sm uppercase font-bold">No Pokemon Found</p>
                 </div>
                 
                 <div v-else-if="!loading && !selectedSet" class="flex flex-col items-center justify-center h-full text-slate-700">
-                    <div class="w-16 h-16 rounded-full bg-[#111] border border-[#222] flex items-center justify-center mb-4">
-                        <i class="fa-solid fa-layer-group text-2xl text-[#333]"></i>
+                    <div class="w-20 h-20 rounded-full bg-[#111] border border-[#222] flex items-center justify-center mb-6">
+                        <i class="fa-solid fa-layer-group text-3xl text-[#333]"></i>
                     </div>
-                    <p class="text-xs uppercase font-bold tracking-widest">Please Select Era & Set</p>
+                    <p class="text-sm uppercase font-bold tracking-widest">Please Select Era & Set</p>
                 </div>
 
             </div>
             
-            <div class="p-2 bg-[#080808] border-t border-[#222] flex justify-between items-center text-[9px] text-slate-500 uppercase font-bold px-4">
+            <div class="p-3 bg-[#080808] border-t border-[#222] flex justify-between items-center text-[10px] text-slate-500 uppercase font-bold px-6">
                  <div>{{ filteredResults.length }} Cards Loaded</div>
                  <div>Data: PokemonTCG.io</div>
              </div>
@@ -249,10 +255,10 @@
     
     <input type="file" ref="restoreInput" @change="restore" class="hidden">
     
-    <div class="md:hidden fixed bottom-0 inset-x-0 bg-[#080808] border-t border-[#222] p-2 flex justify-around z-30">
-        <button @click="updatePrices" class="flex flex-col items-center text-slate-500 text-[10px]" :class="{'text-green-400': isUpdating}"><i class="fa-solid fa-arrows-rotate text-lg" :class="{'animate-spin': isUpdating}"></i> Update</button>
-        <button @click="backup" class="flex flex-col items-center text-slate-500 text-[10px]"><i class="fa-solid fa-download text-lg"></i> Save</button>
-        <button @click="restoreTrigger" class="flex flex-col items-center text-slate-500 text-[10px]"><i class="fa-solid fa-upload text-lg"></i> Load</button>
+    <div class="md:hidden fixed bottom-0 inset-x-0 bg-[#080808] border-t border-[#222] p-3 flex justify-around z-30 pb-5">
+        <button @click="updatePrices" class="flex flex-col items-center text-slate-500 text-xs gap-1" :class="{'text-green-400': isUpdating}"><i class="fa-solid fa-arrows-rotate text-xl" :class="{'animate-spin': isUpdating}"></i> Update</button>
+        <button @click="backup" class="flex flex-col items-center text-slate-500 text-xs gap-1"><i class="fa-solid fa-download text-xl"></i> Save</button>
+        <button @click="restoreTrigger" class="flex flex-col items-center text-slate-500 text-xs gap-1"><i class="fa-solid fa-upload text-xl"></i> Load</button>
     </div>
 
 </div>
