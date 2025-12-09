@@ -15,226 +15,261 @@
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
-        :root { --bg-dark: #09090b; --panel-bg: #121214; --border: #27272a; --gold: #FACC15; --blue: #3B82F6; --text-muted: #71717a; }
-        body { font-family: 'Inter', sans-serif; background-color: #000000; color: #e4e4e7; height: 100vh; overflow: hidden; }
+        :root { --bg-dark: #050505; --gold: #D4AF37; --gold-glow: #FACC15; }
+        body { font-family: 'Inter', sans-serif; background-color: #000; color: #e4e4e7; height: 100vh; overflow: hidden; }
         .font-brand { font-family: 'Cinzel', serif; }
         
+        /* SCROLLBAR */
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: #000; }
         ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
         ::-webkit-scrollbar-thumb:hover { background: #444; }
         
+        /* INPUTS */
         .search-input { background: #000; border: 1px solid #27272a; transition: all 0.2s; }
         .search-input:focus { border-color: var(--gold); outline: none; }
-        
-        .table-input { background: transparent; border-bottom: 1px solid transparent; color: #fff; width: 100%; font-family: 'Inter', sans-serif; transition: 0.2s; }
+        .table-input { background: transparent; border-bottom: 1px solid transparent; color: #fff; width: 100%; transition: 0.2s; }
         .table-input:hover { border-bottom-color: #333; }
         .table-input:focus { border-bottom-color: var(--gold); outline: none; }
         
+        /* UTILS */
         [v-cloak] { display: none; }
-        .stat-box { background: #111; border: 1px solid #222; border-radius: 8px; padding: 10px 20px; min-width: 140px; }
-        .stat-label { font-size: 10px; font-weight: 700; text-transform: uppercase; color: #71717a; letter-spacing: 0.05em; margin-bottom: 4px; }
-        .stat-value { font-family: 'Inter', sans-serif; font-weight: 700; font-size: 20px; }
+        select option { background-color: #000; color: #fff; padding: 12px; }
+
+        /* --- NEW LED / GLOW EFFECTS --- */
+        .logo-container {
+            position: relative;
+            padding: 2px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #333 0%, #000 100%);
+            box-shadow: 0 0 20px rgba(212, 175, 55, 0.15), inset 0 0 10px rgba(0,0,0,0.8);
+            border: 1px solid #333;
+        }
+        .logo-img {
+            filter: drop-shadow(0 0 8px rgba(250, 204, 21, 0.4));
+        }
+        .text-glow {
+            text-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
+        }
+        .stat-box { background: #0a0a0a; border: 1px solid #222; border-radius: 6px; padding: 8px 16px; min-width: 120px; }
         
-        select option { background-color: #000; color: #fff; padding: 12px; font-size: 14px; }
+        /* AUTOCOMPLETE DROPDOWN */
+        .autocomplete-list {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: #111;
+            border: 1px solid #333;
+            border-radius: 0 0 8px 8px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 50;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.8);
+        }
+        .autocomplete-item {
+            padding: 10px 12px;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: bold;
+            color: #ccc;
+            border-bottom: 1px solid #222;
+        }
+        .autocomplete-item:hover { background: #222; color: #D4AF37; }
+        .autocomplete-item.active { background: #222; color: #D4AF37; }
     </style>
 </head>
 <body class="flex flex-col h-screen">
 
 <div id="app" v-cloak class="flex flex-col h-full w-full max-w-[1920px] mx-auto">
     
-    <header class="flex flex-col md:flex-row items-center justify-between px-6 py-5 border-b border-[#222] bg-[#050505] shrink-0 gap-6">
-        <div class="flex items-center gap-4">
-            <img src="https://raw.githubusercontent.com/Kronborg1980/Gladiator-Collectables/main/logogla.webp" class="w-12 h-12 object-contain">
+    <header class="flex flex-col md:flex-row items-center justify-between px-6 py-4 border-b border-[#222] bg-[#050505] shrink-0 gap-6 shadow-xl z-20">
+        <div class="flex items-center gap-5">
+            <div class="logo-container w-14 h-14 flex items-center justify-center">
+                <img src="https://raw.githubusercontent.com/Kronborg1980/Gladiator-Collectables/main/logogla.webp" class="w-10 h-10 object-contain logo-img">
+            </div>
             <div>
-                <h1 class="text-2xl font-brand font-bold text-white tracking-wide">
+                <h1 class="text-2xl font-brand font-bold text-white tracking-widest text-glow">
                     GLADIATOR <span class="text-[#D4AF37]">COLLECTIBLES</span>
                 </h1>
-                <div class="text-xs text-[#555] font-medium tracking-wide">Professional Grading ROI Calculator</div>
+                <div class="text-[10px] text-[#666] font-bold tracking-[0.2em] uppercase mt-1">Professional Grading ROI</div>
             </div>
         </div>
 
-        <div class="flex items-center gap-4 w-full md:w-auto overflow-x-auto">
-            <div class="stat-box border-l-4 border-l-[#333]">
-                <div class="stat-label">Inventory</div>
-                <div class="stat-value text-white">{{ cards.length }} <span class="text-xs text-[#555] font-normal">Items</span></div>
+        <div class="flex items-center gap-4 w-full md:w-auto overflow-x-auto pb-1 md:pb-0">
+            <div class="stat-box border-l-2 border-l-[#444]">
+                <div class="text-[9px] text-[#666] font-bold uppercase tracking-wider mb-1">Inventory</div>
+                <div class="text-lg font-bold text-white leading-none">{{ cards.length }}</div>
             </div>
-            <div class="stat-box border-l-4 border-l-[#3B82F6]">
-                <div class="stat-label text-[#3B82F6]">Total Cost</div>
-                <div class="stat-value text-white">${{ formatNumber(totalCost) }}</div>
+            <div class="stat-box border-l-2 border-l-[#3B82F6]">
+                <div class="text-[9px] text-[#3B82F6] font-bold uppercase tracking-wider mb-1">Cost Basis</div>
+                <div class="text-lg font-bold text-white leading-none">${{ formatNumber(totalCost) }}</div>
             </div>
-            <div class="stat-box border-l-4 border-l-[#FACC15] !border-r-[#FACC15]/20">
-                <div class="stat-label text-[#FACC15]">Proj. Net Profit</div>
-                <div class="stat-value" :class="totalProfit >= 0 ? 'text-[#FACC15]' : 'text-red-500'">${{ formatNumber(totalProfit) }}</div>
+            <div class="stat-box border-l-2 border-l-[#FACC15] bg-[#FACC15]/5">
+                <div class="text-[9px] text-[#FACC15] font-bold uppercase tracking-wider mb-1">Net Profit</div>
+                <div class="text-lg font-bold leading-none" :class="totalProfit >= 0 ? 'text-[#FACC15]' : 'text-red-500'">${{ formatNumber(totalProfit) }}</div>
             </div>
         </div>
     </header>
 
-    <div class="px-6 py-4 bg-[#0a0a0a] border-b border-[#222] shrink-0">
+    <div class="px-6 py-3 bg-[#0a0a0a] border-b border-[#222] shrink-0">
         <div class="flex flex-col md:flex-row gap-4 justify-between items-center">
-            
             <div class="relative w-full md:max-w-md group">
-                <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-[#555] group-focus-within:text-white transition"></i>
-                <input v-model="filter" placeholder="Search inventory..." class="w-full bg-[#111] border border-[#27272a] text-sm text-white rounded-lg pl-11 pr-4 py-2.5 outline-none focus:border-[#D4AF37] focus:bg-[#000] transition placeholder-[#555]">
+                <i class="fa-solid fa-filter absolute left-4 top-1/2 -translate-y-1/2 text-[#444] group-focus-within:text-[#D4AF37] transition"></i>
+                <input v-model="filter" placeholder="FILTER INVENTORY..." class="w-full bg-[#0e0e0e] border border-[#222] text-xs font-bold text-white rounded pl-10 pr-4 py-2.5 outline-none focus:border-[#D4AF37] uppercase tracking-wide transition">
             </div>
 
             <div class="flex items-center gap-3">
-                <div class="flex bg-[#111] rounded-lg border border-[#27272a] p-1">
-                    <button @click="exportExcel" class="w-9 h-9 flex items-center justify-center text-[#777] hover:text-green-500 hover:bg-[#222] rounded transition" title="Export Excel"><i class="fa-solid fa-file-excel"></i></button>
-                    <button @click="exportPDF" class="w-9 h-9 flex items-center justify-center text-[#777] hover:text-red-500 hover:bg-[#222] rounded transition" title="Export PDF"><i class="fa-solid fa-file-pdf"></i></button>
-                    <div class="w-[1px] bg-[#333] my-1 mx-1"></div>
-                    <button @click="backup" class="w-9 h-9 flex items-center justify-center text-[#777] hover:text-blue-500 hover:bg-[#222] rounded transition" title="Save Backup"><i class="fa-solid fa-download"></i></button>
-                    <label class="w-9 h-9 flex items-center justify-center text-[#777] hover:text-purple-500 hover:bg-[#222] rounded transition cursor-pointer" title="Restore Backup"><i class="fa-solid fa-upload"></i> <input type="file" @change="restore" class="hidden"></label>
+                <div class="flex bg-[#111] rounded border border-[#222] p-0.5">
+                    <button @click="forceRefreshSets" class="w-8 h-8 flex items-center justify-center text-[#555] hover:text-[#D4AF37] hover:bg-[#222] rounded transition"><i class="fa-solid fa-sync" :class="{'fa-spin': setsLoading}"></i></button>
+                    <div class="w-[1px] bg-[#222] my-1 mx-0.5"></div>
+                    <button @click="exportExcel" class="w-8 h-8 flex items-center justify-center text-[#555] hover:text-green-500 hover:bg-[#222] rounded transition"><i class="fa-solid fa-file-excel"></i></button>
+                    <button @click="exportPDF" class="w-8 h-8 flex items-center justify-center text-[#555] hover:text-red-500 hover:bg-[#222] rounded transition"><i class="fa-solid fa-file-pdf"></i></button>
+                    <div class="w-[1px] bg-[#222] my-1 mx-0.5"></div>
+                    <button @click="backup" class="w-8 h-8 flex items-center justify-center text-[#555] hover:text-blue-500 hover:bg-[#222] rounded transition"><i class="fa-solid fa-download"></i></button>
+                    <label class="w-8 h-8 flex items-center justify-center text-[#555] hover:text-purple-500 hover:bg-[#222] rounded transition cursor-pointer"><i class="fa-solid fa-upload"></i> <input type="file" @change="restore" class="hidden"></label>
                 </div>
 
-                <button @click="openSearch" class="flex items-center gap-2 bg-[#FACC15] hover:bg-[#EAB308] text-black text-sm font-bold px-5 py-2.5 rounded-lg transition shadow-[0_0_15px_rgba(250,204,21,0.2)] active:scale-95">
-                    <i class="fa-solid fa-plus"></i> Add Card
+                <button @click="openSearch" class="flex items-center gap-2 bg-[#D4AF37] hover:bg-[#EAB308] text-black text-xs font-bold px-4 py-2.5 rounded shadow-[0_0_10px_rgba(212,175,55,0.2)] active:scale-95 uppercase tracking-wider">
+                    <i class="fa-solid fa-plus"></i> Add Assets
                 </button>
             </div>
         </div>
     </div>
 
     <div class="flex-1 overflow-hidden bg-[#050505] relative flex flex-col">
-        
-        <div class="grid grid-cols-[60px_2fr_1fr_1fr_1fr_1fr_1fr_1fr_50px] gap-4 px-6 py-3 border-b border-[#222] bg-[#0c0c0c] text-[10px] font-bold text-[#555] uppercase tracking-wider shrink-0 sticky top-0 z-10 hidden md:grid">
-            <div class="text-center">IMG</div>
+        <div class="grid grid-cols-[60px_2fr_1fr_1fr_1fr_1fr_1fr_1fr_50px] gap-4 px-6 py-3 border-b border-[#222] bg-[#0c0c0c] text-[9px] font-bold text-[#555] uppercase tracking-widest shrink-0 sticky top-0 z-10 hidden md:grid">
+            <div class="text-center">Img</div>
             <div>Asset Details</div>
-            <div class="text-right">Raw Cost</div>
-            <div class="text-right">Grade Fee</div>
-            <div class="text-center">Exp. Grade</div>
-            <div class="text-right">Est. Value</div>
-            <div class="text-center">Decision</div>
-            <div class="text-right">Profit</div>
+            <div class="text-right">Raw $</div>
+            <div class="text-right">Fee $</div>
+            <div class="text-center">Target</div>
+            <div class="text-right">Est. Val</div>
+            <div class="text-center">Action</div>
+            <div class="text-right">Net</div>
             <div></div>
         </div>
 
         <div class="flex-1 overflow-y-auto px-6 py-2">
-            
             <div v-if="filteredCards.length === 0" class="h-full flex flex-col items-center justify-center text-center pb-20">
-                <div class="w-20 h-20 rounded-full bg-[#111] border border-[#222] flex items-center justify-center mb-6">
-                    <i class="fa-solid fa-magnifying-glass-chart text-3xl text-[#333]"></i>
+                <div class="w-24 h-24 rounded-full bg-[#0a0a0a] border border-[#222] flex items-center justify-center mb-6 shadow-inner">
+                    <i class="fa-solid fa-layer-group text-4xl text-[#222]"></i>
                 </div>
-                <h2 class="text-xl font-brand font-bold text-[#555] uppercase tracking-widest mb-2">Your Armory Is Empty</h2>
-                <p class="text-sm text-[#444] mb-6">Start by adding cards to analyze your grading margins.</p>
-                <button @click="openSearch" class="text-[#D4AF37] text-xs font-bold uppercase tracking-widest hover:text-white border-b border-[#D4AF37] hover:border-white pb-0.5 transition">Add First Card</button>
+                <h2 class="text-xl font-brand font-bold text-[#444] uppercase tracking-widest mb-2">Armory Empty</h2>
+                <button @click="openSearch" class="text-[#D4AF37] text-xs font-bold uppercase tracking-widest hover:text-white border-b border-[#D4AF37] hover:border-white pb-0.5 transition">Initialize Database</button>
             </div>
 
             <div v-else class="hidden md:flex flex-col gap-1">
-                <div v-for="(c, i) in filteredCards" :key="i" class="grid grid-cols-[60px_2fr_1fr_1fr_1fr_1fr_1fr_1fr_50px] gap-4 items-center py-3 border-b border-[#1a1a1a] hover:bg-[#111] group transition">
+                <div v-for="(c, i) in filteredCards" :key="i" class="grid grid-cols-[60px_2fr_1fr_1fr_1fr_1fr_1fr_1fr_50px] gap-4 items-center py-2 border-b border-[#1a1a1a] hover:bg-[#111] group transition">
                     <div class="flex justify-center">
-                        <div class="w-10 h-14 bg-black rounded border border-[#333] relative overflow-hidden group-hover:border-[#D4AF37] transition">
+                        <div class="w-10 h-14 bg-black rounded border border-[#333] relative overflow-hidden group-hover:border-[#D4AF37] transition cursor-pointer">
                             <img :src="c.img" class="w-full h-full object-cover">
                         </div>
                     </div>
-                    
                     <div class="min-w-0">
                         <div class="font-bold text-white text-sm truncate pr-2">{{ c.name }}</div>
-                        <div class="text-[10px] text-[#666] uppercase font-bold tracking-wide truncate">{{ c.set }}</div>
-                        <input v-model="c.condition" class="table-input text-[11px] text-[#888] mt-1 placeholder-[#333]" placeholder="Add notes...">
+                        <div class="text-[9px] text-[#666] uppercase font-bold tracking-wide truncate">{{ c.set }}</div>
+                        <input v-model="c.condition" class="table-input text-[10px] text-[#888] mt-0.5 placeholder-[#333]" placeholder="Notes...">
                     </div>
-
-                    <div class="text-right font-mono text-sm text-[#aaa]">$<input v-model.number="c.raw" type="number" class="bg-transparent text-right w-16 outline-none focus:text-white border-b border-transparent focus:border-[#D4AF37]"></div>
-                    <div class="text-right font-mono text-sm text-[#aaa]">$<input v-model.number="c.fee" type="number" class="bg-transparent text-right w-16 outline-none focus:text-white border-b border-transparent focus:border-[#D4AF37]"></div>
-
+                    <div class="text-right font-mono text-sm text-[#aaa]"><input v-model.number="c.raw" type="number" class="bg-transparent text-right w-full outline-none focus:text-white border-b border-transparent focus:border-[#D4AF37]"></div>
+                    <div class="text-right font-mono text-sm text-[#aaa]"><input v-model.number="c.fee" type="number" class="bg-transparent text-right w-full outline-none focus:text-white border-b border-transparent focus:border-[#D4AF37]"></div>
                     <div class="flex justify-center">
-                        <select v-model="c.target" class="bg-[#111] text-[#D4AF37] font-bold text-xs border border-[#222] rounded px-2 py-1 outline-none focus:border-[#D4AF37] cursor-pointer">
+                        <select v-model="c.target" class="bg-[#0e0e0e] text-[#D4AF37] font-bold text-[10px] border border-[#222] rounded px-1 py-1 outline-none focus:border-[#D4AF37] cursor-pointer">
                             <option value="10">PSA 10</option><option value="9">PSA 9</option><option value="8">PSA 8</option>
                         </select>
                     </div>
-
-                    <div class="text-right font-mono text-sm font-bold text-white">$<input :value="getValue(c)" @input="updateValue(c, $event.target.value)" type="number" class="bg-transparent text-right w-20 outline-none focus:border-b focus:border-[#D4AF37]"></div>
-
+                    <div class="text-right font-mono text-sm font-bold text-white"><input :value="getValue(c)" @input="updateValue(c, $event.target.value)" type="number" class="bg-transparent text-right w-full outline-none focus:border-b focus:border-[#D4AF37]"></div>
                     <div class="text-center">
-                        <span v-if="getProfit(c) > 0" class="inline-block text-[9px] font-bold text-green-500 bg-green-900/20 border border-green-500/20 px-2 py-0.5 rounded uppercase tracking-wide">GRADE</span>
-                        <span v-else class="inline-block text-[9px] font-bold text-red-500 bg-red-900/20 border border-red-500/20 px-2 py-0.5 rounded uppercase tracking-wide">HOLD</span>
+                        <span v-if="getProfit(c) > 0" class="text-[9px] font-bold text-green-500 bg-green-900/20 border border-green-500/20 px-2 py-0.5 rounded uppercase tracking-wide">GRADE</span>
+                        <span v-else class="text-[9px] font-bold text-red-500 bg-red-900/20 border border-red-500/20 px-2 py-0.5 rounded uppercase tracking-wide">HOLD</span>
                     </div>
-
-                    <div class="text-right font-mono text-sm font-bold" :class="getProfit(c) >= 0 ? 'text-[#FACC15]' : 'text-red-500'">
-                        {{ getProfit(c) >= 0 ? '+' : '' }}{{ Math.round(getProfit(c)) }}
-                    </div>
-
-                    <div class="text-center">
-                        <button @click="remove(i)" class="text-[#444] hover:text-red-500 transition"><i class="fa-solid fa-trash"></i></button>
-                    </div>
+                    <div class="text-right font-mono text-sm font-bold" :class="getProfit(c) >= 0 ? 'text-[#FACC15]' : 'text-red-500'">{{ Math.round(getProfit(c)) }}</div>
+                    <div class="text-center"><button @click="remove(i)" class="text-[#333] hover:text-red-500 transition"><i class="fa-solid fa-times"></i></button></div>
                 </div>
             </div>
 
             <div class="md:hidden space-y-3 mt-2">
-                <div v-for="(c, i) in filteredCards" :key="i" class="bg-[#111] border border-[#222] rounded-lg p-4 flex gap-4">
-                     <div class="w-20 h-28 bg-black rounded border border-[#333] shrink-0 overflow-hidden">
-                        <img :src="c.img" class="w-full h-full object-cover">
-                    </div>
-                    <div class="flex-1 min-w-0 flex flex-col justify-between">
+                <div v-for="(c, i) in filteredCards" :key="i" class="bg-[#111] border border-[#222] rounded-lg p-3 flex gap-4">
+                     <div class="w-16 h-24 bg-black rounded border border-[#333] shrink-0 overflow-hidden"><img :src="c.img" class="w-full h-full object-cover"></div>
+                     <div class="flex-1 min-w-0 flex flex-col justify-between">
                         <div>
                             <div class="font-bold text-white text-sm truncate">{{ c.name }}</div>
                             <div class="text-[10px] text-[#666] uppercase font-bold">{{ c.set }}</div>
                         </div>
-                        <div class="grid grid-cols-2 gap-2 mt-2">
-                            <div>
-                                <label class="text-[9px] text-[#555] uppercase block">Grade</label>
-                                <select v-model="c.target" class="bg-black text-[#D4AF37] text-xs font-bold border border-[#333] rounded w-full"><option value="10">PSA 10</option><option value="9">PSA 9</option></select>
-                            </div>
-                            <div>
-                                <label class="text-[9px] text-[#555] uppercase block">Profit</label>
-                                <div class="text-sm font-bold font-mono" :class="getProfit(c) >= 0 ? 'text-[#FACC15]' : 'text-red-500'">${{ Math.round(getProfit(c)) }}</div>
-                            </div>
+                        <div class="flex justify-between items-end">
+                            <div class="font-mono font-bold text-[#FACC15]">${{ Math.round(getProfit(c)) }}</div>
+                            <button @click="remove(i)" class="text-[#444]"><i class="fa-solid fa-trash"></i></button>
                         </div>
-                        <div class="flex justify-between items-end mt-2">
-                             <input v-model="c.raw" type="number" placeholder="Raw $" class="bg-transparent border-b border-[#333] text-xs text-white w-16 outline-none focus:border-[#D4AF37]">
-                             <button @click="remove(i)" class="text-[#444] hover:text-red-500"><i class="fa-solid fa-trash"></i></button>
-                        </div>
-                    </div>
+                     </div>
                 </div>
             </div>
-
         </div>
     </div>
 
     <Transition name="modal">
-    <div v-if="showSearch" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-        <div class="bg-[#09090b] w-full max-w-5xl h-[85vh] rounded-xl border border-[#222] shadow-2xl flex flex-col overflow-hidden">
+    <div v-if="showSearch" class="fixed inset-0 bg-black/90 backdrop-blur-md z-50 flex items-center justify-center p-4">
+        <div class="bg-[#09090b] w-full max-w-4xl h-[80vh] rounded-xl border border-[#222] shadow-[0_0_50px_rgba(0,0,0,0.8)] flex flex-col overflow-hidden">
             <div class="p-5 border-b border-[#222] flex justify-between items-center bg-[#0c0c0c]">
-                <h2 class="font-brand font-bold text-xl text-[#FACC15]">Add to Armory</h2>
+                <div class="flex items-center gap-3">
+                    <h2 class="font-brand font-bold text-xl text-[#FACC15] tracking-widest text-glow">ARMORY ACCESS</h2>
+                    <span v-if="namesLoading" class="text-[9px] text-[#555] uppercase animate-pulse">Indexing Names...</span>
+                </div>
                 <button @click="showSearch=false" class="text-[#555] hover:text-white transition"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
 
-            <div class="p-5 border-b border-[#222] bg-[#0c0c0c] grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                    <label class="text-[10px] text-[#555] font-bold uppercase mb-1.5 block">1. Select Era</label>
+            <div class="p-5 border-b border-[#222] bg-[#0c0c0c] grid grid-cols-1 md:grid-cols-10 gap-4">
+                <div class="md:col-span-3">
+                    <label class="text-[9px] text-[#555] font-bold uppercase mb-1.5 block tracking-wider">1. Select Era</label>
                     <div class="relative">
                         <select v-model="selectedEra" class="w-full bg-[#111] border border-[#333] text-white text-xs font-bold rounded p-3 outline-none focus:border-[#D4AF37] appearance-none uppercase cursor-pointer">
-                            <option value="">-- Choose Era --</option>
+                            <option value="">-- Era --</option>
                             <option v-for="era in eras" :value="era">{{ era }}</option>
                         </select>
                         <i class="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-[#555] text-xs pointer-events-none"></i>
                     </div>
                 </div>
-                <div>
-                    <label class="text-[10px] text-[#555] font-bold uppercase mb-1.5 block">2. Select Expansion</label>
+                <div class="md:col-span-3">
+                    <label class="text-[9px] text-[#555] font-bold uppercase mb-1.5 block tracking-wider">2. Select Set</label>
                     <div class="relative">
-                        <select v-model="selectedSet" :disabled="!selectedEra" class="w-full bg-[#111] border border-[#333] text-white text-xs font-bold rounded p-3 outline-none focus:border-[#D4AF37] appearance-none uppercase cursor-pointer disabled:opacity-50">
-                            <option value="">-- Choose Set --</option>
-                            <option v-for="set in filteredSets" :value="set.id">{{ set.name }} ({{ set.releaseDate ? set.releaseDate.substring(0,4) : '2025' }})</option>
+                        <select v-model="selectedSet" :disabled="!selectedEra" class="w-full bg-[#111] border border-[#333] text-white text-xs font-bold rounded p-3 outline-none focus:border-[#D4AF37] appearance-none uppercase cursor-pointer disabled:opacity-30">
+                            <option value="">-- Set --</option>
+                            <option v-for="set in filteredSets" :value="set.id">{{ set.name }}</option>
                         </select>
                         <i class="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-[#555] text-xs pointer-events-none"></i>
                     </div>
                 </div>
-                <div>
-                    <label class="text-[10px] text-[#555] font-bold uppercase mb-1.5 block">3. Type Name (Fast Search)</label>
+                <div class="md:col-span-4 relative">
+                    <label class="text-[9px] text-[#555] font-bold uppercase mb-1.5 block tracking-wider">3. Pokemon Name</label>
                     <div class="relative">
-                        <i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-[#555]"></i>
-                        <input ref="searchBox" v-model="query" @input="debouncedSearch" :disabled="!selectedSet" placeholder="e.g. Charizard..." class="w-full bg-[#111] border border-[#333] text-white text-xs font-bold rounded p-3 pl-9 outline-none focus:border-[#D4AF37] uppercase disabled:opacity-50">
+                        <i class="fa-solid fa-bolt absolute left-3 top-1/2 -translate-y-1/2 text-[#444]"></i>
+                        <input v-model="query" @input="filterNames" :disabled="!selectedSet" placeholder="Start typing..." class="w-full bg-[#111] border border-[#333] text-white text-xs font-bold rounded p-3 pl-9 outline-none focus:border-[#D4AF37] uppercase disabled:opacity-30" autocomplete="off">
+                        
+                        <div v-if="showPredictions && predictedNames.length > 0" class="autocomplete-list">
+                            <div v-for="name in predictedNames" @click="selectName(name)" class="autocomplete-item">
+                                {{ name }}
+                            </div>
+                        </div>
                     </div>
                 </div>
+            </div>
+            
+            <div class="px-5 py-3 bg-[#0c0c0c] border-b border-[#222] flex gap-3 justify-end">
+                <button @click="fetchCards(true)" :disabled="!query" class="bg-[#D4AF37] hover:bg-[#EAB308] disabled:opacity-50 disabled:cursor-not-allowed text-black text-xs font-bold px-6 py-2 rounded uppercase tracking-wider shadow-lg active:scale-95 transition">
+                    Search "{{ query }}"
+                </button>
+                 <div class="w-[1px] bg-[#333]"></div>
+                <button @click="fetchCards(false)" :disabled="!selectedSet" class="text-[#777] hover:text-white text-xs font-bold px-4 py-2 rounded uppercase tracking-wider border border-[#333] hover:border-[#777] transition">
+                    Show Whole Set
+                </button>
             </div>
 
             <div class="flex-1 overflow-y-auto p-5 bg-[#050505]">
                 <div v-if="loading" class="h-full flex flex-col items-center justify-center text-[#D4AF37]">
                     <i class="fa-solid fa-circle-notch fa-spin text-3xl mb-3"></i>
-                    <div class="text-xs font-bold uppercase tracking-widest">Searching API...</div>
+                    <div class="text-xs font-bold uppercase tracking-widest">Retrieving Asset Data...</div>
                 </div>
 
-                <div v-else-if="results.length > 0" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                <div v-else-if="results.length > 0" class="grid grid-cols-2 md:grid-cols-5 gap-4">
                     <div v-for="item in results" :key="item.id" @click="add(item)" class="group bg-[#111] border border-[#222] rounded-lg p-2 hover:border-[#D4AF37] cursor-pointer transition relative">
                         <div class="aspect-[0.7] bg-black rounded overflow-hidden mb-2 relative">
                             <img :src="item.images.small" loading="lazy" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
@@ -243,20 +278,20 @@
                             </div>
                         </div>
                         <div class="text-[10px] font-bold text-white truncate text-center">{{ item.name }}</div>
-                        <div class="text-[9px] text-[#666] font-bold uppercase text-center">#{{ item.number }} • {{ item.rarity }}</div>
+                        <div class="text-[9px] text-[#666] font-bold uppercase text-center">#{{ item.number }}</div>
                     </div>
                 </div>
 
                 <div v-else class="h-full flex flex-col items-center justify-center text-[#333]">
-                    <i class="fa-solid fa-bolt text-5xl mb-4 text-[#222]"></i>
-                    <p class="text-xs font-bold uppercase tracking-widest text-[#555]">Select Set & Type Name to Search</p>
-                    <p class="text-[10px] text-[#444] mt-2">Data loads instantly on typing</p>
+                    <i class="fa-solid fa-crosshairs text-5xl mb-4 text-[#222]"></i>
+                    <p class="text-xs font-bold uppercase tracking-widest text-[#555]">Target Acquired</p>
+                    <p class="text-[10px] text-[#444] mt-2">Select Name & Press Search</p>
                 </div>
             </div>
             
-            <div class="p-3 bg-[#0c0c0c] border-t border-[#222] flex justify-between px-6 text-[10px] text-[#555] uppercase font-bold">
-                <div>{{ results.length }} Cards Found</div>
-                <div>Live Pricing via PokemonTCG.io</div>
+             <div class="p-2 bg-[#080808] border-t border-[#222] flex justify-between px-4 text-[9px] text-[#444] uppercase font-bold">
+                <div>{{ results.length }} Results</div>
+                <div>Live Data</div>
             </div>
         </div>
     </div>
@@ -268,57 +303,29 @@
 <script>
     const { createApp } = Vue;
 
-    // --- UPDATED ERA LIST INCLUDING MISSING SETS ---
-    const PRELOADED_SETS = [
-        // MEGA ERA (2025/2026)
-        {id: "mega4", name: "Mega Evolutions", series: "Mega Era (2025)", releaseDate: "2025/08/15"},
-        {id: "mega3", name: "Phantasmal Flames", series: "Mega Era (2025)", releaseDate: "2025/05/10"},
-        {id: "mega2", name: "Destined Rivals", series: "Mega Era (2025)", releaseDate: "2025/03/22"},
-        {id: "mega1", name: "Journey Together", series: "Mega Era (2025)", releaseDate: "2025/02/08"},
-
-        // SCARLET & VIOLET
-        {id: "sv8pt5", name: "Prismatic Evolutions", series: "Scarlet & Violet", releaseDate: "2025/01/17"},
-        {id: "sv8", name: "Surging Sparks", series: "Scarlet & Violet", releaseDate: "2024/11/08"},
-        {id: "sv7", name: "Stellar Crown", series: "Scarlet & Violet", releaseDate: "2024/09/13"},
-        {id: "sv6pt5", name: "Shrouded Fable", series: "Scarlet & Violet", releaseDate: "2024/08/02"},
-        {id: "sv6", name: "Twilight Masquerade", series: "Scarlet & Violet", releaseDate: "2024/05/24"},
-        {id: "sv5", name: "Temporal Forces", series: "Scarlet & Violet", releaseDate: "2024/03/22"},
-        {id: "sv4pt5", name: "Paldean Fates", series: "Scarlet & Violet", releaseDate: "2024/01/26"},
-        {id: "sv4", name: "Paradox Rift", series: "Scarlet & Violet", releaseDate: "2023/11/03"},
-        {id: "sv3pt5", name: "151", series: "Scarlet & Violet", releaseDate: "2023/09/22"},
-        {id: "sv3", name: "Obsidian Flames", series: "Scarlet & Violet", releaseDate: "2023/08/11"},
-        {id: "sv2", name: "Paldea Evolved", series: "Scarlet & Violet", releaseDate: "2023/06/09"},
-        {id: "sv1", name: "Scarlet & Violet Base", series: "Scarlet & Violet", releaseDate: "2023/03/31"},
-        // SWORD & SHIELD
-        {id: "swsh12pt5", name: "Crown Zenith", series: "Sword & Shield", releaseDate: "2023/01/20"},
-        {id: "swsh12", name: "Silver Tempest", series: "Sword & Shield", releaseDate: "2022/11/11"},
-        {id: "swsh11", name: "Lost Origin", series: "Sword & Shield", releaseDate: "2022/09/09"},
-        {id: "swsh10", name: "Astral Radiance", series: "Sword & Shield", releaseDate: "2022/05/27"},
-        {id: "swsh9", name: "Brilliant Stars", series: "Sword & Shield", releaseDate: "2022/02/25"},
-        {id: "swsh8", name: "Fusion Strike", series: "Sword & Shield", releaseDate: "2021/11/12"},
-        {id: "swsh7", name: "Evolving Skies", series: "Sword & Shield", releaseDate: "2021/08/27"},
-        {id: "swsh6", name: "Chilling Reign", series: "Sword & Shield", releaseDate: "2021/06/18"},
-        // CLASSIC / OTHER
-        {id: "sm115", name: "Hidden Fates", series: "Sun & Moon", releaseDate: "2019/08/23"},
-        {id: "xy12", name: "Evolutions", series: "XY", releaseDate: "2016/11/02"},
-        {id: "base1", name: "Base Set", series: "Classic", releaseDate: "1999/01/09"}
-    ];
-
     createApp({
         data() {
             return {
                 cards: [], filter: '', showSearch: false, query: '', 
                 results: [], loading: false, isUpdating: false,
-                allSets: PRELOADED_SETS,
-                eras: ["Mega Era (2025)", "Scarlet & Violet", "Sword & Shield", "Sun & Moon", "XY", "Classic"],
-                selectedEra: "",
-                selectedSet: "",
-                searchTimer: null
+                
+                // Dynamic Data
+                allSets: [], eras: [],
+                
+                // Selection State
+                selectedEra: "", selectedSet: "",
+                
+                // Name Prediction State
+                allNamesInSet: [], // List of strings ["Charizard", "Pikachu"...]
+                predictedNames: [],
+                showPredictions: false,
+                namesLoading: false
             }
         },
         mounted() {
             const db = localStorage.getItem('gladiator_v26');
             if(db) this.cards = JSON.parse(db);
+            this.loadSets();
         },
         computed: {
             filteredCards() {
@@ -327,15 +334,20 @@
             },
             totalProfit() { return this.cards.reduce((sum, c) => sum + this.getProfit(c), 0); },
             totalCost() { return this.cards.reduce((sum, c) => sum + (c.raw || 0) + (c.fee || 0), 0); },
-            
             filteredSets() {
                 if (!this.selectedEra) return [];
                 return this.allSets.filter(s => s.series === this.selectedEra);
             }
         },
         watch: {
-            selectedSet() { this.query = ''; this.results = []; }, // Clear results on set change
-            selectedEra() { this.selectedSet = ""; this.results = []; }
+            // When Set changes, Fetch Names ONLY (Tiny payload)
+            selectedSet(newVal) {
+                this.query = ''; 
+                this.results = []; 
+                this.allNamesInSet = [];
+                if(newVal) this.fetchSetNames(newVal);
+            },
+            selectedEra() { this.selectedSet = ""; }
         },
         methods: {
             formatNumber(n) { return (n||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}); },
@@ -354,31 +366,82 @@
             },
             getProfit(c) { return this.getValue(c) - ((c.raw || 0) + (c.fee || 0)); },
             
-            // --- NEW LIGHTNING FAST SEARCH LOGIC ---
-            // Instead of downloading 250 cards (slow), we query the API for the specific name (fast)
-            debouncedSearch() {
-                clearTimeout(this.searchTimer);
-                if(this.query.length < 2) return;
-                this.searchTimer = setTimeout(() => this.searchApi(), 300);
+            // --- 1. SET LOADER ---
+            async loadSets() {
+                const cached = localStorage.getItem('gladiator_sets_v3');
+                if(cached) { this.processSets(JSON.parse(cached)); this.fetchSetsFromApi(); }
+                else { await this.fetchSetsFromApi(); }
             },
-            
-            async searchApi() {
+            async forceRefreshSets() {
+                localStorage.removeItem('gladiator_sets_v3');
+                await this.fetchSetsFromApi();
+                alert("Database Refreshed");
+            },
+            async fetchSetsFromApi() {
+                try {
+                    const res = await fetch('https://api.pokemontcg.io/v2/sets?orderBy=-releaseDate&pageSize=250');
+                    const data = await res.json();
+                    localStorage.setItem('gladiator_sets_v3', JSON.stringify(data.data));
+                    this.processSets(data.data);
+                } catch(e) {}
+            },
+            processSets(data) {
+                this.allSets = data;
+                const uniqueSeries = [...new Set(data.map(s => s.series))];
+                const priority = ["Scarlet & Violet", "Sword & Shield", "Sun & Moon", "XY", "Black & White"];
+                this.eras = uniqueSeries.sort((a,b) => {
+                    const idxA = priority.indexOf(a); const idxB = priority.indexOf(b);
+                    if(idxA !== -1 && idxB !== -1) return idxA - idxB;
+                    if(idxA !== -1) return -1; if(idxB !== -1) return 1; return 0;
+                });
+            },
+
+            // --- 2. LIGHTWEIGHT NAME FETCHER (THE SPEED FIX) ---
+            async fetchSetNames(setId) {
+                this.namesLoading = true;
+                try {
+                    // Fetch ONLY names. Returns ~10KB json. Super fast.
+                    const url = `https://api.pokemontcg.io/v2/cards?q=set.id:${setId}&select=name`;
+                    const res = await fetch(url);
+                    const data = await res.json();
+                    // Extract unique names
+                    const names = [...new Set(data.data.map(c => c.name))].sort();
+                    this.allNamesInSet = names;
+                } catch(e) { console.error(e); }
+                finally { this.namesLoading = false; }
+            },
+
+            // --- 3. LOCAL AUTOCOMPLETE ---
+            filterNames() {
+                if(!this.query) { this.showPredictions = false; return; }
+                const q = this.query.toLowerCase();
+                // Filter local list instantly
+                this.predictedNames = this.allNamesInSet.filter(n => n.toLowerCase().startsWith(q)).slice(0, 10); // Show top 10
+                this.showPredictions = true;
+            },
+            selectName(name) {
+                this.query = name;
+                this.showPredictions = false;
+            },
+
+            // --- 4. FINAL SEARCH ---
+            async fetchCards(searchByName) {
                 if(!this.selectedSet) return;
                 this.loading = true;
                 this.results = [];
                 try {
-                    // Optimized Query: Search IN set, FOR name. Limit fields to basics.
-                    // This payload is < 5kb vs the old 200kb.
-                    const q = `set.id:${this.selectedSet} name:"${this.query}*"`;
-                    const url = `https://api.pokemontcg.io/v2/cards?q=${q}&pageSize=30&select=id,name,number,images,tcgplayer,rarity&orderBy=number`; 
+                    let q = `set.id:${this.selectedSet}`;
+                    // If searching specific name, add exact match
+                    if(searchByName && this.query) {
+                        q += ` name:"${this.query}"`; // Exact match quote
+                    }
+                    // Fetch full data for these cards
+                    const url = `https://api.pokemontcg.io/v2/cards?q=${q}&pageSize=250&select=id,name,number,images,tcgplayer,rarity&orderBy=number`;
                     const res = await fetch(url);
                     const data = await res.json();
                     this.results = data.data || [];
-                } catch(e) { 
-                    console.log(e); 
-                } finally { 
-                    this.loading = false; 
-                }
+                } catch(e) {}
+                finally { this.loading = false; }
             },
             
             async updatePrices() {
@@ -412,11 +475,12 @@
                 const p = item.tcgplayer.prices;
                 return p.holofoil?.market || p.normal?.market || p.reverseHolofoil?.market || p.unlimitedHolofoil?.market || 0;
             },
-            openSearch() { this.showSearch = true; this.selectedEra = ""; this.selectedSet = ""; this.query = ""; this.results = []; },
+            openSearch() { this.showSearch = true; this.selectedEra = ""; this.selectedSet = ""; this.query = ""; this.results = []; this.allNamesInSet = []; },
             add(item) {
                 const rawPrice = this.getPrice(item);
+                const setObj = this.allSets.find(s=>s.id === this.selectedSet);
                 const newCard = {
-                    id: item.id, name: item.name, set: this.allSets.find(s=>s.id === this.selectedSet).name, img: item.images.small,
+                    id: item.id, name: item.name, set: setObj ? setObj.name : "Unknown", img: item.images.small,
                     condition: '', raw: rawPrice, fee: 15, target: 10,
                     psa10: parseFloat((rawPrice * 3.2).toFixed(2)),
                     psa9: parseFloat((rawPrice * 1.1).toFixed(2)),
