@@ -16,164 +16,202 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 
     <style>
-        :root { --gold: #D4AF37; --bg-dark: #050505; --glass: rgba(20, 20, 20, 0.85); --border: rgba(255,255,255,0.1); }
-        body { font-family: 'Outfit', sans-serif; background-color: var(--bg-dark); color: #fff; height: 100vh; overflow: hidden; }
+        :root { 
+            --gold: #D4AF37; 
+            --gold-dim: rgba(212, 175, 55, 0.3);
+            --bg-dark: #050505; 
+            --glass: rgba(15, 15, 15, 0.7); 
+            --border: rgba(255,255,255,0.08); 
+        }
+        
+        body { 
+            font-family: 'Outfit', sans-serif; 
+            background-color: var(--bg-dark); 
+            background-image: radial-gradient(circle at 50% 0%, #1a1200 0%, #000000 60%);
+            color: #fff; 
+            height: 100vh; 
+            overflow: hidden; 
+        }
         .font-brand { font-family: 'Cinzel', serif; }
         [v-cloak] { display: none; }
 
-        .glass-panel { background: var(--glass); backdrop-filter: blur(16px); border: 1px solid var(--border); box-shadow: 0 4px 30px rgba(0,0,0,0.5); }
-        .card-hover:hover { transform: translateY(-3px); border-color: var(--gold); box-shadow: 0 0 20px rgba(212,175,55,0.15); }
+        /* GLASSMORPHISM */
+        .glass-panel { 
+            background: var(--glass); 
+            backdrop-filter: blur(20px); 
+            border: 1px solid var(--border); 
+            box-shadow: 0 4px 30px rgba(0,0,0,0.5); 
+        }
+        
+        .nav-item { transition: all 0.2s; border-left: 3px solid transparent; }
+        .nav-item:hover, .nav-item.active { background: linear-gradient(90deg, var(--gold-dim) 0%, transparent 100%); border-color: var(--gold); color: white; }
+        .nav-item.active { color: var(--gold); }
+
+        .card-hover { transition: all 0.3s ease; }
+        .card-hover:hover { transform: translateY(-5px); border-color: var(--gold); box-shadow: 0 0 20px rgba(212,175,55,0.15); }
 
         /* GRAPH LINE ANIMATION */
         .chart-line { stroke-dasharray: 1000; stroke-dashoffset: 1000; animation: draw 2s ease-out forwards; }
         @keyframes draw { to { stroke-dashoffset: 0; } }
         
-        /* SEARCH INPUT */
-        .search-select { background: #000; border: 1px solid #333; color: white; padding: 12px; border-radius: 8px; font-weight: bold; text-transform: uppercase; font-size: 11px; width: 100%; transition: 0.2s; }
-        .search-select:focus { border-color: var(--gold); outline: none; box-shadow: 0 0 10px rgba(212,175,55,0.2); }
+        /* INPUTS */
+        .glass-input { background: rgba(0,0,0,0.5); border: 1px solid var(--border); color: white; padding: 10px; width: 100%; border-radius: 6px; font-size: 12px; font-weight: bold; text-transform: uppercase; transition: 0.2s; }
+        .glass-input:focus { border-color: var(--gold); outline: none; box-shadow: 0 0 10px var(--gold-dim); }
     </style>
 </head>
 <body class="flex flex-col h-screen">
 
 <div id="app" v-cloak class="flex h-full w-full max-w-[1920px] mx-auto relative">
 
-    <div v-if="!user" class="absolute inset-0 z-50 bg-black flex flex-col items-center justify-center p-6 bg-[url('https://wallpapers.com/images/hd/dark-pokemon-background-1920-x-1080-8798.jpg')] bg-cover bg-center">
-        <div class="absolute inset-0 bg-black/80 backdrop-blur-md"></div>
-        <div class="glass-panel p-10 rounded-2xl max-w-md w-full text-center relative z-10 border-t border-[#D4AF37]">
-            <img src="https://raw.githubusercontent.com/Kronborg1980/Gladiator-Collectables/main/logogla.webp" class="w-24 h-24 object-contain mx-auto mb-6 drop-shadow-[0_0_15px_rgba(212,175,55,0.6)]">
-            <h1 class="text-4xl font-brand font-bold text-white mb-2 tracking-widest">GLADIATOR</h1>
-            <p class="text-xs text-[#D4AF37] uppercase tracking-[0.3em] mb-10">Pro Portfolio Tracker</p>
-            <button @click="loginWithGoogle" class="w-full bg-white text-black font-bold py-4 rounded-lg flex items-center justify-center gap-3 hover:bg-gray-200 transition shadow-lg">
-                <i class="fa-brands fa-google text-red-600 text-xl"></i> Sign in with Google
-            </button>
-        </div>
-    </div>
-
-    <template v-else>
-        <aside class="w-64 bg-[#0a0a0a] border-r border-white/10 flex flex-col shrink-0 z-20">
-            <div class="p-6 border-b border-white/10 flex items-center gap-3">
-                <img :src="user.photoURL" class="w-10 h-10 rounded-full border border-[#D4AF37]">
-                <div class="overflow-hidden">
-                    <div class="text-sm font-bold text-white truncate">{{ user.displayName }}</div>
-                    <div class="text-[9px] text-green-400 uppercase tracking-wider flex items-center gap-1"><i class="fa-solid fa-circle text-[6px]"></i> Pro Account</div>
-                </div>
+    <aside class="w-64 bg-[#0a0a0a]/90 backdrop-blur-xl border-r border-white/5 flex flex-col shrink-0 z-20">
+        
+        <div class="p-8 border-b border-white/5 flex flex-col items-center text-center">
+            <div class="w-16 h-16 rounded-full border border-[#D4AF37] flex items-center justify-center shadow-[0_0_15px_rgba(212,175,55,0.3)] mb-3">
+                <img src="https://raw.githubusercontent.com/Kronborg1980/Gladiator-Collectables/main/logogla.webp" class="w-10 h-10 object-contain">
             </div>
+            <h1 class="text-xl font-brand font-bold text-white tracking-[0.2em]">GLADIATOR</h1>
+            <div class="text-[9px] text-[#D4AF37] uppercase tracking-widest">Assets Manager</div>
+        </div>
 
-            <div class="flex-1 overflow-y-auto py-6 px-3 space-y-1">
-                <button @click="currentView='dashboard'; currentBinder=null" class="w-full text-left px-4 py-3 rounded-lg text-sm font-bold text-gray-400 hover:text-white hover:bg-white/5 transition flex items-center gap-3" :class="{'bg-white/10 text-white': currentView==='dashboard'}">
-                    <i class="fa-solid fa-chart-pie"></i> Dashboard
-                </button>
-                <button @click="currentView='armory'; currentBinder=null" class="w-full text-left px-4 py-3 rounded-lg text-sm font-bold text-gray-400 hover:text-white hover:bg-white/5 transition flex items-center gap-3" :class="{'bg-white/10 text-white': currentView==='armory' && !currentBinder}">
-                    <i class="fa-solid fa-layer-group"></i> Master Collection
-                </button>
+        <div class="flex-1 overflow-y-auto py-6 px-0 space-y-1">
+            <div class="px-6 text-[9px] text-[#555] font-bold uppercase tracking-widest mb-2">Main Menu</div>
+            <button @click="currentView='dashboard'; currentBinder=null" class="nav-item w-full text-left px-6 py-3 text-sm font-medium text-gray-400 flex items-center gap-3" :class="{active: currentView==='dashboard'}">
+                <i class="fa-solid fa-chart-line w-4 text-center"></i> Dashboard
+            </button>
+            <button @click="currentView='armory'; currentBinder=null" class="nav-item w-full text-left px-6 py-3 text-sm font-medium text-gray-400 flex items-center gap-3" :class="{active: currentView==='armory' && !currentBinder}">
+                <i class="fa-solid fa-layer-group w-4 text-center"></i> Master Armory
+            </button>
 
-                <div class="mt-8 mb-2 px-4 text-[10px] font-bold text-[#555] uppercase tracking-widest flex justify-between items-center">
-                    <span>Binders</span>
-                    <i @click="createBinder" class="fa-solid fa-plus text-[#D4AF37] cursor-pointer hover:scale-110 transition"></i>
-                </div>
-                <div v-for="binder in binders" :key="binder.id">
-                    <button @click="selectBinder(binder)" class="w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 transition flex items-center justify-between group" :class="{'text-[#D4AF37]': currentBinder?.id === binder.id}">
-                        <span class="truncate flex items-center gap-2"><i class="fa-solid fa-book text-xs"></i> {{ binder.name }}</span>
-                    </button>
+            <div class="px-6 mt-8 mb-2 flex justify-between items-center group cursor-pointer" @click="createBinder">
+                <span class="text-[9px] text-[#555] font-bold uppercase tracking-widest group-hover:text-[#D4AF37] transition">Custom Binders</span>
+                <i class="fa-solid fa-plus text-[#555] text-xs group-hover:text-white transition"></i>
+            </div>
+            
+            <div v-for="binder in binders" :key="binder.id">
+                <button @click="selectBinder(binder)" class="nav-item w-full text-left px-6 py-2.5 text-xs font-bold text-gray-400 flex items-center justify-between group" :class="{active: currentBinder?.id === binder.id}">
+                    <span class="truncate uppercase flex items-center gap-2"><i class="fa-solid fa-folder w-4 text-center"></i> {{ binder.name }}</span>
+                    <i @click.stop="deleteBinder(binder.id)" class="fa-solid fa-trash text-[10px] opacity-0 group-hover:opacity-100 hover:text-red-500 transition"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="p-6 border-t border-white/5">
+            <div v-if="user" class="bg-white/5 rounded-lg p-3 border border-white/10 flex items-center gap-3 mb-2">
+                <img :src="user.photoURL" class="w-8 h-8 rounded-full border border-[#D4AF37]">
+                <div class="overflow-hidden">
+                    <div class="text-xs font-bold text-white truncate">{{ user.displayName }}</div>
+                    <div class="text-[8px] text-green-400 uppercase tracking-wider flex items-center gap-1"><i class="fa-solid fa-circle text-[4px]"></i> Cloud Sync Active</div>
                 </div>
             </div>
             
-            <button @click="logout" class="p-4 text-xs text-red-500 hover:text-white border-t border-white/10 flex items-center gap-2 justify-center transition">
-                <i class="fa-solid fa-right-from-bracket"></i> Sign Out
+            <button v-if="!user" @click="loginWithGoogle" class="w-full bg-[#D4AF37]/10 border border-[#D4AF37]/30 text-[#D4AF37] hover:bg-[#D4AF37] hover:text-black font-bold py-2 rounded text-xs uppercase tracking-widest transition flex items-center justify-center gap-2">
+                <i class="fa-brands fa-google"></i> Connect Cloud
             </button>
-        </aside>
+            <button v-else @click="logout" class="w-full text-xs text-red-500 hover:text-red-300 text-center py-2">Sign Out</button>
+        </div>
+    </aside>
 
-        <main class="flex-1 flex flex-col relative overflow-hidden bg-[#050505]">
-            <header class="px-8 py-5 flex justify-between items-center border-b border-white/5 bg-black/40 backdrop-blur-md">
-                <div>
-                    <h2 class="text-2xl font-brand font-bold text-white tracking-wide">{{ headerTitle }}</h2>
-                    <div class="text-[10px] text-[#D4AF37] font-medium tracking-widest uppercase flex items-center gap-2">
-                        <i class="fa-solid fa-coins"></i> Total Value: ${{ formatNumber(totalValue) }}
-                    </div>
+    <main class="flex-1 flex flex-col relative overflow-hidden bg-[#050505]">
+        <header class="px-8 py-6 flex justify-between items-center border-b border-white/5 bg-black/20 backdrop-blur-sm z-10">
+            <div>
+                <h2 class="text-2xl font-brand font-bold text-white tracking-widest uppercase text-glow">{{ headerTitle }}</h2>
+                <div class="text-[10px] text-[#D4AF37] font-bold tracking-[0.2em] uppercase flex items-center gap-2 opacity-80">
+                    <i class="fa-solid fa-vault"></i> Total Assets: ${{ formatNumber(totalValue) }}
                 </div>
-                <button @click="openSearch" class="bg-[#D4AF37] hover:bg-[#b5952f] text-black text-xs font-bold px-6 py-3 rounded-lg shadow-[0_0_20px_rgba(212,175,55,0.2)] transition active:scale-95">
-                    <i class="fa-solid fa-plus mr-1"></i> ADD CARD
-                </button>
-            </header>
+            </div>
+            <button @click="openSearch" class="bg-[#D4AF37] hover:bg-white hover:scale-105 text-black text-xs font-extrabold px-8 py-3 rounded shadow-[0_0_20px_rgba(212,175,55,0.2)] transition duration-300 uppercase tracking-widest">
+                <i class="fa-solid fa-plus mr-1"></i> Add Asset
+            </button>
+        </header>
 
-            <div v-if="currentView === 'dashboard'" class="flex-1 overflow-y-auto p-8">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                    <div class="glass-panel p-6 rounded-xl border-t-2 border-t-[#D4AF37]">
-                        <div class="text-[10px] text-gray-500 uppercase font-bold">Portfolio Value</div>
-                        <div class="text-3xl font-bold text-white mt-1">${{ formatNumber(totalValue) }}</div>
-                        <div class="text-xs text-green-500 mt-2"><i class="fa-solid fa-arrow-trend-up"></i> +12% (24h)</div>
-                    </div>
-                    <div class="glass-panel p-6 rounded-xl border-t-2 border-t-blue-500">
-                        <div class="text-[10px] text-gray-500 uppercase font-bold">Total Cards</div>
-                        <div class="text-3xl font-bold text-white mt-1">{{ displayCards.length }}</div>
-                        <div class="text-xs text-gray-500 mt-2">Across {{ binders.length }} Binders</div>
-                    </div>
-                    <div class="glass-panel p-6 rounded-xl border-t-2 border-t-purple-500">
-                        <div class="text-[10px] text-gray-500 uppercase font-bold">Top Asset</div>
-                        <div class="text-xl font-bold text-white mt-1 truncate">{{ topCard ? topCard.name : 'N/A' }}</div>
-                        <div class="text-xs text-[#D4AF37] mt-2">${{ topCard ? formatNumber(topCard.market) : 0 }}</div>
-                    </div>
+        <div v-if="currentView === 'dashboard'" class="flex-1 overflow-y-auto p-8">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="glass-panel p-6 rounded-2xl relative overflow-hidden group">
+                    <div class="absolute -right-6 -top-6 text-[#D4AF37] opacity-5 text-9xl group-hover:scale-110 transition duration-700"><i class="fa-solid fa-sack-dollar"></i></div>
+                    <div class="text-[9px] text-[#888] uppercase tracking-[0.2em] font-bold mb-2">Portfolio Valuation</div>
+                    <div class="text-4xl font-bold text-white text-glow mb-1">${{ formatNumber(totalValue) }}</div>
+                    <div class="text-xs text-green-400 font-bold uppercase tracking-wider flex items-center gap-1"><i class="fa-solid fa-arrow-trend-up"></i> Live Market Data</div>
                 </div>
-
-                <h3 class="text-white font-bold text-sm uppercase tracking-widest mb-4">Your Collections</h3>
-                <div class="grid grid-cols-2 md:grid-cols-5 gap-6">
-                    <div @click="currentView='armory'; currentBinder=null" class="glass-panel aspect-[3/4] rounded-xl p-5 flex flex-col justify-end cursor-pointer hover:border-[#D4AF37] transition group relative overflow-hidden">
-                        <div class="absolute inset-0 bg-gradient-to-t from-[#D4AF37]/20 to-transparent opacity-50"></div>
-                        <i class="fa-solid fa-layer-group text-3xl text-[#D4AF37] mb-2"></i>
-                        <div class="font-bold text-white">Master Collection</div>
-                        <div class="text-xs text-gray-400">{{ cards.length }} Cards</div>
-                    </div>
-                    <div v-for="b in binders" :key="b.id" @click="selectBinder(b)" class="glass-panel aspect-[3/4] rounded-xl p-5 flex flex-col justify-end cursor-pointer hover:border-white transition group">
-                        <i class="fa-solid fa-book text-3xl text-gray-600 group-hover:text-white mb-2 transition"></i>
-                        <div class="font-bold text-white truncate">{{ b.name }}</div>
-                        <div class="text-xs text-gray-400">{{ getBinderCount(b.id) }} Cards</div>
-                    </div>
+                <div class="glass-panel p-6 rounded-2xl border-l-2 border-[#D4AF37]">
+                    <div class="text-[9px] text-[#888] uppercase tracking-[0.2em] font-bold mb-2">Total Inventory</div>
+                    <div class="text-3xl font-bold text-white mb-1">{{ displayCards.length }} <span class="text-sm text-[#555] font-normal">Items</span></div>
+                    <div class="text-xs text-[#555] uppercase tracking-wider">{{ binders.length }} Active Binders</div>
+                </div>
+                <div class="glass-panel p-6 rounded-2xl border-l-2 border-white">
+                    <div class="text-[9px] text-[#888] uppercase tracking-[0.2em] font-bold mb-2">Crown Jewel</div>
+                    <div class="text-xl font-bold text-white truncate mb-1">{{ topCard ? topCard.name : 'N/A' }}</div>
+                    <div class="text-xs text-[#D4AF37] font-bold">${{ topCard ? formatNumber(topCard.market) : 0 }}</div>
                 </div>
             </div>
 
-            <div v-else class="flex-1 overflow-y-auto p-6">
-                <div v-if="displayCards.length === 0" class="flex flex-col items-center justify-center h-full opacity-30">
-                    <i class="fa-solid fa-ghost text-6xl mb-4"></i>
-                    <p class="uppercase tracking-widest font-bold">No Cards Found</p>
+            <h3 class="text-white font-bold text-xs uppercase tracking-[0.2em] mb-4 border-b border-white/5 pb-2 text-[#555]">Your Binders</h3>
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-6">
+                <div @click="currentView='armory'; currentBinder=null" class="glass-panel aspect-[3/4] rounded-xl p-6 flex flex-col justify-end cursor-pointer border border-[#D4AF37]/30 hover:border-[#D4AF37] hover:shadow-[0_0_30px_rgba(212,175,55,0.1)] transition group relative overflow-hidden">
+                    <div class="absolute inset-0 bg-gradient-to-t from-[#D4AF37]/10 to-transparent"></div>
+                    <i class="fa-solid fa-shield-halved text-4xl text-[#D4AF37] mb-4 group-hover:scale-110 transition duration-500"></i>
+                    <div>
+                        <div class="font-bold text-white text-lg font-brand tracking-wide">Master</div>
+                        <div class="text-[10px] text-[#888] font-bold uppercase tracking-widest">Full Collection</div>
+                    </div>
                 </div>
-                <div v-else class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
-                    <div v-for="card in displayCards" :key="card.uid" @click="openCardDetail(card)" class="glass-panel rounded-xl p-3 relative group card-hover cursor-pointer transition-all duration-300">
-                        <div class="aspect-[0.7] rounded bg-[#111] overflow-hidden mb-3 relative">
-                            <img :src="card.image" class="w-full h-full object-cover">
-                        </div>
-                        <div class="mb-2">
-                            <div class="font-bold text-white text-xs truncate">{{ card.name }}</div>
-                            <div class="text-[9px] text-gray-500 font-bold uppercase truncate">{{ card.set }}</div>
-                        </div>
-                        <div class="border-t border-white/10 pt-2 flex justify-between items-end">
-                            <div><div class="text-[9px] text-gray-500 uppercase">Market</div><div class="text-sm font-bold text-white">${{ formatNumber(card.market) }}</div></div>
+
+                <div v-for="b in binders" :key="b.id" @click="selectBinder(b)" class="glass-panel aspect-[3/4] rounded-xl p-6 flex flex-col justify-end cursor-pointer hover:bg-white/5 transition group border border-transparent hover:border-white/20">
+                    <i class="fa-solid fa-book text-3xl text-[#333] group-hover:text-white mb-4 transition duration-500"></i>
+                    <div>
+                        <div class="font-bold text-white text-lg truncate font-brand tracking-wide">{{ b.name }}</div>
+                        <div class="text-[10px] text-[#555] font-bold uppercase tracking-widest group-hover:text-[#888]">{{ getBinderCount(b.id) }} Cards</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div v-else class="flex-1 overflow-y-auto p-8">
+            <div v-if="displayCards.length === 0" class="flex flex-col items-center justify-center h-full opacity-20">
+                <i class="fa-solid fa-box-open text-6xl mb-4"></i>
+                <p class="uppercase tracking-[0.3em] font-bold">Collection Empty</p>
+            </div>
+            
+            <div v-else class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
+                <div v-for="card in displayCards" :key="card.uid" @click="openCardDetail(card)" class="glass-panel rounded-xl p-3 relative group card-hover cursor-pointer">
+                    <div class="aspect-[0.7] rounded bg-[#080808] overflow-hidden mb-3 relative border border-white/5">
+                        <img :src="card.image" class="w-full h-full object-cover transition duration-500 group-hover:scale-110">
+                    </div>
+                    <div class="mb-2 px-1">
+                        <div class="font-bold text-white text-xs truncate">{{ card.name }}</div>
+                        <div class="text-[9px] text-[#666] font-bold uppercase truncate tracking-wider">{{ card.set }}</div>
+                    </div>
+                    <div class="border-t border-white/5 pt-2 flex justify-between items-end px-1">
+                        <div>
+                            <div class="text-[8px] text-[#555] uppercase font-bold">Value</div>
+                            <div class="text-sm font-bold text-white font-mono">${{ formatNumber(card.market) }}</div>
                         </div>
                     </div>
                 </div>
             </div>
-        </main>
-    </template>
+        </div>
+    </main>
 
     <Transition name="fade">
-    <div v-if="showSearch" class="fixed inset-0 bg-black/90 backdrop-blur-md z-[100] flex items-center justify-center p-4">
-        <div class="bg-[#0c0c0c] w-full max-w-5xl rounded-lg border border-[#333] shadow-2xl overflow-hidden flex flex-col h-[80vh]">
-            <div class="px-8 py-6 border-b border-[#222] flex justify-between items-center">
-                <h2 class="text-xl font-brand font-bold text-[#D4AF37] tracking-[0.1em] uppercase">Pokédex Archive</h2>
-                <button @click="showSearch=false" class="text-gray-500 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+    <div v-if="showSearch" class="fixed inset-0 bg-black/90 backdrop-blur-md z-[100] flex items-center justify-center p-6">
+        <div class="glass-panel w-full max-w-5xl rounded-xl shadow-2xl overflow-hidden flex flex-col h-[85vh] border border-[#333]">
+            <div class="px-8 py-6 border-b border-white/10 flex justify-between items-center bg-black/40">
+                <h2 class="text-xl font-brand font-bold text-[#D4AF37] tracking-[0.2em] uppercase text-glow">Pokédex Archive</h2>
+                <button @click="showSearch=false" class="text-[#666] hover:text-white transition"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
-            <div class="px-8 py-6 bg-[#080808] grid grid-cols-1 md:grid-cols-4 gap-4 border-b border-[#222]">
-                <div><label class="text-[10px] text-[#555] font-bold uppercase mb-2 block">1. Era</label><select v-model="selectedEra" class="search-select"><option value="">-- Choose Era --</option><option v-for="era in eras" :value="era">{{ era }}</option></select></div>
-                <div><label class="text-[10px] text-[#555] font-bold uppercase mb-2 block">2. Set</label><select v-model="selectedSet" :disabled="!selectedEra" class="search-select disabled:opacity-50"><option value="">-- Choose Set --</option><option v-for="s in filteredSets" :value="s.id">{{ s.name }}</option></select></div>
-                <div><label class="text-[10px] text-[#555] font-bold uppercase mb-2 block">3. Pokemon</label><input v-model="query" @keyup.enter="fetchCards" :disabled="!selectedSet" placeholder="e.g. Charizard" class="search-select disabled:opacity-50 lowercase placeholder:uppercase"></div>
-                <div><label class="text-[10px] text-[#D4AF37] font-bold uppercase mb-2 block">4. Binder</label><select v-model="targetBinder" class="search-select border-[#D4AF37]"><option value="master">Master Collection</option><option v-for="b in binders" :value="b.id">{{ b.name }}</option></select></div>
+            <div class="px-8 py-8 bg-black/20 grid grid-cols-1 md:grid-cols-4 gap-6 border-b border-white/10">
+                <div><label class="text-[9px] text-[#555] font-bold uppercase mb-2 block tracking-widest">1. Era</label><select v-model="selectedEra" class="glass-input"><option value="">-- Choose Era --</option><option v-for="era in eras" :value="era">{{ era }}</option></select></div>
+                <div><label class="text-[9px] text-[#555] font-bold uppercase mb-2 block tracking-widest">2. Set</label><select v-model="selectedSet" :disabled="!selectedEra" class="glass-input disabled:opacity-30"><option value="">-- Choose Set --</option><option v-for="s in filteredSets" :value="s.id">{{ s.name }}</option></select></div>
+                <div><label class="text-[9px] text-[#555] font-bold uppercase mb-2 block tracking-widest">3. Pokemon</label><input v-model="query" @keyup.enter="fetchCards" :disabled="!selectedSet" placeholder="e.g. Charizard" class="glass-input disabled:opacity-30 lowercase placeholder:uppercase"></div>
+                <div><label class="text-[9px] text-[#D4AF37] font-bold uppercase mb-2 block tracking-widest">4. Binder</label><select v-model="targetBinder" class="glass-input border-[#D4AF37]"><option value="master">Master Collection</option><option v-for="b in binders" :value="b.id">{{ b.name }}</option></select></div>
             </div>
-            <div class="px-8 py-3 bg-[#080808] flex justify-end border-b border-[#222]"><button @click="fetchCards" class="bg-[#D4AF37] text-black text-xs font-bold px-8 py-3 rounded shadow-lg uppercase tracking-wider">Search Card</button></div>
+            <div class="px-8 py-4 bg-black/40 flex justify-end border-b border-white/10"><button @click="fetchCards" class="bg-[#D4AF37] hover:bg-white text-black text-xs font-bold px-10 py-3 rounded shadow-[0_0_15px_rgba(212,175,55,0.4)] uppercase tracking-widest transition transform active:scale-95">Initiate Scan</button></div>
             <div class="flex-1 overflow-y-auto p-8 bg-[#050505]">
-                <div v-if="searchResults.length === 0" class="h-full flex flex-col items-center justify-center opacity-30"><i class="fa-solid fa-magnifying-glass text-5xl mb-4"></i><p class="uppercase font-bold tracking-widest">Awaiting Input</p></div>
-                <div v-else class="grid grid-cols-2 md:grid-cols-5 gap-4">
-                    <div v-for="card in searchResults" :key="card.id" @click="addCardToDB(card)" class="bg-[#111] border border-[#222] rounded-lg p-3 cursor-pointer hover:border-[#D4AF37] group relative">
-                        <img :src="card.images.small" class="w-full rounded mb-2"><div class="text-center text-xs font-bold text-white truncate">{{ card.name }}</div>
-                        <div class="absolute top-2 right-2 bg-black/80 text-[#D4AF37] text-[10px] font-bold px-1.5 rounded border border-[#D4AF37]">${{ getCardPrice(card) }}</div>
+                <div v-if="searchResults.length === 0" class="h-full flex flex-col items-center justify-center opacity-20"><i class="fa-solid fa-fingerprint text-6xl mb-4 text-white"></i><p class="uppercase font-bold tracking-[0.3em]">Awaiting Input</p></div>
+                <div v-else class="grid grid-cols-2 md:grid-cols-5 gap-6">
+                    <div v-for="card in searchResults" :key="card.id" @click="addCard(card)" class="glass-panel p-3 rounded-xl cursor-pointer hover:border-[#D4AF37] group relative transition duration-300">
+                        <img :src="card.images.small" class="w-full rounded-lg mb-3 shadow-lg group-hover:scale-105 transition duration-300">
+                        <div class="text-center text-xs font-bold text-white truncate">{{ card.name }}</div>
+                        <div class="absolute top-2 right-2 bg-black/90 backdrop-blur text-[#D4AF37] text-[9px] font-bold px-2 py-1 rounded border border-[#D4AF37] shadow-lg">${{ getCardPrice(card) }}</div>
                     </div>
                 </div>
             </div>
@@ -182,61 +220,39 @@
     </Transition>
 
     <Transition name="fade">
-    <div v-if="detailCard" class="fixed inset-0 bg-black/95 backdrop-blur-xl z-[200] flex items-center justify-center p-4">
-        <div class="bg-[#0c0c0c] w-full max-w-6xl h-[85vh] rounded-2xl border border-[#222] shadow-2xl flex overflow-hidden">
-            <div class="w-1/3 bg-[#080808] p-10 flex items-center justify-center border-r border-[#222] relative">
-                <div class="absolute top-6 left-6 text-[#D4AF37] font-bold tracking-widest uppercase text-xs cursor-pointer hover:text-white" @click="detailCard=null"><i class="fa-solid fa-arrow-left mr-2"></i> Back</div>
-                <img :src="detailCard.image.replace('small','large')" class="w-full max-w-sm rounded-lg shadow-[0_0_50px_rgba(0,0,0,0.8)] card-hover transition duration-500">
+    <div v-if="detailCard" class="fixed inset-0 bg-black/95 backdrop-blur-xl z-[200] flex items-center justify-center p-6">
+        <div class="bg-[#080808] w-full max-w-6xl h-[85vh] rounded-2xl border border-[#333] shadow-[0_0_100px_rgba(0,0,0,1)] flex overflow-hidden">
+            <div class="w-1/3 bg-[#050505] p-10 flex items-center justify-center border-r border-[#222] relative">
+                <div class="absolute top-8 left-8 text-[#D4AF37] font-bold tracking-widest uppercase text-[10px] cursor-pointer hover:text-white transition" @click="detailCard=null"><i class="fa-solid fa-arrow-left mr-2"></i> Return</div>
+                <img :src="detailCard.image.replace('small','large')" class="w-full max-w-sm rounded-lg shadow-[0_0_50px_rgba(212,175,55,0.1)] card-hover transition duration-500">
             </div>
-
-            <div class="w-2/3 flex flex-col bg-[#050505]">
-                <div class="p-8 border-b border-[#222] flex justify-between items-start">
+            <div class="w-2/3 flex flex-col bg-[#0a0a0a]">
+                <div class="p-10 border-b border-[#222] flex justify-between items-start">
                     <div>
-                        <h2 class="text-3xl font-bold text-white mb-2">{{ detailCard.name }}</h2>
-                        <div class="flex items-center gap-4 text-sm text-gray-400">
-                            <span class="bg-[#1a1a1a] px-3 py-1 rounded border border-[#333] uppercase font-bold tracking-wider text-[10px]">{{ detailCard.set }}</span>
+                        <h2 class="text-4xl font-brand font-bold text-white mb-2 tracking-wide">{{ detailCard.name }}</h2>
+                        <div class="flex items-center gap-4 text-xs text-gray-400 font-bold uppercase tracking-widest">
+                            <span class="bg-[#151515] px-3 py-1 rounded border border-[#333]">{{ detailCard.set }}</span>
                             <span>#{{ detailCard.number }}</span>
                         </div>
                     </div>
                     <div class="text-right">
-                        <div class="text-sm text-gray-500 uppercase tracking-widest font-bold">Market Price</div>
-                        <div class="text-4xl font-bold text-[#D4AF37]">${{ formatNumber(detailCard.market) }}</div>
-                        <div class="text-xs text-green-500 mt-1 font-bold">+0.00% (24h)</div>
+                        <div class="text-[10px] text-gray-500 uppercase tracking-[0.2em] font-bold mb-1">Market Price</div>
+                        <div class="text-5xl font-brand font-bold text-[#D4AF37] text-glow">${{ formatNumber(detailCard.market) }}</div>
                     </div>
                 </div>
-
-                <div class="flex-1 p-8 relative">
-                    <div class="text-xs text-gray-500 uppercase font-bold mb-4 flex gap-4">
-                        <span class="text-white border-b-2 border-[#D4AF37] pb-1">Price History (Simulated)</span>
-                    </div>
-                    <div class="w-full h-64 border-l border-b border-[#333] relative">
-                         <svg viewBox="0 0 100 50" class="w-full h-full overflow-visible">
+                <div class="flex-1 p-10 relative">
+                    <div class="w-full h-full border-l border-b border-[#222] relative opacity-50">
+                        <svg viewBox="0 0 100 50" class="w-full h-full overflow-visible">
                             <path d="M0,40 Q20,10 40,30 T80,20 T100,5" fill="none" stroke="#D4AF37" stroke-width="0.5" class="chart-line" />
                             <path d="M0,40 Q20,10 40,30 T80,20 T100,5 L100,50 L0,50 Z" fill="url(#grad)" opacity="0.2" />
-                            <defs>
-                                <linearGradient id="grad" x1="0%" y1="0%" x2="0%" y2="100%">
-                                    <stop offset="0%" style="stop-color:#D4AF37;stop-opacity:1" />
-                                    <stop offset="100%" style="stop-color:#D4AF37;stop-opacity:0" />
-                                </linearGradient>
-                            </defs>
+                            <defs><linearGradient id="grad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:#D4AF37;stop-opacity:1" /><stop offset="100%" style="stop-color:#D4AF37;stop-opacity:0" /></linearGradient></defs>
                         </svg>
                     </div>
                 </div>
-
-                <div class="p-8 bg-[#080808] border-t border-[#222] grid grid-cols-2 gap-8">
-                    <div>
-                        <label class="block text-[10px] text-gray-500 uppercase font-bold mb-2">Quantity Owned</label>
-                        <div class="flex items-center gap-4">
-                            <button class="w-10 h-10 rounded bg-[#111] border border-[#333] text-white hover:border-white">-</button>
-                            <span class="text-xl font-bold">1</span>
-                            <button class="w-10 h-10 rounded bg-[#111] border border-[#333] text-white hover:border-white">+</button>
-                        </div>
-                    </div>
-                    <div class="flex justify-end items-end">
-                        <button @click="deleteCard(detailCard.uid); detailCard=null" class="text-red-500 hover:text-white text-xs font-bold uppercase tracking-widest flex items-center gap-2">
-                            <i class="fa-solid fa-trash"></i> Remove from Portfolio
-                        </button>
-                    </div>
+                <div class="p-10 bg-[#050505] border-t border-[#222] flex justify-end">
+                    <button @click="deleteCard(detailCard.uid); detailCard=null" class="text-red-500 hover:text-white text-[10px] font-bold uppercase tracking-[0.2em] flex items-center gap-3 transition">
+                        <i class="fa-solid fa-trash"></i> Remove Asset
+                    </button>
                 </div>
             </div>
         </div>
@@ -246,7 +262,7 @@
 </div>
 
 <script>
-    // --- YOUR FIREBASE CONFIGURATION ---
+    // --- FIREBASE CONFIG (Paste Keys Here for Cloud Sync, leave empty for Guest Mode) ---
     const firebaseConfig = {
         apiKey: "AIzaSyBnb9VlLk4sNbj89beWtb2hmLGsvhgb6TE",
         authDomain: "gladiator-portfolio.firebaseapp.com",
@@ -256,30 +272,50 @@
         appId: "1:61051937804:web:535cbbcb5417c4bde67a29"
     };
 
-    // Initialize Firebase
-    if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
-    const auth = firebase.auth();
-    const db = firebase.firestore();
-    const provider = new firebase.auth.GoogleAuthProvider();
+    // Init Firebase only if config is present
+    let auth, db, provider;
+    try {
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        auth = firebase.auth();
+        db = firebase.firestore();
+        provider = new firebase.auth.GoogleAuthProvider();
+    } catch(e) { console.log("Guest Mode Active"); }
 
     const { createApp } = Vue;
 
     createApp({
         data() {
             return {
-                user: null, currentView: 'dashboard', currentBinder: null, binders: [], cards: [],
+                user: null, currentView: 'dashboard', currentBinder: null, 
+                // Hybrid Storage
+                localBinders: [], localCards: [],
+                cloudBinders: [], cloudCards: [],
+                // Search
                 showSearch: false, detailCard: null,
                 allSets: [], eras: [], selectedEra: "", selectedSet: "", query: "", targetBinder: 'master', searchResults: [],
-                cacheKey: 'gladiator_sets_v4'
+                cacheKey: 'gladiator_sets_v5'
             }
         },
         mounted() {
-            auth.onAuthStateChanged(u => {
-                if(u) { this.user = u; this.initUserData(); this.loadSetsAPI(); } 
-                else { this.user = null; }
-            });
+            // 1. Load Local Data Immediately
+            this.loadLocalData();
+            this.loadSetsAPI();
+
+            // 2. Check Cloud Auth
+            if(auth) {
+                auth.onAuthStateChanged(u => {
+                    if(u) { 
+                        this.user = u; 
+                        this.initCloudData(); 
+                    } else { 
+                        this.user = null; 
+                    }
+                });
+            }
         },
         computed: {
+            binders() { return this.user ? this.cloudBinders : this.localBinders; },
+            cards() { return this.user ? this.cloudCards : this.localCards; },
             headerTitle() { return this.currentBinder ? this.currentBinder.name : "Master Collection"; },
             displayCards() { return this.currentBinder ? this.cards.filter(c => c.binderId === this.currentBinder.id) : this.cards; },
             totalValue() { return this.displayCards.reduce((sum, c) => sum + (c.market || 0), 0); },
@@ -287,30 +323,79 @@
             topCard() { return [...this.cards].sort((a,b) => b.market - a.market)[0]; }
         },
         methods: {
-            loginWithGoogle() { auth.signInWithPopup(provider).catch(e => alert(e.message)); },
-            logout() { auth.signOut(); this.cards = []; this.binders = []; },
-            
-            initUserData() {
-                db.collection('users').doc(this.user.uid).collection('binders').onSnapshot(s => this.binders = s.docs.map(d => ({id: d.id, ...d.data()})));
-                db.collection('users').doc(this.user.uid).collection('cards').onSnapshot(s => this.cards = s.docs.map(d => ({uid: d.id, ...d.data()})));
+            // --- AUTH ---
+            loginWithGoogle() { if(auth) auth.signInWithPopup(provider).catch(e => alert(e.message)); },
+            logout() { if(auth) auth.signOut(); },
+
+            // --- DATA HANDLER (The Hybrid Logic) ---
+            loadLocalData() {
+                const b = localStorage.getItem('glad_binders');
+                if(b) this.localBinders = JSON.parse(b);
+                const c = localStorage.getItem('glad_cards');
+                if(c) this.localCards = JSON.parse(c);
             },
+            saveLocalData() {
+                localStorage.setItem('glad_binders', JSON.stringify(this.localBinders));
+                localStorage.setItem('glad_cards', JSON.stringify(this.localCards));
+            },
+            initCloudData() {
+                db.collection('users').doc(this.user.uid).collection('binders').onSnapshot(s => this.cloudBinders = s.docs.map(d => ({id: d.id, ...d.data()})));
+                db.collection('users').doc(this.user.uid).collection('cards').onSnapshot(s => this.cloudCards = s.docs.map(d => ({uid: d.id, ...d.data()})));
+            },
+
+            // --- ACTIONS ---
             createBinder() {
                 const name = prompt("Binder Name:");
-                if(name) db.collection('users').doc(this.user.uid).collection('binders').add({ name, createdAt: new Date() });
+                if(!name) return;
+                if(this.user) {
+                    db.collection('users').doc(this.user.uid).collection('binders').add({ name, createdAt: new Date() });
+                } else {
+                    this.localBinders.push({ id: Date.now().toString(), name });
+                    this.saveLocalData();
+                }
             },
+            deleteBinder(id) {
+                if(!confirm("Delete binder? Cards remain in Master.")) return;
+                if(this.user) db.collection('users').doc(this.user.uid).collection('binders').doc(id).delete();
+                else {
+                    this.localBinders = this.localBinders.filter(b => b.id !== id);
+                    this.saveLocalData();
+                }
+            },
+            addCard(c) {
+                const cardData = {
+                    id: c.id, name: c.name, set: this.allSets.find(s=>s.id === this.selectedSet)?.name || 'Set', 
+                    image: c.images.small, number: c.number, market: this.getCardPrice(c), 
+                    binderId: this.targetBinder === 'master' ? null : this.targetBinder
+                };
+
+                if(this.user) {
+                    db.collection('users').doc(this.user.uid).collection('cards').add(cardData);
+                } else {
+                    cardData.uid = Date.now().toString(); // Local unique ID
+                    this.localCards.push(cardData);
+                    this.saveLocalData();
+                }
+                alert("Asset Secured.");
+            },
+            deleteCard(uid) {
+                if(!confirm("Remove asset?")) return;
+                if(this.user) db.collection('users').doc(this.user.uid).collection('cards').doc(uid).delete();
+                else {
+                    this.localCards = this.localCards.filter(c => c.uid !== uid);
+                    this.saveLocalData();
+                }
+            },
+
+            // --- HELPERS ---
             selectBinder(b) { this.currentView = 'armory'; this.currentBinder = b; },
             getBinderCount(id) { return this.cards.filter(c => c.binderId === id).length; },
-            
-            addCardToDB(c) {
-                const p = this.getCardPrice(c);
-                db.collection('users').doc(this.user.uid).collection('cards').add({
-                    id: c.id, name: c.name, set: this.allSets.find(s=>s.id === this.selectedSet)?.name || 'Set', 
-                    image: c.images.small, number: c.number, market: p, binderId: this.targetBinder === 'master' ? null : this.targetBinder
-                });
-                alert("Added!");
-            },
-            deleteCard(uid) { if(confirm("Delete?")) db.collection('users').doc(this.user.uid).collection('cards').doc(uid).delete(); },
-            
+            openSearch() { this.showSearch = true; this.searchResults = []; },
+            openCardDetail(c) { this.detailCard = c; },
+            formatNumber(n) { return (n||0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}); },
+            getCardPrice(c) { return c.tcgplayer?.prices?.holofoil?.market || c.tcgplayer?.prices?.normal?.market || 0; },
+
+            // --- API ---
             async loadSetsAPI() {
                 const c = localStorage.getItem(this.cacheKey);
                 if(c) { const d = JSON.parse(c); this.allSets = d.sets; this.eras = d.eras; return; }
@@ -325,12 +410,7 @@
                 const res = await fetch(`https://api.pokemontcg.io/v2/cards?q=${q}&pageSize=50&select=id,name,number,images,tcgplayer`);
                 const data = await res.json();
                 this.searchResults = data.data || [];
-            },
-            getCardPrice(c) { return c.tcgplayer?.prices?.holofoil?.market || c.tcgplayer?.prices?.normal?.market || 0; },
-            
-            openSearch() { this.showSearch = true; this.searchResults = []; },
-            openCardDetail(c) { this.detailCard = c; },
-            formatNumber(n) { return (n||0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}); }
+            }
         }
     }).mount('#app');
 </script>
