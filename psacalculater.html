@@ -34,26 +34,18 @@
         /* Gold Glass Panel */
         .gladiator-panel {
             background: rgba(18, 18, 18, 0.95);
-            border: 1px solid rgba(212, 175, 55, 0.3); /* Gold Border */
+            border: 1px solid rgba(212, 175, 55, 0.3);
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.8);
         }
 
         /* Gold Gradient Text */
-        .text-gold {
-            color: var(--gold-primary);
-        }
+        .text-gold { color: var(--gold-primary); }
         .text-gold-gradient {
             background: linear-gradient(to right, #bf953f, #fcf6ba, #b38728, #fbf5b7, #aa771c);
             -webkit-background-clip: text;
             background-clip: text;
             color: transparent;
         }
-
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar { width: 8px; height: 8px; }
-        ::-webkit-scrollbar-track { background: #000; }
-        ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; border: 1px solid #444; }
-        ::-webkit-scrollbar-thumb:hover { background: var(--gold-dim); }
 
         /* Inputs */
         input, select, textarea {
@@ -64,6 +56,20 @@
         input:focus, select:focus, textarea:focus {
             border-color: var(--gold-primary) !important;
             box-shadow: 0 0 5px rgba(212, 175, 55, 0.5);
+        }
+
+        /* Card Image Loading Animation */
+        .card-img-wrapper {
+            position: relative;
+            padding-bottom: 139%; /* Aspect Ratio for Pokemon Cards */
+            overflow: hidden;
+            background: #1a1a1a;
+            border-radius: 6px;
+        }
+        .card-img-wrapper img {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            object-fit: cover;
         }
     </style>
 </head>
@@ -84,10 +90,6 @@
                 <div class="text-[10px] text-slate-500 uppercase tracking-wider">Inventory</div>
                 <div class="text-2xl font-bold text-white">{{ cards.length }} <span class="text-sm text-slate-600 font-normal">Cards</span></div>
             </div>
-            <div class="text-right px-6 border-r border-[#333]">
-                <div class="text-[10px] text-slate-500 uppercase tracking-wider">Total Invested</div>
-                <div class="text-2xl font-bold text-blue-400">${{ formatNumber(totalInvested) }}</div>
-            </div>
             <div class="text-right pl-6">
                 <div class="text-[10px] text-slate-500 uppercase tracking-wider">Potential Profit</div>
                 <div class="text-2xl font-bold" :class="totalProfit >= 0 ? 'text-[#D4AF37]' : 'text-red-500'">
@@ -105,56 +107,54 @@
         </div>
 
         <div class="flex gap-2">
-            <label class="cursor-pointer bg-[#1a1a1a] hover:bg-[#333] border border-[#333] text-slate-400 px-4 py-2 rounded-sm text-xs font-bold uppercase tracking-widest transition flex items-center gap-2">
-                <i class="fa-solid fa-file-import"></i> Import Database
-                <input type="file" @change="importData" class="hidden" accept=".json">
-            </label>
-            <button @click="exportData" class="bg-[#1a1a1a] hover:bg-[#333] border border-[#333] text-slate-400 px-4 py-2 rounded-sm text-xs font-bold uppercase tracking-widest transition flex items-center gap-2">
-                <i class="fa-solid fa-file-export"></i> Export Database
+            <button @click="exportData" class="bg-[#1a1a1a] hover:bg-[#333] border border-[#333] text-slate-400 px-4 py-2 rounded-sm text-xs font-bold uppercase tracking-widest transition">
+                <i class="fa-solid fa-download mr-1"></i> Backup
             </button>
-            <button @click="openModal" class="bg-[#D4AF37] hover:bg-[#b39028] text-black px-6 py-2 rounded-sm font-bold tracking-wider transition uppercase flex items-center gap-2 ml-4">
-                <i class="fa-solid fa-plus"></i> Add Card
+            <button @click="openModal" class="bg-[#D4AF37] hover:bg-[#b39028] text-black px-6 py-2 rounded-sm font-bold tracking-wider transition uppercase flex items-center gap-2 ml-2 shadow-[0_0_10px_rgba(212,175,55,0.2)]">
+                <i class="fa-solid fa-bolt"></i> Add Card
             </button>
         </div>
     </div>
 
     <div class="gladiator-panel rounded-lg overflow-hidden">
         <div v-if="cards.length === 0" class="p-12 text-center text-slate-500">
-            <i class="fa-solid fa-box-open text-6xl mb-4 text-[#333]"></i>
-            <h3 class="text-xl font-bold text-slate-400 mb-2 brand-font">Your Inventory is Empty</h3>
-            <p class="text-sm mb-6">Add a card to begin calculating your grading margins.</p>
-            <button @click="openModal" class="text-[#D4AF37] hover:underline uppercase text-xs font-bold tracking-widest">
-                Create First Entry
-            </button>
+            <i class="fa-solid fa-magnifying-glass-chart text-6xl mb-4 text-[#333]"></i>
+            <h3 class="text-xl font-bold text-slate-400 mb-2 brand-font">Inventory Empty</h3>
+            <p class="text-sm mb-6">Use the "Add Card" button to search the database.</p>
         </div>
 
         <div v-else class="overflow-x-auto">
             <table class="w-full text-left border-collapse">
                 <thead>
                     <tr class="bg-black text-[#D4AF37] text-[10px] uppercase tracking-widest border-b border-[#D4AF37]/20">
-                        <th class="p-4">Card Name</th>
-                        <th class="p-4">Condition</th>
+                        <th class="p-4">Card Info</th>
+                        <th class="p-4 text-center">Set</th>
                         <th class="p-4 text-right">Raw $</th>
                         <th class="p-4 text-right">Grade Cost</th>
                         <th class="p-4 text-center">Exp. Grade</th>
                         <th class="p-4 text-right text-slate-500">PSA 10</th>
                         <th class="p-4 text-right text-slate-500">PSA 9</th>
                         <th class="p-4 text-right text-white">Profit</th>
-                        <th class="p-4 text-center">Grade It?</th>
-                        <th class="p-4 text-center">Status</th>
+                        <th class="p-4 text-center">Action</th>
                         <th class="p-4"></th>
                     </tr>
                 </thead>
                 <tbody class="text-sm divide-y divide-[#333]">
                     <tr v-for="(card, index) in filteredCards" :key="index" class="hover:bg-[#1a1a1a] transition group">
                         
-                        <td class="p-4 font-bold text-slate-200 border-l-2 border-transparent hover:border-[#D4AF37]">
-                            {{ card.name }}
+                        <td class="p-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-14 bg-[#111] rounded overflow-hidden border border-[#333]">
+                                    <img v-if="card.image" :src="card.image" class="w-full h-full object-cover">
+                                </div>
+                                <div>
+                                    <div class="font-bold text-slate-200">{{ card.name }}</div>
+                                    <div class="text-[10px] text-slate-500 uppercase">{{ card.rarity }}</div>
+                                </div>
+                            </div>
                         </td>
                         
-                        <td class="p-4 text-slate-500 text-xs italic max-w-[150px] truncate" :title="card.notes">
-                            {{ card.notes || '-' }}
-                        </td>
+                        <td class="p-4 text-center text-xs text-slate-500">{{ card.set }}</td>
 
                         <td class="p-4 text-right text-slate-400 font-mono">${{ card.raw }}</td>
                         
@@ -178,25 +178,16 @@
                         </td>
 
                         <td class="p-4 text-center">
-                            <span v-if="calculateProfit(card) > 0" class="text-[#D4AF37] text-xs font-bold tracking-widest border border-[#D4AF37] px-2 py-1 rounded-sm">
-                                YES
-                            </span>
-                            <span v-else class="text-slate-600 text-xs font-bold tracking-widest border border-slate-700 px-2 py-1 rounded-sm">
-                                NO
-                            </span>
-                        </td>
-
-                        <td class="p-4 text-center">
                              <select v-model="card.status" @change="saveData" class="bg-transparent text-xs text-slate-400 border-none focus:ring-0 cursor-pointer text-center">
                                 <option value="Inventory">Inventory</option>
-                                <option value="Grading">At Grading</option>
+                                <option value="Grading">Sent</option>
                                 <option value="Sold">Sold</option>
                             </select>
                         </td>
 
                         <td class="p-4 text-right">
                             <button @click="deleteCard(index)" class="text-slate-700 hover:text-[#8a1c1c] transition">
-                                <i class="fa-solid fa-trash"></i>
+                                <i class="fa-solid fa-times"></i>
                             </button>
                         </td>
                     </tr>
@@ -205,55 +196,121 @@
         </div>
     </div>
 
-    <div v-if="showModal" class="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-50">
-        <div class="gladiator-panel p-8 rounded-lg w-full max-w-2xl relative">
+    <div v-if="showModal" class="fixed inset-0 bg-black/95 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div class="gladiator-panel rounded-lg w-full max-w-4xl h-[85vh] flex flex-col relative overflow-hidden">
             
-            <h2 class="text-2xl text-[#D4AF37] brand-font mb-6 border-b border-[#333] pb-2">New Gladiator Acquisition</h2>
+            <div class="p-6 border-b border-[#333] bg-[#111] flex justify-between items-center shrink-0">
+                <h2 class="text-2xl text-[#D4AF37] brand-font uppercase">Search Database</h2>
+                <button @click="showModal = false" class="text-slate-500 hover:text-white"><i class="fa-solid fa-times text-xl"></i></button>
+            </div>
             
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="md:col-span-2">
-                    <label class="text-[10px] uppercase tracking-widest text-slate-500">Card Name</label>
-                    <input v-model="newCard.name" type="text" class="w-full p-3 rounded-sm mt-1 focus:outline-none" placeholder="e.g. Charizard SIR 151">
-                </div>
-                
-                <div>
-                    <label class="text-[10px] uppercase tracking-widest text-slate-500">Raw Purchase Price</label>
-                    <input v-model.number="newCard.raw" type="number" class="w-full p-3 rounded-sm mt-1 font-mono" placeholder="0.00">
-                </div>
-                
-                <div>
-                    <label class="text-[10px] uppercase tracking-widest text-slate-500">Grading Cost</label>
-                    <input v-model.number="newCard.gradingPrice" type="number" class="w-full p-3 rounded-sm mt-1 font-mono" placeholder="20.00">
-                </div>
-
-                <div class="bg-[#0a0a0a] p-4 rounded-sm border border-[#333] md:col-span-2 grid grid-cols-3 gap-4">
-                    <div class="md:col-span-3 text-xs text-[#D4AF37] uppercase tracking-widest mb-1 text-center">- Estimated Market Values -</div>
-                    <div>
-                        <label class="text-[10px] text-slate-500 block text-center">PSA 10</label>
-                        <input v-model.number="newCard.psa10" type="number" class="w-full p-2 text-center font-mono text-green-500">
-                    </div>
-                    <div>
-                        <label class="text-[10px] text-slate-500 block text-center">PSA 9</label>
-                        <input v-model.number="newCard.psa9" type="number" class="w-full p-2 text-center font-mono text-yellow-500">
-                    </div>
-                    <div>
-                        <label class="text-[10px] text-slate-500 block text-center">PSA 8</label>
-                        <input v-model.number="newCard.psa8" type="number" class="w-full p-2 text-center font-mono text-red-500">
-                    </div>
-                </div>
-
-                <div class="md:col-span-2">
-                    <label class="text-[10px] uppercase tracking-widest text-slate-500">Condition Notes</label>
-                    <textarea v-model="newCard.notes" rows="2" class="w-full p-3 rounded-sm mt-1 text-sm text-slate-300" placeholder="Whitening on corners, centering off..."></textarea>
+            <div class="p-6 bg-[#0a0a0a] shrink-0">
+                <div class="flex gap-2">
+                    <input v-model="apiSearchQuery" @keyup.enter="searchApi" type="text" 
+                        class="w-full p-4 rounded-sm text-lg font-mono text-[#D4AF37] placeholder-slate-700" 
+                        placeholder="Type card name (e.g., 'Gengar VMAX', 'Charizard 151')...">
+                    <button @click="searchApi" class="bg-[#D4AF37] text-black px-8 font-bold uppercase tracking-widest hover:bg-white transition">
+                        <i class="fa-solid fa-search"></i>
+                    </button>
                 </div>
             </div>
 
-            <div class="flex justify-end gap-4 mt-8 pt-4 border-t border-[#333]">
-                <button @click="showModal = false" class="px-6 py-2 text-slate-400 hover:text-white uppercase text-xs tracking-widest">Cancel</button>
-                <button @click="addCard" class="px-8 py-2 bg-[#D4AF37] hover:bg-[#b39028] text-black font-bold uppercase tracking-widest rounded-sm shadow-[0_0_15px_rgba(212,175,55,0.4)]">
-                    Add to Inventory
-                </button>
+            <div class="flex-1 overflow-y-auto p-6 bg-[#050505]">
+                <div v-if="isSearching" class="text-center py-20 text-[#D4AF37] animate-pulse">
+                    <i class="fa-solid fa-circle-notch fa-spin text-4xl mb-4"></i>
+                    <p class="uppercase tracking-widest text-xs">Consulting the Oracles...</p>
+                </div>
+
+                <div v-else-if="apiResults.length > 0" class="grid grid-cols-2 md:grid-cols-4 gap-6">
+                    <div v-for="card in apiResults" :key="card.id" 
+                        @click="selectCard(card)"
+                        class="group cursor-pointer bg-[#111] border border-[#333] hover:border-[#D4AF37] rounded-lg p-3 transition hover:transform hover:scale-105">
+                        
+                        <div class="card-img-wrapper mb-3 border border-black">
+                            <img :src="card.images.small" loading="lazy">
+                        </div>
+
+                        <h4 class="font-bold text-sm text-slate-300 truncate">{{ card.name }}</h4>
+                        <div class="flex justify-between items-end mt-2">
+                            <span class="text-[10px] text-slate-500 uppercase">{{ card.set.name }}</span>
+                            <span v-if="card.cardmarket?.prices?.trendPrice" class="text-[#D4AF37] font-mono font-bold text-sm">
+                                ${{ formatNumber(card.cardmarket.prices.trendPrice) }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <div v-else class="text-center py-20 text-slate-600">
+                    <i class="fa-solid fa-dragon text-6xl mb-4 opacity-20"></i>
+                    <p class="text-sm">Search for a card to begin.</p>
+                </div>
             </div>
+
+            <div v-if="selectedApiCard" class="absolute inset-0 bg-[#050505] z-10 flex flex-col animate-in fade-in slide-in-from-bottom-10 duration-300">
+                <div class="p-6 border-b border-[#333] flex justify-between items-center">
+                    <button @click="selectedApiCard = null" class="text-slate-500 hover:text-white text-sm uppercase tracking-widest">
+                        <i class="fa-solid fa-arrow-left mr-2"></i> Back to Results
+                    </button>
+                    <h3 class="text-[#D4AF37] font-bold uppercase">Confirm Details</h3>
+                </div>
+
+                <div class="p-8 flex-1 overflow-y-auto flex flex-col md:flex-row gap-8">
+                    <div class="w-full md:w-1/3">
+                        <img :src="selectedApiCard.images.large" class="w-full rounded-lg shadow-2xl border border-[#333]">
+                    </div>
+
+                    <div class="w-full md:w-2/3 space-y-6">
+                        <div>
+                            <label class="text-[10px] uppercase tracking-widest text-slate-500">Card Name</label>
+                            <input v-model="draftCard.name" type="text" class="w-full p-3 rounded-sm mt-1 text-lg font-bold">
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="text-[10px] uppercase tracking-widest text-slate-500">Raw Price (Auto)</label>
+                                <input v-model.number="draftCard.raw" type="number" class="w-full p-3 rounded-sm mt-1 font-mono text-[#D4AF37]">
+                            </div>
+                            <div>
+                                <label class="text-[10px] uppercase tracking-widest text-slate-500">Grading Cost</label>
+                                <input v-model.number="draftCard.gradingPrice" type="number" class="w-full p-3 rounded-sm mt-1 font-mono">
+                            </div>
+                        </div>
+
+                        <div class="bg-[#111] p-4 rounded border border-[#333]">
+                            <div class="flex justify-between items-center mb-4">
+                                <span class="text-xs text-[#D4AF37] uppercase tracking-widest">Predicted Market Values</span>
+                                <span class="text-[10px] text-slate-500 italic">*Estimated based on Raw Price</span>
+                            </div>
+                            <div class="grid grid-cols-3 gap-4">
+                                <div>
+                                    <label class="text-[10px] text-slate-500 block text-center mb-1">PSA 10</label>
+                                    <input v-model.number="draftCard.psa10" type="number" class="w-full p-2 text-center font-mono text-green-500 bg-black">
+                                </div>
+                                <div>
+                                    <label class="text-[10px] text-slate-500 block text-center mb-1">PSA 9</label>
+                                    <input v-model.number="draftCard.psa9" type="number" class="w-full p-2 text-center font-mono text-yellow-500 bg-black">
+                                </div>
+                                <div>
+                                    <label class="text-[10px] text-slate-500 block text-center mb-1">PSA 8</label>
+                                    <input v-model.number="draftCard.psa8" type="number" class="w-full p-2 text-center font-mono text-red-500 bg-black">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="text-[10px] uppercase tracking-widest text-slate-500">Condition Notes</label>
+                            <textarea v-model="draftCard.notes" rows="2" class="w-full p-3 rounded-sm mt-1 text-sm text-slate-300"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-6 border-t border-[#333] flex justify-end">
+                    <button @click="addToInventory" class="bg-[#D4AF37] hover:bg-white hover:text-black text-black px-8 py-3 font-bold uppercase tracking-widest rounded-sm transition shadow-[0_0_20px_rgba(212,175,55,0.3)]">
+                        Confirm & Add
+                    </button>
+                </div>
+            </div>
+
         </div>
     </div>
 
@@ -266,27 +323,29 @@
         data() {
             return {
                 searchQuery: '',
+                apiSearchQuery: '',
+                isSearching: false,
                 showModal: false,
-                cards: [],
-                newCard: {
-                    name: '', raw: null, gradingPrice: 20, preGrade: 10, psa10: null, psa9: null, psa8: null, notes: '', status: 'Inventory'
-                }
+                apiResults: [],
+                selectedApiCard: null,
+                
+                // Draft card for editing before adding
+                draftCard: {
+                    name: '', raw: 0, gradingPrice: 20, preGrade: 10, psa10: 0, psa9: 0, psa8: 0, notes: '', 
+                    image: '', set: '', rarity: '', status: 'Inventory'
+                },
+
+                cards: []
             }
         },
         mounted() {
-            // Load from LocalStorage on startup
-            const savedData = localStorage.getItem('gladiator_cards');
-            if (savedData) {
-                this.cards = JSON.parse(savedData);
-            }
+            const savedData = localStorage.getItem('gladiator_cards_v4');
+            if (savedData) this.cards = JSON.parse(savedData);
         },
         computed: {
             filteredCards() {
                 if(!this.searchQuery) return this.cards;
                 return this.cards.filter(c => c.name.toLowerCase().includes(this.searchQuery.toLowerCase()));
-            },
-            totalInvested() {
-                return this.cards.reduce((sum, card) => sum + (card.raw || 0) + (card.gradingPrice || 0), 0);
             },
             totalProfit() {
                 return this.cards.reduce((sum, card) => sum + this.calculateProfit(card), 0);
@@ -294,35 +353,87 @@
         },
         methods: {
             formatNumber(num) {
-                if(num === null || num === undefined) return '0.00';
-                return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                return (num || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
             },
             calculateProfit(card) {
-                let predictedValue = 0;
-                if(card.preGrade == 10) predictedValue = card.psa10;
-                else if(card.preGrade == 9) predictedValue = card.psa9;
-                else if(card.preGrade == 8) predictedValue = card.psa8;
-                if(!predictedValue) predictedValue = 0;
-                return predictedValue - ((card.raw || 0) + (card.gradingPrice || 0));
+                let val = 0;
+                if(card.preGrade == 10) val = card.psa10;
+                else if(card.preGrade == 9) val = card.psa9;
+                else if(card.preGrade == 8) val = card.psa8;
+                return (val || 0) - ((card.raw || 0) + (card.gradingPrice || 0));
             },
             openModal() {
-                this.newCard = { name: '', raw: null, gradingPrice: 20, preGrade: 10, psa10: null, psa9: null, psa8: null, notes: '', status: 'Inventory' };
                 this.showModal = true;
+                this.apiSearchQuery = '';
+                this.apiResults = [];
+                this.selectedApiCard = null;
             },
-            addCard() {
-                if(!this.newCard.name) return alert("Enter a card name");
-                this.cards.push({...this.newCard});
+            async searchApi() {
+                if(!this.apiSearchQuery) return;
+                this.isSearching = true;
+                this.selectedApiCard = null;
+                try {
+                    // Using pokemontcg.io API
+                    const res = await fetch(`https://api.pokemontcg.io/v2/cards?q=name:"${this.apiSearchQuery}*"&pageSize=20`);
+                    const data = await res.json();
+                    this.apiResults = data.data || [];
+                } catch(e) {
+                    alert("Scouting failed. Check your connection.");
+                } finally {
+                    this.isSearching = false;
+                }
+            },
+            selectCard(apiCard) {
+                this.selectedApiCard = apiCard;
+                
+                // DATA MAPPING LOGIC
+                // 1. Get Price (Try TCGPlayer Market, then Trend, then 0)
+                let price = 0;
+                if(apiCard.tcgplayer && apiCard.tcgplayer.prices) {
+                    const prices = apiCard.tcgplayer.prices;
+                    // Prioritize Holofoil or Normal market price
+                    if(prices.holofoil) price = prices.holofoil.market || prices.holofoil.mid;
+                    else if(prices.normal) price = prices.normal.market || prices.normal.mid;
+                    else if(prices.reverseHolofoil) price = prices.reverseHolofoil.market;
+                } else if (apiCard.cardmarket) {
+                    price = apiCard.cardmarket.prices.trendPrice * 1.08; // Rough EUR to USD conversion
+                }
+
+                // 2. Estimate Graded Prices (Rule of Thumb Algorithms)
+                // PSA 10 is usually 3-4x Raw for Modern, 10x for Vintage (we'll stick to conservative 3.2x)
+                // PSA 9 is usually 1.1x Raw
+                const raw = parseFloat(price.toFixed(2));
+                
+                this.draftCard = {
+                    name: apiCard.name,
+                    raw: raw,
+                    gradingPrice: 20,
+                    preGrade: 10,
+                    // Auto-Estimates
+                    psa10: parseFloat((raw * 3.2).toFixed(2)),
+                    psa9: parseFloat((raw * 1.1).toFixed(2)),
+                    psa8: parseFloat((raw * 0.8).toFixed(2)),
+                    
+                    notes: '',
+                    image: apiCard.images.small,
+                    set: apiCard.set.name,
+                    rarity: apiCard.rarity,
+                    status: 'Inventory'
+                };
+            },
+            addToInventory() {
+                this.cards.push({...this.draftCard});
                 this.saveData();
                 this.showModal = false;
             },
             deleteCard(index) {
-                if(confirm('Are you sure you want to delete this card?')) {
+                if(confirm('Dismiss this gladiator?')) {
                     this.cards.splice(index, 1);
                     this.saveData();
                 }
             },
             saveData() {
-                localStorage.setItem('gladiator_cards', JSON.stringify(this.cards));
+                localStorage.setItem('gladiator_cards_v4', JSON.stringify(this.cards));
             },
             exportData() {
                 const dataStr = JSON.stringify(this.cards, null, 2);
@@ -332,26 +443,6 @@
                 a.href = url;
                 a.download = "gladiator_inventory.json";
                 a.click();
-            },
-            importData(event) {
-                const file = event.target.files[0];
-                if (!file) return;
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    try {
-                        const importedCards = JSON.parse(e.target.result);
-                        if(Array.isArray(importedCards)) {
-                            this.cards = importedCards;
-                            this.saveData();
-                            alert("Database Restored Successfully!");
-                        } else {
-                            alert("Invalid file format.");
-                        }
-                    } catch (err) {
-                        alert("Error reading file.");
-                    }
-                };
-                reader.readAsText(file);
             }
         }
     }).mount('#app');
