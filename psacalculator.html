@@ -51,7 +51,6 @@
         /* --- ROI CALCULATOR TABLE --- */
         .roi-grid {
             display: grid;
-            /* Columns: Image | Details | Binder | Raw $ | Fee $ | Target | Est Value | Decision | Profit | Delete */
             grid-template-columns: 50px 2fr 1.2fr 0.8fr 0.8fr 0.8fr 1fr 0.8fr 1fr 40px;
             gap: 16px;
             align-items: center;
@@ -329,12 +328,12 @@
                 <div class="px-8 py-8 bg-[#080a10] grid grid-cols-1 md:grid-cols-4 gap-6 border-b border-white/5">
                     <div><label class="text-[10px] text-gray-500 font-bold uppercase mb-2 block tracking-widest">1. Era</label><select v-model="selectedEra" class="glass-input"><option value="">Select Era</option><option v-for="era in eras" :value="era">{{ era }}</option></select></div>
                     <div><label class="text-[10px] text-gray-500 font-bold uppercase mb-2 block tracking-widest">2. Set</label><select v-model="selectedSet" :disabled="!selectedEra" class="glass-input disabled:opacity-30"><option value="">Select Set</option><option v-for="s in filteredSets" :value="s.id">{{ s.name }}</option></select></div>
-                    <div><label class="text-[10px] text-gray-500 font-bold uppercase mb-2 block tracking-widest">3. Name</label><input v-model="query" @keyup.enter="fetchCards" :disabled="!selectedSet" placeholder="e.g. Charizard" class="glass-input disabled:opacity-30 lowercase placeholder:uppercase"></div>
+                    <div><label class="text-[10px] text-gray-500 font-bold uppercase mb-2 block tracking-widest">3. Name</label><input v-model="query" @keyup.enter="fetchCards(1)" :disabled="!selectedSet" placeholder="e.g. Charizard" class="glass-input disabled:opacity-30 lowercase placeholder:uppercase"></div>
                     <div><label class="text-[10px] text-[#00f2ff] font-bold uppercase mb-2 block tracking-widest">4. Add To</label><select v-model="targetBinder" class="glass-input border-[#00f2ff] text-[#00f2ff]"><option value="master">All Cards (Master)</option><option v-for="b in binders" :value="b.id">{{ b.name }}</option></select></div>
                 </div>
                 
                 <div class="px-8 py-4 bg-[#050505] flex justify-end border-b border-white/5">
-                    <button @click="fetchCards" :disabled="isSearching" class="bg-[#00f2ff] hover:bg-white text-black text-xs font-bold px-10 py-3 rounded shadow-lg uppercase tracking-widest transition transform active:scale-95 disabled:opacity-50 disabled:scale-100 flex items-center gap-2">
+                    <button @click="fetchCards(1)" :disabled="isSearching" class="bg-[#00f2ff] hover:bg-white text-black text-xs font-bold px-10 py-3 rounded shadow-lg uppercase tracking-widest transition transform active:scale-95 disabled:opacity-50 disabled:scale-100 flex items-center gap-2">
                         <i v-if="isSearching" class="fa-solid fa-circle-notch fa-spin"></i>
                         {{ isSearching ? 'Scanning...' : 'Search' }}
                     </button>
@@ -351,17 +350,68 @@
                         <p class="uppercase font-bold tracking-widest text-xs">Ready to Search</p>
                     </div>
                     
-                    <div v-else class="grid grid-cols-2 md:grid-cols-5 gap-6">
-                        <div v-for="card in searchResults" :key="card.id" @click="addCard(card)" class="bg-[#0a0f18] p-3 rounded-xl cursor-pointer hover:border-[#00f2ff] border border-white/5 group relative transition duration-200">
-                            <img :src="card.images.small" class="w-full rounded-lg mb-3 shadow-lg">
-                            <div class="text-center text-xs font-bold text-white truncate">{{ card.name }}</div>
-                            <div class="absolute top-2 right-2 bg-black/90 backdrop-blur text-[#00f2ff] text-[9px] font-bold px-2 py-1 rounded border border-[#00f2ff] shadow-lg">${{ getCardPrice(card) }}</div>
+                    <div v-else>
+                        <div class="grid grid-cols-2 md:grid-cols-5 gap-6 mb-6">
+                            <div v-for="card in searchResults" :key="card.id" @click="addCard(card)" class="bg-[#0a0f18] p-3 rounded-xl cursor-pointer hover:border-[#00f2ff] border border-white/5 group relative transition duration-200">
+                                <img :src="card.images.small" class="w-full rounded-lg mb-3 shadow-lg">
+                                <div class="text-center text-xs font-bold text-white truncate">{{ card.name }}</div>
+                                <div class="absolute top-2 right-2 bg-black/90 backdrop-blur text-[#00f2ff] text-[9px] font-bold px-2 py-1 rounded border border-[#00f2ff] shadow-lg">${{ getCardPrice(card) }}</div>
+                                <div v-if="addedIds.includes(card.id)" class="absolute inset-0 bg-green-500/80 flex items-center justify-center rounded-xl font-bold text-black uppercase tracking-widest text-xs animate-pulse">
+                                    ACQUIRED <i class="fa-solid fa-check ml-2"></i>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex justify-center gap-4 items-center pt-4 border-t border-white/10">
+                            <button @click="searchPage > 1 ? fetchCards(searchPage - 1) : null" :disabled="searchPage === 1" class="pagination-btn"><i class="fa-solid fa-chevron-left"></i> Prev</button>
+                            <span class="text-xs font-bold text-[#00f2ff]">Page {{ searchPage }}</span>
+                            <button @click="fetchCards(searchPage + 1)" class="pagination-btn">Next <i class="fa-solid fa-chevron-right"></i></button>
                         </div>
                     </div>
                 </div>
             </template>
         </div>
     </div>
+    </Transition>
+
+    <Transition name="fade">
+        <div v-if="detailCard" class="fixed inset-0 bg-black/95 backdrop-blur-md z-[200] flex items-center justify-center p-6">
+            <div class="bg-[#0a0f18] w-full max-w-6xl h-[85vh] rounded-2xl border border-white/10 shadow-2xl flex overflow-hidden">
+                <div class="w-1/3 bg-[#050505] p-10 flex items-center justify-center border-r border-white/5 relative">
+                    <div class="absolute top-8 left-8 text-[#00f2ff] font-bold tracking-widest uppercase text-[10px] cursor-pointer hover:text-white transition" @click="detailCard=null"><i class="fa-solid fa-arrow-left mr-2"></i> Back</div>
+                    <img :src="detailCard.image.replace('small','large')" class="w-full max-w-sm rounded-lg shadow-2xl card-hover">
+                </div>
+                <div class="w-2/3 flex flex-col bg-[#080a10]">
+                    <div class="p-10 border-b border-white/5 flex justify-between items-start bg-black/20">
+                        <div>
+                            <h2 class="text-4xl font-brand font-bold text-white mb-2 tracking-wide">{{ detailCard.name }}</h2>
+                            <div class="flex items-center gap-4 text-xs text-gray-400 font-bold uppercase tracking-widest">
+                                <span class="bg-[#151515] px-3 py-1 rounded border border-[#333]">{{ detailCard.set }}</span>
+                                <span>#{{ detailCard.number }}</span>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-[10px] text-gray-500 uppercase tracking-widest font-bold mb-1">Market Price</div>
+                            <div class="text-5xl font-brand font-bold text-[#00f2ff]">${{ formatNumber(detailCard.market) }}</div>
+                        </div>
+                    </div>
+                    <div class="flex-1 p-10 relative">
+                        <div class="w-full h-full border-l border-b border-[#333] relative opacity-50">
+                            <svg viewBox="0 0 100 50" class="w-full h-full overflow-visible">
+                                <path d="M0,40 Q20,10 40,30 T80,20 T100,5" fill="none" stroke="#00f2ff" stroke-width="0.5" class="chart-line" />
+                                <path d="M0,40 Q20,10 40,30 T80,20 T100,5 L100,50 L0,50 Z" fill="url(#grad)" opacity="0.2" />
+                                <defs><linearGradient id="grad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:#00f2ff;stop-opacity:1" /><stop offset="100%" style="stop-color:#00f2ff;stop-opacity:0" /></linearGradient></defs>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="p-10 bg-[#050505] border-t border-white/5 flex justify-between items-center">
+                        <button @click="deleteCard(detailCard.uid); detailCard=null" class="text-red-500 hover:text-white text-[10px] font-bold uppercase tracking-widest flex items-center gap-3 transition">
+                            <i class="fa-solid fa-trash"></i> Remove Card
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </Transition>
 
 </div>
@@ -397,10 +447,14 @@
                 cacheKey: 'gladiator_sets_v6',
                 
                 // SORT & PAGINATION
-                sortBy: 'profit', // Default Sort
-                sortDesc: true,   // High to Low
+                sortBy: 'profit', 
+                sortDesc: true,   
                 currentPage: 1,
-                itemsPerPage: 8
+                itemsPerPage: 10,
+                
+                // SEARCH PAGINATION
+                searchPage: 1,
+                addedIds: [] // Track added cards for visual feedback
             }
         },
         mounted() {
@@ -424,13 +478,9 @@
             
             // --- SMART SORTING ---
             sortedCards() {
-                // Clone array to avoid mutating source
                 let list = [...this.displayCards];
-                
                 return list.sort((a, b) => {
                     let valA, valB;
-                    
-                    // Logic for different sort keys
                     if(this.sortBy === 'name') {
                         valA = a.name.toLowerCase(); valB = b.name.toLowerCase();
                     } else if(this.sortBy === 'rawCost') {
@@ -440,16 +490,15 @@
                     } else if(this.sortBy === 'profit') {
                         valA = this.getProfit(a); valB = this.getProfit(b);
                     } else {
-                        valA = a.id; valB = b.id; // Default fallback
+                        valA = a.id; valB = b.id; 
                     }
-
                     if(valA < valB) return this.sortDesc ? 1 : -1;
                     if(valA > valB) return this.sortDesc ? -1 : 1;
                     return 0;
                 });
             },
 
-            // --- PAGINATION LOGIC ---
+            // --- LOCAL PAGINATION ---
             totalPages() { return Math.ceil(this.sortedCards.length / this.itemsPerPage); },
             paginatedCards() {
                 const start = (this.currentPage - 1) * this.itemsPerPage;
@@ -471,9 +520,9 @@
                     this.sortDesc = !this.sortDesc; // Toggle
                 } else {
                     this.sortBy = key;
-                    this.sortDesc = true; // Default to descending for new metrics
+                    this.sortDesc = true; 
                 }
-                this.currentPage = 1; // Reset to page 1 on sort
+                this.currentPage = 1; 
             },
             nextPage() { if(this.currentPage < this.totalPages) this.currentPage++; },
             prevPage() { if(this.currentPage > 1) this.currentPage--; },
@@ -518,7 +567,10 @@
                 };
                 if(this.user) db.collection('users').doc(this.user.uid).collection('cards').add(cardData);
                 else { cardData.uid = Date.now().toString(); this.localCards.push(cardData); this.saveData(); }
-                // NOTE: Alert removed so you can add multiple cards quickly
+                
+                // VISUAL FEEDBACK (No Alert)
+                this.addedIds.push(c.id);
+                setTimeout(() => { this.addedIds = this.addedIds.filter(id => id !== c.id); }, 1500);
             },
             deleteCard(uid) {
                 if(!confirm("Remove this card permanently?")) return;
@@ -540,8 +592,8 @@
 
             selectBinder(b) { this.currentView = 'armory'; this.currentBinder = b; this.currentPage = 1; },
             getBinderCount(id) { return this.cards.filter(c => c.binderId === id).length; },
-            openSearch() { this.showSearch = true; this.searchResults = []; },
-            openCardDetail(c) { /* Optional: Detail view logic */ },
+            openSearch() { this.showSearch = true; this.searchResults = []; this.searchPage = 1; },
+            openCardDetail(c) { this.detailCard = c; },
             formatNumber(n) { return (n||0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}); },
             getCardPrice(c) { return c.tcgplayer?.prices?.holofoil?.market || c.tcgplayer?.prices?.normal?.market || 0; },
             
@@ -559,13 +611,13 @@
                 localStorage.setItem(this.cacheKey, JSON.stringify({sets: this.allSets, eras: this.eras}));
                 this.setsLoading = false;
             },
-            async fetchCards() {
+            async fetchCards(page = 1) {
                 if(!this.selectedSet) return;
                 this.isSearching = true; 
-                this.searchResults = []; 
+                this.searchPage = page; // Track API Page
                 let q = `set.id:${this.selectedSet}`; if(this.query) q += ` name:"${this.query}*"`;
                 try {
-                    const res = await fetch(`https://api.pokemontcg.io/v2/cards?q=${q}&pageSize=50&select=id,name,number,images,tcgplayer`);
+                    const res = await fetch(`https://api.pokemontcg.io/v2/cards?q=${q}&pageSize=10&page=${page}&select=id,name,number,images,tcgplayer`);
                     const data = await res.json();
                     this.searchResults = data.data || [];
                 } catch(e) { console.error(e); } 
