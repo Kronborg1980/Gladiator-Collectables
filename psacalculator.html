@@ -236,10 +236,10 @@
                 </div>
 
                 <div class="relative">
-                    <label class="text-[10px] text-[#555] font-bold uppercase mb-2 block tracking-wider">3. Type Pokemon</label>
+                    <label class="text-[10px] text-[#555] font-bold uppercase mb-2 block tracking-wider">3. Type Pokemon (Optional)</label>
                     <div class="relative">
                         <i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-[#444]"></i>
-                        <input v-model="query" @input="debouncedNameSearch" :disabled="!selectedSet" placeholder="e.g. Charizard" class="w-full bg-[#111] border border-[#333] text-white text-xs font-bold rounded-lg p-3 pl-9 outline-none focus:border-[#D4AF37] uppercase disabled:opacity-50" autocomplete="off">
+                        <input v-model="query" @input="debouncedNameSearch" :disabled="!selectedSet" placeholder="Leave empty for full set..." class="w-full bg-[#111] border border-[#333] text-white text-xs font-bold rounded-lg p-3 pl-9 outline-none focus:border-[#D4AF37] uppercase disabled:opacity-50" autocomplete="off">
                         <div v-if="showPredictions && predictedNames.length > 0" class="autocomplete-list">
                             <div v-for="name in predictedNames" @click="selectName(name)" class="autocomplete-item">{{ name }}</div>
                         </div>
@@ -248,8 +248,8 @@
             </div>
 
             <div class="px-6 py-4 bg-[#0c0c0c] border-b border-[#222] flex justify-end">
-                <button @click="fetchCards" :disabled="!query" class="bg-[#D4AF37] hover:bg-[#EAB308] text-black text-xs font-bold px-8 py-3 rounded-lg uppercase tracking-wider shadow-lg active:scale-95 transition disabled:opacity-50 disabled:cursor-not-allowed">
-                    Search Card
+                <button @click="fetchCards" :disabled="!selectedSet" class="bg-[#D4AF37] hover:bg-[#EAB308] text-black text-xs font-bold px-8 py-3 rounded-lg uppercase tracking-wider shadow-lg active:scale-95 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                    {{ query ? 'Search Card' : 'Load Full Set' }}
                 </button>
             </div>
 
@@ -260,9 +260,16 @@
                 </div>
 
                 <div v-else-if="results.length > 0" class="grid grid-cols-2 md:grid-cols-5 gap-4">
-                    <div v-for="item in results" :key="item.id" @click="add(item)" class="group bg-[#111] border border-[#222] rounded-xl p-3 hover:border-[#D4AF37] cursor-pointer transition relative">
+                    <div v-for="item in results" :key="item.id" @click="add(item)" 
+                         class="group bg-[#111] border border-[#222] rounded-xl p-3 hover:border-[#D4AF37] cursor-pointer transition relative overflow-hidden"
+                         :class="{'!border-green-500/50 bg-green-900/10': isOwned(item.id)}">
+                        
+                        <div v-if="isOwned(item.id)" class="absolute top-2 right-2 z-10 bg-green-500 text-black text-[9px] font-bold px-2 py-1 rounded shadow">
+                            IN ARMORY <i class="fa-solid fa-check ml-1"></i>
+                        </div>
+
                         <div class="aspect-[0.7] bg-black rounded-lg overflow-hidden mb-3 relative">
-                            <img :src="item.images?.small || item.images?.large" loading="lazy" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
+                            <img :src="item.images?.small || item.images?.large" loading="lazy" class="w-full h-full object-cover group-hover:scale-105 transition duration-300" :class="{'opacity-75 grayscale-[0.3]': isOwned(item.id)}">
                              <div class="absolute bottom-0 inset-x-0 bg-black/90 border-t border-[#333] py-1.5 text-center">
                                 <span class="text-[#D4AF37] font-bold text-xs">${{ getPrice(item) }}</span>
                             </div>
@@ -317,7 +324,6 @@
         },
         computed: {
             filteredCards() {
-                // Filter logic remains in case you want to use it later, but UI input is removed
                 if(!this.filter) return this.cards;
                 return this.cards.filter(c => c.name.toLowerCase().includes(this.filter.toLowerCase()));
             },
@@ -335,46 +341,28 @@
         methods: {
             async loadSets(force = false) {
                 this.initError = false;
-
-                // 1. CHECK CACHE FIRST
                 if (!force) {
                     const cachedData = localStorage.getItem(this.CACHE_KEY);
                     if (cachedData) {
                         try {
                             const { timestamp, sets, eras } = JSON.parse(cachedData);
-                            const now = Date.now();
-                            if (now - timestamp < this.CACHE_DURATION && sets.length > 0) {
+                            if (Date.now() - timestamp < this.CACHE_DURATION && sets.length > 0) {
                                 this.allSets = sets;
                                 this.eras = eras;
-                                console.log("Loaded sets from cache (Instant)");
                                 return;
                             }
-                        } catch(e) { console.log("Cache corrupted, reloading"); }
+                        } catch(e) {}
                     }
                 }
-
-                // 2. FETCH FROM API WITH TIMEOUT
                 this.initLoading = true;
-                
-                // Create a timeout promise that rejects after 8 seconds
-                const timeout = new Promise((_, reject) => {
-                    setTimeout(() => reject(new Error("Request timed out")), 8000);
-                });
-
+                const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 8000));
                 try {
-                    // Optimized Call
                     const apiCall = fetch('https://api.pokemontcg.io/v2/sets?orderBy=-releaseDate&select=id,name,series,releaseDate&pageSize=250');
-                    
-                    // Race API call vs Timeout
                     const res = await Promise.race([apiCall, timeout]);
-                    
                     const data = await res.json();
-                    
                     if(data.data) {
                         this.allSets = data.data;
                         this.processEras();
-                        
-                        // Save to Cache
                         localStorage.setItem(this.CACHE_KEY, JSON.stringify({
                             timestamp: Date.now(),
                             sets: this.allSets,
@@ -383,19 +371,15 @@
                         if(force) alert("Pokedex Updated");
                     }
                 } catch(e) {
-                    console.error("Connection failed:", e);
-                    this.initError = true; // Shows the Retry Screen
+                    this.initError = true;
                 } finally {
                     this.initLoading = false;
                 }
             },
-
-            // --- FAIL-SAFE ERA PROCESSING ---
             processEras() {
                 const seriesSet = new Set();
                 this.allSets.forEach(s => { if(s.series) seriesSet.add(s.series); });
                 const uniqueEras = Array.from(seriesSet);
-
                 const eraDates = {};
                 this.allSets.forEach(set => {
                     if (set.series && set.releaseDate) {
@@ -405,7 +389,6 @@
                         }
                     }
                 });
-
                 this.eras = uniqueEras.sort((a, b) => {
                     const dateA = eraDates[a] || '0000-00-00';
                     const dateB = eraDates[b] || '0000-00-00';
@@ -413,40 +396,33 @@
                     return dateB.localeCompare(dateA); 
                 });
             },
-
-            // --- 2. NAME PREDICTION ---
             debouncedNameSearch() {
                 clearTimeout(this.searchTimer);
                 if(this.query.length < 2) { this.showPredictions = false; return; }
                 this.searchTimer = setTimeout(() => this.fetchNameSuggestions(), 300);
             },
-
             async fetchNameSuggestions() {
                 if(!this.selectedSet) return;
                 try {
-                    // Optimized: Only fetch names
                     const fallbackUrl = `https://api.pokemontcg.io/v2/cards?q=set.id:${this.selectedSet} name:"${this.query}*"&select=name&pageSize=10`;
                     const res = await fetch(fallbackUrl);
                     const data = await res.json();
                     this.predictedNames = [...new Set(data.data.map(c => c.name))];
                     this.showPredictions = true;
-                } catch(e) {
-                    this.showPredictions = false;
-                }
+                } catch(e) { this.showPredictions = false; }
             },
-
-            selectName(name) {
-                this.query = name;
-                this.showPredictions = false;
-            },
-
-            // --- 3. EXECUTE SEARCH ---
+            selectName(name) { this.query = name; this.showPredictions = false; },
+            
             async fetchCards() {
-                if(!this.selectedSet || !this.query) return;
+                if(!this.selectedSet) return;
                 this.loading = true;
                 this.results = [];
                 try {
-                    const q = `set.id:${this.selectedSet} name:"${this.query}*"`;
+                    // Logic: If query exists, search by name. If not, search only by Set ID (Load Full Set)
+                    let q = `set.id:${this.selectedSet}`;
+                    if(this.query) q += ` name:"${this.query}*"`;
+
+                    // We increase limit slightly to 250 to catch most full sets
                     const url = `https://api.pokemontcg.io/v2/cards?q=${q}&pageSize=250&select=id,name,number,images,tcgplayer,rarity&orderBy=number`;
                     const res = await fetch(url);
                     const data = await res.json();
@@ -456,6 +432,24 @@
                 } finally {
                     this.loading = false;
                 }
+            },
+            isOwned(id) { return this.cards.some(c => c.id === id); },
+            add(item) {
+                // Prevent duplicates if you want, or allow multiple
+                if(this.isOwned(item.id)) return; 
+
+                const rawPrice = this.getPrice(item);
+                const setObj = this.allSets.find(s=>s.id === this.selectedSet);
+                const newCard = {
+                    id: item.id, name: item.name, set: setObj ? setObj.name : "Unknown", img: item.images.small,
+                    condition: '', raw: rawPrice, fee: 15, target: 10,
+                    psa10: parseFloat((rawPrice * 3.2).toFixed(2)),
+                    psa9: parseFloat((rawPrice * 1.1).toFixed(2)),
+                    psa8: parseFloat((rawPrice * 0.85).toFixed(2))
+                };
+                this.cards.push(newCard);
+                this.save();
+                // Removed the line that closes the search window
             },
 
             formatNumber(n) { return (n||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}); },
@@ -490,20 +484,6 @@
                 this.query = ""; 
                 this.results = []; 
                 if(this.eras.length === 0) this.loadSets();
-            },
-            add(item) {
-                const rawPrice = this.getPrice(item);
-                const setObj = this.allSets.find(s=>s.id === this.selectedSet);
-                const newCard = {
-                    id: item.id, name: item.name, set: setObj ? setObj.name : "Unknown", img: item.images.small,
-                    condition: '', raw: rawPrice, fee: 15, target: 10,
-                    psa10: parseFloat((rawPrice * 3.2).toFixed(2)),
-                    psa9: parseFloat((rawPrice * 1.1).toFixed(2)),
-                    psa8: parseFloat((rawPrice * 0.85).toFixed(2))
-                };
-                this.cards.push(newCard);
-                this.save();
-                this.showSearch = false;
             },
             remove(i) { if(confirm('Release Pokemon?')) { this.cards.splice(i,1); this.save(); } },
             exportExcel() {
