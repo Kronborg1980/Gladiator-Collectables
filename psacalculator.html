@@ -29,24 +29,13 @@
         ::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
         ::-webkit-scrollbar-thumb:hover { background: var(--gold); }
         [v-cloak] { display: none; }
-        .animate-spin-slow { animation: spin 2s linear infinite; }
+        select option { background-color: #000; color: #fff; padding: 8px; }
     </style>
 </head>
 <body class="flex flex-col h-screen overflow-hidden">
 
 <div id="app" v-cloak class="flex flex-col h-full w-full max-w-[1900px] mx-auto">
     
-    <div class="md:hidden flex justify-between items-center p-4 bg-[#080808] border-b border-[#222] shrink-0 z-20">
-        <div class="flex items-center gap-3">
-            <img src="https://raw.githubusercontent.com/Kronborg1980/Gladiator-Collectables/main/logogla.webp" class="w-10 h-10 object-contain">
-            <h1 class="font-brand font-bold text-lg text-white">Gladiator</h1>
-        </div>
-        <div class="text-right">
-             <div class="text-[10px] uppercase text-slate-500 font-bold tracking-widest">Net Profit</div>
-             <div class="font-mono font-bold text-[#D4AF37]">${{ formatNumber(totalProfit) }}</div>
-        </div>
-    </div>
-
     <div class="hidden md:flex flex-col lg:flex-row justify-between items-end gap-6 p-6 pb-4 shrink-0">
         <div class="flex items-center gap-6">
             <div class="w-20 h-20 bg-black rounded-xl border border-[#222] flex items-center justify-center shadow-[0_0_25px_rgba(212,175,55,0.1)] p-3 relative group">
@@ -55,7 +44,7 @@
             </div>
             <div>
                 <h1 class="text-4xl font-bold font-brand text-white tracking-wide uppercase drop-shadow-lg">
-                    Gladiator <span class="text-gold-gradient">Collectables</span>
+                    Gladiator <span class="text-gold-gradient">Collectibles</span>
                 </h1>
                 <div class="flex gap-6 mt-2">
                     <div class="text-xs uppercase tracking-[0.15em] text-slate-500 font-bold">
@@ -71,16 +60,26 @@
         <div class="flex flex-wrap items-center gap-3 bg-[#111] p-2 rounded-xl border border-[#222] shadow-xl">
             <div class="relative group">
                 <i class="fa-solid fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-600 group-focus-within:text-[#D4AF37] transition"></i>
-                <input v-model="filter" placeholder="FILTER..." class="bg-black border border-[#222] text-white text-xs font-bold rounded-lg pl-10 pr-4 py-3 w-32 focus:w-48 focus:border-[#D4AF37] outline-none transition-all uppercase placeholder-slate-700 tracking-wider">
+                <input v-model="filter" placeholder="FILTER INV..." class="bg-black border border-[#222] text-white text-xs font-bold rounded-lg pl-10 pr-4 py-3 w-32 focus:w-48 focus:border-[#D4AF37] outline-none transition-all uppercase placeholder-slate-700 tracking-wider">
             </div>
             <div class="w-[1px] h-8 bg-[#222] mx-1"></div>
             <button @click="updatePrices" :disabled="isUpdating" class="w-10 h-10 flex items-center justify-center bg-[#1a1a1a] hover:bg-[#222] text-slate-400 hover:text-green-400 rounded-lg transition border border-transparent hover:border-[#333]" title="Update Prices"><i class="fa-solid fa-arrows-rotate" :class="{'animate-spin': isUpdating}"></i></button>
             <button @click="exportExcel" class="w-10 h-10 flex items-center justify-center bg-[#1a1a1a] hover:bg-[#222] text-slate-400 hover:text-green-500 rounded-lg transition border border-transparent hover:border-[#333]" title="Excel"><i class="fa-solid fa-file-excel"></i></button>
-            <button @click="exportPDF" class="w-10 h-10 flex items-center justify-center bg-[#1a1a1a] hover:bg-[#222] text-slate-400 hover:text-red-500 rounded-lg transition border border-transparent hover:border-[#333]" title="PDF"><i class="fa-solid fa-file-pdf"></i></button>
             <button @click="backup" class="w-10 h-10 flex items-center justify-center bg-[#1a1a1a] hover:bg-[#222] text-slate-400 hover:text-blue-500 rounded-lg transition border border-transparent hover:border-[#333]" title="Save"><i class="fa-solid fa-download"></i></button>
             <label class="w-10 h-10 flex items-center justify-center bg-[#1a1a1a] hover:bg-[#222] text-slate-400 hover:text-purple-500 rounded-lg transition border border-transparent hover:border-[#333] cursor-pointer" title="Load"><i class="fa-solid fa-upload"></i> <input type="file" @change="restore" class="hidden"></label>
             <div class="w-[1px] h-8 bg-[#222] mx-1"></div>
             <button @click="openSearch" class="flex items-center gap-2 px-6 py-3 bg-[#D4AF37] hover:bg-[#fff] text-black text-xs font-bold uppercase rounded-lg shadow-lg transition transform active:scale-95 tracking-wider"><i class="fa-solid fa-plus"></i> Add</button>
+        </div>
+    </div>
+    
+    <div class="md:hidden flex justify-between items-center p-4 bg-[#080808] border-b border-[#222] shrink-0 z-20">
+        <div class="flex items-center gap-3">
+            <img src="https://raw.githubusercontent.com/Kronborg1980/Gladiator-Collectables/main/logogla.webp" class="w-10 h-10 object-contain">
+            <h1 class="font-brand font-bold text-lg text-white">Gladiator</h1>
+        </div>
+        <div class="text-right">
+             <div class="text-[10px] uppercase text-slate-500 font-bold tracking-widest">Net Profit</div>
+             <div class="font-mono font-bold text-[#D4AF37]">${{ formatNumber(totalProfit) }}</div>
         </div>
     </div>
 
@@ -167,113 +166,201 @@
         </div>
     </div>
 
+    <div v-if="showSearch" class="fixed inset-0 bg-black/90 backdrop-blur-md flex items-start justify-center pt-10 z-50 p-4 transition-all">
+        <div class="w-full max-w-5xl bg-[#0a0a0a] border border-[#222] rounded-2xl shadow-2xl flex flex-col max-h-[85vh] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div class="p-4 border-b border-[#222] bg-[#0f0f0f]">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-lg font-bold font-brand text-[#D4AF37] uppercase tracking-wide">Add Asset</h2>
+                    <button @click="showSearch=false" class="text-slate-500 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-3">
+                    
+                    <div class="md:col-span-3 relative">
+                        <label class="text-[9px] text-[#D4AF37] font-bold ml-1 mb-1 block tracking-wider">STEP 1: ERA</label>
+                        <select v-model="selectedEra" class="w-full bg-[#050505] border border-[#333] text-white text-[10px] font-bold rounded px-3 py-3 outline-none uppercase appearance-none cursor-pointer hover:border-[#D4AF37] focus:border-[#D4AF37] transition shadow-lg">
+                            <option value="">-- SELECT ERA --</option>
+                            <option v-for="era in eras" :value="era">{{ era }}</option>
+                        </select>
+                        <i class="fa-solid fa-chevron-down absolute right-3 bottom-3.5 text-slate-600 text-[10px] pointer-events-none"></i>
+                    </div>
+
+                    <div class="md:col-span-4 relative">
+                        <label class="text-[9px] text-[#D4AF37] font-bold ml-1 mb-1 block tracking-wider">STEP 2: EXPANSION</label>
+                        <select v-model="selectedSet" :disabled="!selectedEra" class="w-full bg-[#050505] border border-[#333] text-white text-[10px] font-bold rounded px-3 py-3 outline-none uppercase appearance-none cursor-pointer hover:border-[#D4AF37] focus:border-[#D4AF37] transition shadow-lg disabled:opacity-30 disabled:cursor-not-allowed">
+                            <option value="">-- SELECT SET --</option>
+                            <option v-for="set in filteredSets" :value="set.id">{{ set.name }} ({{ set.releaseDate.substring(0,4) }})</option>
+                        </select>
+                        <i class="fa-solid fa-chevron-down absolute right-3 bottom-3.5 text-slate-600 text-[10px] pointer-events-none"></i>
+                    </div>
+
+                    <div class="md:col-span-5 relative">
+                        <label class="text-[9px] text-[#D4AF37] font-bold ml-1 mb-1 block tracking-wider">STEP 3: POKEMON</label>
+                        <i class="fa-solid fa-search absolute left-3 bottom-3 text-slate-500 text-xs"></i>
+                        <input ref="searchBox" v-model="query" :disabled="!selectedSet" :placeholder="selectedSet ? 'Type Name (e.g. Charizard)...' : 'Waiting for Step 2...'" class="w-full bg-[#050505] border border-[#333] text-white rounded pl-9 pr-2 py-2.5 text-sm outline-none focus:border-[#D4AF37] uppercase disabled:opacity-30 disabled:cursor-not-allowed transition font-bold placeholder-slate-700">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="flex-1 overflow-y-auto p-4 bg-[#050505] relative">
+                
+                <div v-if="loading" class="flex flex-col items-center justify-center py-20 gap-3">
+                    <i class="fa-solid fa-circle-notch fa-spin text-3xl text-[#D4AF37]"></i>
+                    <div class="text-xs uppercase tracking-widest text-[#D4AF37] font-bold">Loading Set Data...</div>
+                </div>
+                
+                <div v-else-if="filteredResults.length" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                    <div v-for="item in filteredResults" :key="item.id" @click="add(item)" class="bg-[#111] border border-[#222] p-2 rounded-lg hover:border-[#D4AF37] cursor-pointer group hover:bg-[#161616] transition relative overflow-hidden">
+                        <div class="aspect-[0.7] bg-black rounded overflow-hidden mb-2 relative">
+                            <img :src="item.images.small" loading="lazy" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
+                            <div class="absolute top-1 right-1 w-6 h-6 bg-white/10 rounded-full flex items-center justify-center p-1 backdrop-blur-md">
+                                <img :src="item.set.images.symbol" class="w-full h-full object-contain">
+                            </div>
+                            <div class="absolute bottom-0 inset-x-0 bg-black/90 text-center text-[#D4AF37] font-bold text-xs p-1 border-t border-[#333]">${{ getPrice(item) }}</div>
+                        </div>
+                        <div class="text-[10px] font-bold text-slate-300 truncate group-hover:text-white">{{ item.name }}</div>
+                        <div class="flex justify-between items-center mt-1">
+                             <div class="text-[9px] text-slate-500 uppercase truncate">#{{ item.number }}</div>
+                             <div class="text-[9px] text-slate-600 uppercase">{{ item.rarity || 'Common' }}</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div v-else-if="!loading && selectedSet && filteredResults.length === 0" class="flex flex-col items-center justify-center h-full text-slate-600 opacity-50">
+                    <i class="fa-solid fa-ghost text-4xl mb-3"></i>
+                    <p class="text-xs uppercase font-bold">No Pokemon Found</p>
+                </div>
+                
+                <div v-else-if="!loading && !selectedSet" class="flex flex-col items-center justify-center h-full text-slate-700">
+                    <div class="w-16 h-16 rounded-full bg-[#111] border border-[#222] flex items-center justify-center mb-4">
+                        <i class="fa-solid fa-layer-group text-2xl text-[#333]"></i>
+                    </div>
+                    <p class="text-xs uppercase font-bold tracking-widest">Please Select Era & Set</p>
+                </div>
+
+            </div>
+            
+            <div class="p-2 bg-[#080808] border-t border-[#222] flex justify-between items-center text-[9px] text-slate-500 uppercase font-bold px-4">
+                 <div>{{ filteredResults.length }} Cards Loaded</div>
+                 <div>Data: PokemonTCG.io</div>
+             </div>
+        </div>
+    </div>
+    
+    <input type="file" ref="restoreInput" @change="restore" class="hidden">
+    
     <div class="md:hidden fixed bottom-0 inset-x-0 bg-[#080808] border-t border-[#222] p-2 flex justify-around z-30">
         <button @click="updatePrices" class="flex flex-col items-center text-slate-500 text-[10px]" :class="{'text-green-400': isUpdating}"><i class="fa-solid fa-arrows-rotate text-lg" :class="{'animate-spin': isUpdating}"></i> Update</button>
         <button @click="backup" class="flex flex-col items-center text-slate-500 text-[10px]"><i class="fa-solid fa-download text-lg"></i> Save</button>
         <button @click="restoreTrigger" class="flex flex-col items-center text-slate-500 text-[10px]"><i class="fa-solid fa-upload text-lg"></i> Load</button>
     </div>
 
-    <div v-if="showSearch" class="fixed inset-0 bg-black/90 backdrop-blur-md flex items-start justify-center pt-10 z-50 p-4 transition-all">
-        <div class="w-full max-w-4xl bg-[#0a0a0a] border border-[#222] rounded-2xl shadow-2xl flex flex-col max-h-[85vh] overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-            <div class="p-4 border-b border-[#222] bg-[#0f0f0f] flex flex-col gap-3">
-                <div class="flex items-center justify-between">
-                    <h2 class="text-lg font-bold font-brand text-[#D4AF37] uppercase tracking-wide">Add Asset</h2>
-                    <button @click="showSearch=false" class="text-slate-500"><i class="fa-solid fa-xmark text-xl"></i></button>
-                </div>
-                
-                <div class="flex flex-col md:flex-row gap-2">
-                    <div class="relative w-full md:w-1/3">
-                        <label class="text-[9px] text-slate-500 font-bold ml-1 mb-1 block">1. SELECT EXPANSION</label>
-                        <select v-model="selectedSet" class="w-full bg-black border border-[#333] text-slate-300 text-[10px] font-bold rounded px-3 py-2 outline-none uppercase appearance-none cursor-pointer hover:border-[#D4AF37]">
-                            <option value="">CHOOSE EXPANSION...</option>
-                            <option v-for="set in sets" :value="set.id">{{ set.name }} ({{ set.releaseDate.substring(0,4) }})</option>
-                        </select>
-                        <i class="fa-solid fa-chevron-down absolute right-3 bottom-3 text-slate-600 text-[10px] pointer-events-none"></i>
-                    </div>
-
-                    <div class="relative flex-1">
-                        <label class="text-[9px] text-slate-500 font-bold ml-1 mb-1 block">2. SEARCH IN SET</label>
-                        <i class="fa-solid fa-search absolute left-3 bottom-2.5 text-slate-500 text-xs"></i>
-                        <input ref="searchBox" v-model="query" :disabled="!selectedSet && query.length === 0" :placeholder="selectedSet ? 'Search this set...' : 'Select a set first...'" class="w-full bg-black border border-[#333] text-white rounded pl-8 pr-2 py-2 text-sm outline-none focus:border-[#D4AF37] uppercase disabled:opacity-50 disabled:cursor-not-allowed">
-                    </div>
-
-                    <div class="relative w-32">
-                        <label class="text-[9px] text-slate-500 font-bold ml-1 mb-1 block">SORT BY</label>
-                        <select v-model="sortBy" @change="sortResults" class="w-full bg-black border border-[#333] text-slate-300 text-[10px] font-bold rounded px-2 py-2 outline-none uppercase appearance-none">
-                            <option value="date_desc">Newest</option>
-                            <option value="price_desc">Price High</option>
-                            <option value="price_asc">Price Low</option>
-                            <option value="number_asc">Card #</option>
-                        </select>
-                        <i class="fa-solid fa-sort absolute right-2 bottom-3 text-slate-600 text-[10px] pointer-events-none"></i>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="flex-1 overflow-y-auto p-4 bg-[#050505]">
-                <div v-if="loading" class="text-center py-10 text-[#D4AF37] text-xs uppercase tracking-widest"><i class="fa-solid fa-circle-notch fa-spin"></i> Scanning...</div>
-                
-                <div v-else-if="results.length" class="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    <div v-for="item in results" :key="item.id" @click="add(item)" class="bg-[#111] border border-[#222] p-2 rounded-lg hover:border-[#D4AF37] cursor-pointer group">
-                        <div class="aspect-[0.7] bg-black rounded overflow-hidden mb-2 relative">
-                            <img :src="item.images.small" loading="lazy" class="w-full h-full object-cover">
-                            <div class="absolute top-1 right-1 w-6 h-6 bg-white/10 rounded-full flex items-center justify-center p-1 backdrop-blur-md">
-                                <img :src="item.set.images.symbol" class="w-full h-full object-contain">
-                            </div>
-                            <div class="absolute bottom-0 inset-x-0 bg-black/90 text-center text-[#D4AF37] font-bold text-xs p-1">${{ getPrice(item) }}</div>
-                        </div>
-                        <div class="text-[10px] font-bold text-slate-300 truncate group-hover:text-white">{{ item.name }}</div>
-                        <div class="text-[9px] text-slate-500 uppercase truncate">{{ item.set.name }} #{{ item.number }}</div>
-                    </div>
-                </div>
-                
-                <div v-else-if="!loading && (query.length > 2 || selectedSet)" class="text-center py-10 text-slate-600">
-                    <p class="text-xs uppercase">No Results Found.</p>
-                </div>
-                
-                 <div v-else-if="!loading && !selectedSet" class="text-center py-10 text-slate-600">
-                    <p class="text-xs uppercase">Please select an Expansion Set to begin.</p>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <input type="file" ref="restoreInput" @change="restore" class="hidden">
-
 </div>
 
 <script>
     const { createApp } = Vue;
 
+    // --- PRELOADED DATA STRUCTURE (INSTANT LOAD) ---
+    // Organized by Era for the 3-Step logic
+    const PRELOADED_SETS = [
+        // 2025+ FUTURE / MEGA ERA
+        {id: "sv8pt5", name: "Prismatic Evolutions", series: "Legends Z-A (Mega)", releaseDate: "2025/01/17", images: {symbol: "https://images.pokemontcg.io/sv8pt5/symbol.png"}},
+        
+        // SCARLET & VIOLET
+        {id: "sv8", name: "Surging Sparks", series: "Scarlet & Violet", releaseDate: "2024/11/08", images: {symbol: "https://images.pokemontcg.io/sv8/symbol.png"}},
+        {id: "sv7", name: "Stellar Crown", series: "Scarlet & Violet", releaseDate: "2024/09/13", images: {symbol: "https://images.pokemontcg.io/sv7/symbol.png"}},
+        {id: "sv6pt5", name: "Shrouded Fable", series: "Scarlet & Violet", releaseDate: "2024/08/02", images: {symbol: "https://images.pokemontcg.io/sv6pt5/symbol.png"}},
+        {id: "sv6", name: "Twilight Masquerade", series: "Scarlet & Violet", releaseDate: "2024/05/24", images: {symbol: "https://images.pokemontcg.io/sv6/symbol.png"}},
+        {id: "sv5", name: "Temporal Forces", series: "Scarlet & Violet", releaseDate: "2024/03/22", images: {symbol: "https://images.pokemontcg.io/sv5/symbol.png"}},
+        {id: "sv4pt5", name: "Paldean Fates", series: "Scarlet & Violet", releaseDate: "2024/01/26", images: {symbol: "https://images.pokemontcg.io/sv4pt5/symbol.png"}},
+        {id: "sv4", name: "Paradox Rift", series: "Scarlet & Violet", releaseDate: "2023/11/03", images: {symbol: "https://images.pokemontcg.io/sv4/symbol.png"}},
+        {id: "sv3pt5", name: "151", series: "Scarlet & Violet", releaseDate: "2023/09/22", images: {symbol: "https://images.pokemontcg.io/sv3pt5/symbol.png"}},
+        {id: "sv3", name: "Obsidian Flames", series: "Scarlet & Violet", releaseDate: "2023/08/11", images: {symbol: "https://images.pokemontcg.io/sv3/symbol.png"}},
+        {id: "sv2", name: "Paldea Evolved", series: "Scarlet & Violet", releaseDate: "2023/06/09", images: {symbol: "https://images.pokemontcg.io/sv2/symbol.png"}},
+        {id: "sv1", name: "Scarlet & Violet Base", series: "Scarlet & Violet", releaseDate: "2023/03/31", images: {symbol: "https://images.pokemontcg.io/sv1/symbol.png"}},
+        
+        // SWORD & SHIELD
+        {id: "swsh12pt5", name: "Crown Zenith", series: "Sword & Shield", releaseDate: "2023/01/20", images: {symbol: "https://images.pokemontcg.io/swsh12pt5/symbol.png"}},
+        {id: "swsh12", name: "Silver Tempest", series: "Sword & Shield", releaseDate: "2022/11/11", images: {symbol: "https://images.pokemontcg.io/swsh12/symbol.png"}},
+        {id: "swsh11", name: "Lost Origin", series: "Sword & Shield", releaseDate: "2022/09/09", images: {symbol: "https://images.pokemontcg.io/swsh11/symbol.png"}},
+        {id: "swsh10", name: "Astral Radiance", series: "Sword & Shield", releaseDate: "2022/05/27", images: {symbol: "https://images.pokemontcg.io/swsh10/symbol.png"}},
+        {id: "swsh9", name: "Brilliant Stars", series: "Sword & Shield", releaseDate: "2022/02/25", images: {symbol: "https://images.pokemontcg.io/swsh9/symbol.png"}},
+        {id: "swsh8", name: "Fusion Strike", series: "Sword & Shield", releaseDate: "2021/11/12", images: {symbol: "https://images.pokemontcg.io/swsh8/symbol.png"}},
+        {id: "swsh7", name: "Evolving Skies", series: "Sword & Shield", releaseDate: "2021/08/27", images: {symbol: "https://images.pokemontcg.io/swsh7/symbol.png"}},
+        {id: "swsh6", name: "Chilling Reign", series: "Sword & Shield", releaseDate: "2021/06/18", images: {symbol: "https://images.pokemontcg.io/swsh6/symbol.png"}},
+        
+        // SUN & MOON
+        {id: "sm12", name: "Cosmic Eclipse", series: "Sun & Moon", releaseDate: "2019/11/01", images: {symbol: "https://images.pokemontcg.io/sm12/symbol.png"}},
+        {id: "sm115", name: "Hidden Fates", series: "Sun & Moon", releaseDate: "2019/08/23", images: {symbol: "https://images.pokemontcg.io/sm115/symbol.png"}},
+        {id: "sm9", name: "Team Up", series: "Sun & Moon", releaseDate: "2019/02/01", images: {symbol: "https://images.pokemontcg.io/sm9/symbol.png"}},
+        
+        // XY
+        {id: "xy12", name: "Evolutions", series: "XY", releaseDate: "2016/11/02", images: {symbol: "https://images.pokemontcg.io/xy12/symbol.png"}},
+        {id: "xy7", name: "Ancient Origins", series: "XY", releaseDate: "2015/08/12", images: {symbol: "https://images.pokemontcg.io/xy7/symbol.png"}},
+
+        // BLACK & WHITE
+        {id: "bw11", name: "Legendary Treasures", series: "Black & White", releaseDate: "2013/11/06", images: {symbol: "https://images.pokemontcg.io/bw11/symbol.png"}},
+
+        // CLASSIC
+        {id: "base1", name: "Base Set", series: "Classic", releaseDate: "1999/01/09", images: {symbol: "https://images.pokemontcg.io/base1/symbol.png"}},
+        {id: "base4", name: "Base Set 2", series: "Classic", releaseDate: "2000/02/24", images: {symbol: "https://images.pokemontcg.io/base4/symbol.png"}},
+        {id: "gym1", name: "Gym Heroes", series: "Classic", releaseDate: "2000/08/14", images: {symbol: "https://images.pokemontcg.io/gym1/symbol.png"}}
+    ];
+
     createApp({
         data() {
             return {
                 cards: [], filter: '', showSearch: false, query: '', 
-                results: [], loading: false, timer: null, sortBy: 'price_desc', isUpdating: false,
-                sets: [], selectedSet: ''
+                rawSetData: [], loading: false, isUpdating: false,
+                allSets: PRELOADED_SETS,
+                
+                // 3-STEP SELECTION STATE
+                eras: ["Legends Z-A (Mega)", "Scarlet & Violet", "Sword & Shield", "Sun & Moon", "XY", "Black & White", "Classic"],
+                selectedEra: "",
+                selectedSet: ""
             }
         },
         mounted() {
             const db = localStorage.getItem('gladiator_v26');
             if(db) this.cards = JSON.parse(db);
-            this.loadSets();
+            this.loadSetsBackground(); 
         },
         computed: {
             filteredCards() {
                 if(!this.filter) return this.cards;
                 return this.cards.filter(c => c.name.toLowerCase().includes(this.filter.toLowerCase()));
             },
-            totalProfit() { return this.cards.reduce((sum, c) => sum + this.getProfit(c), 0); }
+            totalProfit() { return this.cards.reduce((sum, c) => sum + this.getProfit(c), 0); },
+            
+            // Step 2 Filter: Only show sets from Selected Era
+            filteredSets() {
+                if (!this.selectedEra) return [];
+                return this.allSets.filter(s => s.series === this.selectedEra || (this.selectedEra === "Classic" && s.series === "Base"));
+            },
+
+            // Step 3 Filter: Filter the loaded set by query
+            filteredResults() {
+                let res = this.rawSetData;
+                if(this.query) {
+                    const q = this.query.toLowerCase();
+                    res = res.filter(item => item.name.toLowerCase().includes(q) || item.number.includes(q));
+                }
+                // Sort by Number default for ease of finding
+                return res.sort((a,b) => parseInt(a.number) - parseInt(b.number));
+            }
         },
         watch: {
-            query(val) { this.triggerSearch(); },
-            selectedSet(newVal) { 
+            // When user picks a set, download immediately
+            selectedSet(newVal) {
                 if(newVal) {
-                    // Reset query when switching sets and trigger immediate search
-                    this.query = ''; 
-                    this.triggerSearch(true); 
+                    this.query = '';
+                    this.fetchEntireSet(newVal);
+                } else {
+                    this.rawSetData = [];
                 }
-            }
+            },
+            // Clear set selection if era changes
+            selectedEra() { this.selectedSet = ""; this.rawSetData = []; }
         },
         methods: {
             formatNumber(n) { return (n||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}); },
@@ -293,71 +380,39 @@
             },
             getProfit(c) { return this.getValue(c) - ((c.raw || 0) + (c.fee || 0)); },
 
-            async loadSets() {
-                const cached = localStorage.getItem('gladiator_all_sets');
-                if (cached) {
-                    this.sets = JSON.parse(cached);
-                } else {
-                    try {
-                        // Fetching more sets to ensure we find new ones
-                        const res = await fetch('https://api.pokemontcg.io/v2/sets?select=id,name,releaseDate,images&orderBy=-releaseDate&pageSize=250');
-                        const data = await res.json();
-                        this.sets = data.data;
-                        localStorage.setItem('gladiator_all_sets', JSON.stringify(this.sets));
-                    } catch(e) { console.error("Set load failed", e); }
-                }
-            },
-
-            triggerSearch(immediate = false) {
-                clearTimeout(this.timer);
-                
-                // If we have a set selected, we can search immediately
-                if(this.selectedSet) {
-                    this.loading = true;
-                    // If immediate (set change), delay is 0. If typing, delay is 500ms
-                    this.timer = setTimeout(() => this.fetchAPI(), immediate ? 0 : 500);
-                } else if (this.query.length >= 3) {
-                     // Fallback for global search (optional)
-                     this.loading = true;
-                     this.timer = setTimeout(() => this.fetchAPI(), 500);
-                } else {
-                    this.results = [];
-                    this.loading = false;
-                }
-            },
-
-            async fetchAPI() {
+            // Background fetch to ensure we have ALL sets eventually, not just preloaded
+            async loadSetsBackground() {
                 try {
-                    let q = '';
-                    
-                    // 1. Set ID is the primary filter (VERY FAST)
-                    if (this.selectedSet) {
-                        q += ` set.id:${this.selectedSet}`;
-                    }
-
-                    // 2. Add Name Query if present
-                    if (this.query.length >= 1) {
-                        const terms = this.query.trim().split(/\s+/);
-                        const nameQ = terms.map((t, index) => {
-                            const cleanTerm = t.replace(/[^a-zA-Z0-9-]/g, '');
-                            return index === terms.length - 1 ? `name:"${cleanTerm}*"` : `name:"${cleanTerm}"`; 
-                        }).join(' ');
-                        q += ' ' + nameQ;
-                    }
-
-                    if(!q.trim()) { this.loading = false; return; }
-
-                    const fields = 'id,name,set,number,images,tcgplayer';
-                    // Fetch up to 250 cards (entire set usually) if just set selected
-                    const url = `https://api.pokemontcg.io/v2/cards?q=${q}&pageSize=250&select=${fields}`; 
-                    
-                    const res = await fetch(url);
+                    const res = await fetch('https://api.pokemontcg.io/v2/sets?select=id,name,series,releaseDate,images&orderBy=-releaseDate&pageSize=150');
                     const data = await res.json();
                     
-                    let rawResults = data.data || [];
-                    this.results = this.applySort(rawResults);
+                    // Smart Merge: Don't duplicate preloaded sets
+                    const incoming = data.data;
+                    const combined = [...this.allSets];
+                    
+                    incoming.forEach(inc => {
+                        if(!combined.find(c => c.id === inc.id)) {
+                            // Normalize series names if needed
+                            if(inc.series === "Base") inc.series = "Classic"; 
+                            combined.push(inc);
+                        }
+                    });
+                    this.allSets = combined;
+                } catch(e) { console.log("Background sync silent fail"); }
+            },
+
+            async fetchEntireSet(setId) {
+                this.loading = true;
+                this.rawSetData = [];
+                try {
+                    const fields = 'id,name,set,number,images,tcgplayer,rarity';
+                    const url = `https://api.pokemontcg.io/v2/cards?q=set.id:${setId}&pageSize=250&select=${fields}&orderBy=number`; 
+                    const res = await fetch(url);
+                    const data = await res.json();
+                    this.rawSetData = data.data || [];
+                    this.$nextTick(() => this.$refs.searchBox.focus());
                 } catch(e) {
-                    console.error(e);
+                    alert("Error loading set. Check connection.");
                 } finally { 
                     this.loading = false; 
                 }
@@ -367,7 +422,6 @@
                 this.isUpdating = true;
                 const cardsWithIds = this.cards.filter(c => c.id);
                 const chunkSize = 20; 
-                
                 for (let i = 0; i < cardsWithIds.length; i += chunkSize) {
                     const chunk = cardsWithIds.slice(i, i + chunkSize);
                     const ids = chunk.map(c => `id:${c.id}`).join(' OR ');
@@ -393,31 +447,19 @@
                 alert("Prices Updated!");
             },
 
-            sortResults() { if(this.results.length > 0) this.results = this.applySort([...this.results]); },
-            applySort(list) {
-                return list.sort((a, b) => {
-                    const priceA = this.getPrice(a);
-                    const priceB = this.getPrice(b);
-                    const dateA = a.set.releaseDate ? new Date(a.set.releaseDate) : new Date(0);
-                    const dateB = b.set.releaseDate ? new Date(b.set.releaseDate) : new Date(0);
-                    
-                    switch(this.sortBy) {
-                        case 'price_desc': return priceB - priceA;
-                        case 'price_asc': return priceA - priceB;
-                        case 'date_desc': return dateB - dateA;
-                        case 'number_asc': return parseInt(a.number) - parseInt(b.number);
-                        default: return 0;
-                    }
-                });
-            },
-
             getPrice(item) {
                 if(!item.tcgplayer?.prices) return 0;
                 const p = item.tcgplayer.prices;
                 return p.holofoil?.market || p.normal?.market || p.reverseHolofoil?.market || p.unlimitedHolofoil?.market || 0;
             },
 
-            openSearch() { this.showSearch = true; this.query = ''; this.selectedSet = ''; this.results = []; },
+            openSearch() { 
+                this.showSearch = true; 
+                this.selectedEra = ""; 
+                this.selectedSet = ""; 
+                this.query = ""; 
+                this.rawSetData = []; 
+            },
             
             add(item) {
                 const rawPrice = this.getPrice(item);
