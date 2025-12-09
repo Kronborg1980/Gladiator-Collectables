@@ -98,7 +98,7 @@
 
             <div class="flex items-center gap-3">
                 <div class="flex bg-[#111] rounded-lg border border-[#27272a] p-1">
-                    <button @click="loadSets" class="w-10 h-10 flex items-center justify-center text-[#777] hover:text-white hover:bg-[#222] rounded transition" title="Force Sync API"><i class="fa-solid fa-sync" :class="{'fa-spin': initLoading}"></i></button>
+                    <button @click="loadSets(true)" class="w-10 h-10 flex items-center justify-center text-[#777] hover:text-white hover:bg-[#222] rounded transition" title="Force Sync API"><i class="fa-solid fa-sync" :class="{'fa-spin': initLoading}"></i></button>
                     <div class="w-[1px] bg-[#333] my-2 mx-1"></div>
                     <button @click="exportExcel" class="w-10 h-10 flex items-center justify-center text-[#777] hover:text-green-500 hover:bg-[#222] rounded transition"><i class="fa-solid fa-file-excel"></i></button>
                     <button @click="exportPDF" class="w-10 h-10 flex items-center justify-center text-[#777] hover:text-red-500 hover:bg-[#222] rounded transition"><i class="fa-solid fa-file-pdf"></i></button>
@@ -291,15 +291,17 @@
                 // PREDICTION
                 predictedNames: [], showPredictions: false, searchTimer: null,
                 
-                // API CONFIG (Using the one you provided)
+                // API CONFIG
                 API_BASE: 'https://api.pokemonpricetracker.com/api/v2',
-                API_KEY: 'pokeprice_free_2d3a863c6c494cc90dc40d488e4f48482e085d28fd2f0617'
+                API_KEY: 'pokeprice_free_2d3a863c6c494cc90dc40d488e4f48482e085d28fd2f0617',
+                CACHE_KEY: 'gladiator_sets_cache_v1',
+                CACHE_DURATION: 1000 * 60 * 60 * 24 // 24 Hours
             }
         },
         mounted() {
             const db = localStorage.getItem('gladiator_v26');
             if(db) this.cards = JSON.parse(db);
-            this.loadSets();
+            this.loadSets(); // Now checks cache first
         },
         computed: {
             filteredCards() {
@@ -318,8 +320,29 @@
             selectedEra() { this.selectedSet = ""; }
         },
         methods: {
-            // --- 1. DYNAMIC SET LOADER (API) ---
-            async loadSets() {
+            // --- 1. DYNAMIC SET LOADER (WITH CACHE) ---
+            async loadSets(force = false) {
+                // 1. CHECK CACHE FIRST
+                if (!force) {
+                    const cachedData = localStorage.getItem(this.CACHE_KEY);
+                    if (cachedData) {
+                        try {
+                            const { timestamp, sets, eras } = JSON.parse(cachedData);
+                            const now = Date.now();
+                            // If cache is fresh (less than 24 hours)
+                            if (now - timestamp < this.CACHE_DURATION) {
+                                this.allSets = sets;
+                                this.eras = eras;
+                                console.log("Loaded sets from cache (Instant)");
+                                return; // Exit early, no API call needed
+                            }
+                        } catch(e) {
+                            console.log("Cache error, reloading");
+                        }
+                    }
+                }
+
+                // 2. FETCH FROM API IF NO CACHE OR FORCED
                 this.initLoading = true;
                 try {
                     const res = await fetch(`${this.API_BASE}/sets`, {
@@ -331,24 +354,47 @@
                     const data = await res.json();
                     this.allSets = data.data || data; 
 
-                    // --- UPDATED SORTING LOGIC ---
                     this.processEras();
                     
+                    // 3. SAVE TO CACHE
+                    try {
+                        localStorage.setItem(this.CACHE_KEY, JSON.stringify({
+                            timestamp: Date.now(),
+                            sets: this.allSets,
+                            eras: this.eras
+                        }));
+                        if(force) alert("Sync Complete");
+                    } catch(e) {
+                        console.warn("Storage full, cannot cache sets");
+                    }
+
                 } catch(e) {
                     console.error("Set fetch error:", e);
-                    this.fetchFallbackSets();
+                    this.fetchFallbackSets(force); // Pass force param
                 } finally {
                     this.initLoading = false;
                 }
             },
 
-            async fetchFallbackSets() {
-                const res = await fetch('https://api.pokemontcg.io/v2/sets?orderBy=-releaseDate&pageSize=250');
-                const data = await res.json();
-                this.allSets = data.data;
-                
-                // --- UPDATED SORTING LOGIC ---
-                this.processEras();
+            async fetchFallbackSets(force) {
+                try {
+                    const res = await fetch('https://api.pokemontcg.io/v2/sets?orderBy=-releaseDate&pageSize=250');
+                    const data = await res.json();
+                    this.allSets = data.data;
+                    
+                    this.processEras();
+
+                    // Save Fallback to Cache too
+                    localStorage.setItem(this.CACHE_KEY, JSON.stringify({
+                        timestamp: Date.now(),
+                        sets: this.allSets,
+                        eras: this.eras
+                    }));
+                    if(force) alert("Sync Complete (Fallback)");
+
+                } catch(e) {
+                    alert("Could not load sets. Please check internet.");
+                }
             },
 
             // New helper to sort eras by latest release date
@@ -363,7 +409,6 @@
                             eraDates[set.series] = dateVal;
                         }
                     } else if (!eraDates[set.series]) {
-                        // fallback if no date (put it at bottom mostly)
                         eraDates[set.series] = 0; 
                     }
                 });
