@@ -53,9 +53,9 @@
             display: grid;
             /* Columns: Checkbox | Image | Details | Binder | Raw $ | Fee $ | Target | Est Value | Decision | Profit | Delete */
             grid-template-columns: 30px 50px 2fr 1.2fr 0.8fr 0.8fr 0.8fr 1fr 0.8fr 1fr 40px;
-            gap: 12px;
+            gap: 16px;
             align-items: center;
-            padding: 12px 20px;
+            padding: 12px 24px;
             border-bottom: 1px solid rgba(255,255,255,0.05);
             transition: all 0.2s;
         }
@@ -72,17 +72,6 @@
         .sortable { cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 4px; }
         .sortable:hover { color: var(--accent); }
         .sortable.active { color: var(--accent); text-shadow: 0 0 10px rgba(0, 242, 255, 0.3); }
-
-        /* Custom Checkbox */
-        .custom-checkbox {
-            appearance: none; background-color: #000; margin: 0;
-            font: inherit; color: var(--accent); width: 14px; height: 14px;
-            border: 1px solid #555; border-radius: 3px; display: grid; place-content: center;
-            cursor: pointer;
-        }
-        .custom-checkbox::before { content: ""; width: 8px; height: 8px; transform: scale(0); transition: 120ms transform ease-in-out; box-shadow: inset 1em 1em var(--accent); transform-origin: center; clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%); }
-        .custom-checkbox:checked::before { transform: scale(1); }
-        .custom-checkbox:checked { border-color: var(--accent); }
 
         /* --- PAGINATION --- */
         .pagination-btn {
@@ -109,6 +98,17 @@
         }
         .table-select:hover { border-color: var(--accent); color: white; }
         .table-select:focus { border-color: var(--accent); color: var(--accent); }
+
+        /* Checkbox */
+        .custom-checkbox {
+            appearance: none; background-color: #000; margin: 0;
+            font: inherit; color: var(--accent); width: 14px; height: 14px;
+            border: 1px solid #555; border-radius: 3px; display: grid; place-content: center;
+            cursor: pointer;
+        }
+        .custom-checkbox::before { content: ""; width: 8px; height: 8px; transform: scale(0); transition: 120ms transform ease-in-out; box-shadow: inset 1em 1em var(--accent); transform-origin: center; clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%); }
+        .custom-checkbox:checked::before { transform: scale(1); }
+        .custom-checkbox:checked { border-color: var(--accent); }
 
         /* --- INTERACTIVE --- */
         .nav-btn { transition: all 0.2s; border-radius: 8px; font-weight: 600; letter-spacing: 0.5px; border-left: 3px solid transparent; }
@@ -185,9 +185,15 @@
                     <i class="fa-solid fa-coins"></i> Net Value: ${{ formatNumber(totalValue) }}
                 </div>
             </div>
-            <button @click="openSearch" class="bg-[#00f2ff] hover:bg-white text-black text-xs font-bold px-6 py-3 rounded-lg shadow-[0_0_20px_rgba(0,242,255,0.3)] transition active:scale-95 flex items-center gap-2">
-                <i class="fa-solid fa-plus"></i> Add Card
-            </button>
+            <div class="flex gap-4">
+                <div v-if="currentView === 'armory'" class="relative">
+                    <input v-model="collectionFilter" placeholder="Filter Collection..." class="glass-input !py-2 !w-64">
+                    <i class="fa-solid fa-filter absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"></i>
+                </div>
+                <button @click="openSearch" class="bg-[#00f2ff] hover:bg-white text-black text-xs font-bold px-6 py-3 rounded-lg shadow-[0_0_20px_rgba(0,242,255,0.3)] transition active:scale-95 flex items-center gap-2">
+                    <i class="fa-solid fa-plus"></i> Add Card
+                </button>
+            </div>
         </header>
 
         <div v-if="currentView === 'dashboard'" class="flex-1 glass-panel overflow-y-auto p-8">
@@ -234,7 +240,7 @@
 
         <div v-else class="flex-1 flex flex-col overflow-hidden glass-panel">
             <div class="roi-grid roi-header shrink-0">
-                <div class="flex items-center gap-2">
+                <div class="flex items-center justify-center">
                     <input type="checkbox" :checked="isAllSelected" @click="toggleSelectAll" class="custom-checkbox">
                 </div>
                 <div class="text-center">IMG</div>
@@ -255,8 +261,8 @@
                     PROFIT <i class="fa-solid" :class="sortDesc ? 'fa-caret-down' : 'fa-caret-up'" v-if="sortBy==='profit'"></i>
                 </div>
                 <div class="flex justify-end">
-                    <button v-if="selectedIds.length > 0" @click="deleteSelected" class="bg-red-500 hover:bg-red-600 text-white text-[9px] font-bold px-3 py-1 rounded uppercase tracking-wider transition">
-                        DELETE {{ selectedIds.length }}
+                    <button v-if="selectedIds.length > 0" @click="deleteSelected" class="bg-red-500 hover:bg-red-600 text-white text-[9px] font-bold px-2 py-1 rounded uppercase transition">
+                        DEL {{ selectedIds.length }}
                     </button>
                 </div>
             </div>
@@ -269,7 +275,7 @@
                 
                 <div v-else>
                     <div v-for="(c, i) in paginatedCards" :key="c.uid || i" class="roi-grid hover:bg-white/5 transition" :class="{'bg-white/5': selectedIds.includes(c.uid)}">
-                        <div>
+                        <div class="flex justify-center">
                             <input type="checkbox" :value="c.uid" v-model="selectedIds" class="custom-checkbox">
                         </div>
 
@@ -468,6 +474,7 @@
                 showSearch: false, detailCard: null, setsLoading: false, isSearching: false,
                 allSets: [], eras: [], selectedEra: "", selectedSet: "", query: "", targetBinder: 'master', searchResults: [],
                 cacheKey: 'gladiator_sets_v6',
+                collectionFilter: '',
                 
                 // SORT & PAGINATION
                 sortBy: 'profit', 
@@ -497,7 +504,12 @@
             headerTitle() { return this.currentBinder ? this.currentBinder.name : "All Cards"; },
             
             displayCards() { 
-                return this.currentBinder ? this.cards.filter(c => c.binderId === this.currentBinder.id) : this.cards; 
+                let list = this.currentBinder ? this.cards.filter(c => c.binderId === this.currentBinder.id) : this.cards; 
+                // Filter by search input
+                if(this.collectionFilter) {
+                    list = list.filter(c => c.name.toLowerCase().includes(this.collectionFilter.toLowerCase()));
+                }
+                return list;
             },
             
             isAllSelected() {
