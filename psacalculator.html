@@ -5,172 +5,137 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Gladiator | Pro Dashboard</title>
     <link rel="icon" type="image/webp" href="https://raw.githubusercontent.com/Kronborg1980/Gladiator-Collectables/main/logogla.webp">
+   
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --bg: #000000;
-            --panel: #0d0d0d;
-            --gold: #ffda6a;
-            --gold-glow: #D4AF37;
-            --border: #333;
-        }
-        body {
-            font-family: 'Inter', sans-serif;
-            background: var(--bg);
-            color: #e0e0e0;
-            height: 100vh;
-            overflow: hidden;
-        }
-        .big-input {
-            @apply bg-black/50 border border-[#333] rounded-lg px-4 py-3 text-lg font-medium text-white outline-none transition;
-        }
-        .big-input:focus {
-            @apply border-[#ffda6a] shadow-lg shadow-[#ffda6a]/20;
-        }
-        .gold-btn {
-            @apply bg-gradient-to-r from-[#ffda6a] to-[#D4AF37] text-black font-black uppercase tracking-wider rounded-lg shadow-xl hover:shadow-2xl hover:shadow-[#ffda6a]/40 transform hover:scale-105 transition-all duration-200;
-        }
-        .card-hover {
-            @apply hover:border-[#ffda6a] hover:shadow-2xl hover:shadow-[#ffda6a]/30 transform hover:-translate-y-2 transition-all duration-300;
-        }
-        ::-webkit-scrollbar { width: 10px; }
-        ::-webkit-scrollbar-track { background: #000; }
-        }
-        ::-webkit-scrollbar-thumb { background: #333; border-radius: 5px; }
+        :root { --bg: #050505; --gold: #D4AF37; --border: #222; }
+        body { font-family: 'Inter', sans-serif; background-color: var(--bg); color: #e2e8f0; height: 100vh; overflow: hidden; font-size: 12px; }
+        .pro-input { background: transparent; border: 1px solid transparent; color: #ccc; width: 100%; padding: 1px 4px; font-size: 11px; }
+        .pro-input:hover { background: #1a1a1a; border-color: #333; }
+        .pro-input:focus { background: #000; border-color: var(--gold); outline: none; color: white; }
+        .pro-input.number { font-family: monospace; font-weight: 600; letter-spacing: -0.5px; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #080808; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
         ::-webkit-scrollbar-thumb:hover { background: var(--gold); }
         [v-cloak] { display: none; }
     </style>
 </head>
 <body class="flex flex-col h-screen">
-
-<div id="app" v-cloak class="flex flex-col h-full">
-
-    <!-- HEADER -->
-    <div class="h-20 bg-gradient-to-b from-[#111] to-black border-b-4 border-[#ffda6a]/30 flex items-center justify-between px-8 shadow-2xl">
-        <div class="flex items-center gap-6">
-            <img src="https://raw.githubusercontent.com/Kronborg1980/Gladiator-Collectables/main/logogla.webp" class="h-14 drop-shadow-2xl">
+<div id="app" v-cloak class="flex flex-col h-full w-full">
+   
+    <!-- HEADER - EXACTLY LIKE YOUR SCREENSHOT -->
+    <div class="h-12 bg-[#0a0a0a] border-b border-[#222] flex items-center justify-between px-4 shrink-0">
+        <div class="flex items-center gap-4">
+            <img src="https://raw.githubusercontent.com/Kronborg1980/Gladiator-Collectables/main/logogla.webp" class="h-8 w-8 object-contain rounded">
             <div>
-                <h1 class="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-[#ffda6a] to-[#D4AF37] tracking-widest">GLADIATOR</h1>
-                <p class="text-sm text-gray-500 -mt-1">PRO ARMORY</p>
+                <div class="text-xl font-bold text-[#D4AF37] tracking-widest">GLADIATOR COLLECTABLES</div>
+                <div class="text-[10px] text-gray-500 -mt-1">ASSETS: {{ cards.length }}  •  PROFIT: <span :class="totalProfit >= 0 ? 'text-green-400' : 'text-red-400'">${{ formatNumber(totalProfit) }}</span></div>
             </div>
         </div>
-        <div class="flex items-center gap-12 text-2xl font-bold">
-            <div>ASSETS: <span class="text-white">{{ cards.length }}</span></div>
-            <div>COST: <span class="text-cyan-400">${{ formatNumber(totalCost) }}</span></div>
-            <div>PROFIT: <span :class="totalProfit >= 0 ? 'text-green-400' : 'text-red-500'">${{ formatNumber(totalProfit) }}</span></div>
+        <div class="flex items-center gap-3">
+            <input v-model="filter" placeholder="Filter..." class="bg-[#111] border border-[#333] text-white text-xs px-3 py-1.5 rounded-full w-40 focus:w-56 focus:border-[#D4AF37] outline-none transition-all">
+            <button @click="updatePrices" class="p-2 text-gray-500 hover:text-white"><i class="fa-solid fa-arrows-rotate" :class="{'animate-spin': isUpdating}"></i></button>
+            <button @click="exportExcel" class="p-2 text-gray-500 hover:text-green-400"><i class="fa-solid fa-file-excel"></i></button>
+            <button @click="backup" class="p-2 text-gray-500 hover:text-blue-400"><i class="fa-solid fa-download"></i></button>
+            <label class="p-2 text-gray-500 hover:text-purple-400 cursor-pointer"><i class="fa-solid fa-upload"></i><input type="file" @change="restore" class="hidden"></label>
+            <button @click="openSearch" class="bg-[#D4AF37] hover:bg-[#ffea00] text-black font-bold px-6 py-1.5 rounded-full text-sm uppercase shadow-lg">+ ADD</button>
         </div>
     </div>
 
-    <!-- TOOLBAR -->
-    <div class="p-6 bg-[#050505] border-b border-[#333] flex flex-wrap gap-6 items-center">
-        <div class="relative">
-            <i class="fa-solid fa-search absolute left-5 top-5 text-gray-500 text-xl"></i>
-            <input v-model="filter" placeholder="FILTER COLLECTION..." class="pl-14 big-input w-96">
-        </div>
-        <div class="flex gap-4">
-            <button @click="updatePrices" :disabled="isUpdating" class="px-8 py-4 gold-btn text-xl"><i class="fa-solid fa-arrows-rotate" :class="{'animate-spin': isUpdating}"></i> UPDATE PRICES</button>
-            <button @click="exportExcel" class="px-8 py-4 bg-gradient-to-r from-green-600 to-green-500 text-white font-bold rounded-lg shadow-lg hover:shadow-green-500/50">EXCEL</button>
-            <button @click="backup" class="px-8 py-4 bg-gradient-to-r from-blue-600 to-blue-500 text-white font-bold rounded-lg shadow-lg">BACKUP</button>
-            <label class="px-8 py-4 bg-gradient-to-r from-purple-600 to-purple-500 text-white font-bold rounded-lg shadow-lg cursor-pointer">RESTORE <input type="file" @change="restore" class="hidden"></label>
-        </div>
-        <div class="flex-1"></div>
-        <button @click="openSearch" class="px-12 py-5 gold-btn text-2xl shadow-2xl"><i class="fa-solid fa-plus mr-3"></i> ADD ASSET</button>
-    </div>
-
-    <!-- DESKTOP TABLE -->
-    <div class="flex-1 overflow-auto bg-black">
-        <table class="w-full text-left">
-            <thead class="sticky top-0 bg-black border-b-4 border-[#ffda6a]/40 text-yellow-500 text-xl uppercase tracking-widest h-20">
-                <tr>
-                    <th class="pl-8"></th>
-                    <th class="px-6">CARD</th>
-                    <th class="px-6">SET</th>
-                    <th class="px-6">COND</th>
-                    <th class="px-6 text-right">RAW</th>
-                    <th class="px-6 text-right">FEE</th>
-                    <th class="px-6 text-center text-[#ffda6a]">TARGET</th>
-                    <th class="px-6 text-right text-white">VALUE</th>
-                    <th class="px-6 text-right">PROFIT</th>
-                    <th class="px-6"></th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody class="text-lg">
-                <tr v-for="(c,i) in filteredCards" :key="i" class="h-24 border-b border-[#222] hover:bg-[#111] card-hover group">
-                    <td class="pl-8">
-                        <img :src="c.img" class="h-20 w-14 object-cover rounded-lg border-2 border-[#333] group-hover:border-[#ffda6a] transition">
-                    </td>
-                    <td class="px-6 font-bold text-white max-w-md truncate" :title="c.name">{{ c.name }}</td>
-                    <td class="px-6 text-gray-400">{{ c.set }}</td>
-                    <td class="px-6"><input v-model="c.condition" class="big-input w-32 text-center"></td>
-                    <td class="px-6 text-right font-mono"><input v-model.number="c.raw" type="number" class="bg-transparent text-right w-32"></td>
-                    <td class="px-6 text-right font-mono"><input v-model.number="c.fee" type="number" class="bg-transparent text-right w-24"></td>
-                    <td class="px-6 text-center">
-                        <select v-model="c.target" class="bg-black/70 text-[#ffda6a] font-black text-2xl w-20 mx-auto rounded border border-[#444]">
-                            <option value="10">10</option><option value="9">9</option><option value="8">8</option>
-                        </select>
-                    </td>
-                    <td class="px-6 text-right font-black text-white text-2xl"><input :value="getValue(c)" @input="updateValue(c,$event.target.value)" class="bg-gradient-to-r from-cyan-500/20 to-transparent text-right w-40 px-3 rounded"></td>
-                    <td class="px-6 text-right font-black text-3xl" :class="getProfit(c)>=0?'text-[#ffda6a]':'text-red-500'">${{ Math.round(getProfit(c)).toLocaleString() }}</td>
-                    <td class="px-6 text-center text-3xl">
-                        <i v-if="getProfit(c)>0" class="text-green-500 fa-solid fa-trophy"></i>
-                        <i v-else class="text-red-600 fa-solid fa-bomb"></i>
-                    </td>
-                    <td class="pr-8"><button @click="remove(i)" class="text-red-500 hover:text-red-400 text-2xl"><i class="fa-solid fa-trash-can"></i></button></td>
-                </tr>
-            </tbody>
-        </table>
-        <div v-if="cards.length===0" class="h-full flex items-center justify-center">
-            <div class="text-6xl font-black text-gray-800 uppercase opacity-20">EMPTY ARMORY</div>
+    <!-- TABLE - IDENTICAL TO YOUR PHOTO -->
+    <div class="flex-1 overflow-hidden bg-[#050505]">
+        <div class="overflow-auto h-full">
+            <table class="w-full text-left border-collapse">
+                <thead class="sticky top-0 z-10 bg-[#0c0c0c] border-b border-[#222]">
+                    <tr class="text-[10px] text-gray-500 uppercase tracking-wider h-10">
+                        <th class="pl-4">IMG</th>
+                        <th class="px-4">ASSET DETAILS</th>
+                        <th class="px-4 text-center">CONDITION</th>
+                        <th class="px-4 text-right">RAW $</th>
+                        <th class="px-4 text-right">COST $</th>
+                        <th class="px-4 text-center text-[#D4AF37]">TARGET</th>
+                        <th class="px-4 text-right text-white">EST. VALUE</th>
+                        <th class="px-4 text-right">NET PROFIT</th>
+                        <th class="px-4 text-center">ACTION</th>
+                    </tr>
+                </thead>
+                <tbody class="text-sm divide-y divide-[#151515]">
+                    <tr v-for="(c, i) in filteredCards" :key="i" class="h-12 hover:bg-[#111] group">
+                        <td class="pl-4">
+                            <img v-if="c.img" :src="c.img" class="h-10 w-7 object-cover rounded border border-[#333]">
+                        </td>
+                        <td class="px-4">
+                            <div class="font-bold text-white">{{ c.name }}</div>
+                            <div class="text-[10px] text-gray-500">{{ c.set }}</div>
+                        </td>
+                        <td class="px-4 text-center"><input v-model="c.condition" class="pro-input text-center w-20"></td>
+                        <td class="px-4 text-right"><input v-model.number="c.raw" type="number" class="pro-input number text-right w-20"></td>
+                        <td class="px-4 text-right"><input v-model.number="c.fee" type="number" class="pro-input number text-right w-20"></td>
+                        <td class="px-4 text-center">
+                            <select v-model="c.target" class="bg-transparent text-[#D4AF37] font-bold outline-none cursor-pointer">
+                                <option value="10">10</option><option value="9">9</option><option value="8">8</option>
+                            </select>
+                        </td>
+                        <td class="px-4 text-right font-bold text-white">
+                            <input :value="getValue(c)" @input="updateValue(c,$event.target.value)" class="pro-input number text-right bg-[#111] px-2 rounded w-28">
+                        </td>
+                        <td class="px-4 text-right font-bold text-xl" :class="getProfit(c)>=0?'text-[#D4AF37]':'text-red-500'">
+                            ${{ Math.round(getProfit(c)) }}
+                        </td>
+                        <td class="px-4 text-center">
+                            <button @click="remove(i)" class="text-gray-600 hover:text-red-500 opacity-0 group-hover:opacity-100 transition"><i class="fa-solid fa-trash"></i></button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <div v-if="cards.length===0" class="h-full flex items-center justify-center">
+                <div class="text-4xl font-bold text-gray-800 uppercase opacity-10">EMPTY VAULT</div>
+            </div>
         </div>
     </div>
 
-    <!-- SEARCH MODAL — BIG & BEAUTIFUL -->
-    <div v-if="showSearch" class="fixed inset-0 bg-black/95 backdrop-blur-xl flex items-center justify-center z-50 p-8">
-        <div class="w-full max-w-6xl bg-gradient-to-b from-[#111] to-black border-4 border-[#ffda6a]/40 rounded-2xl shadow-4xl overflow-hidden">
-            <div class="p-8 border-b-4 border-[#ffda6a]/20 flex justify-between items-center">
-                <h2 class="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-[#ffda6a] to-[#D4AF37]">ADD NEW ASSET</h2>
-                <button @click="showSearch=false" class="text-4xl text-gray-500 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+    <!-- SEARCH MODAL - FAST & CLEAN -->
+    <div v-if="showSearch" class="fixed inset-0 bg-black/95 backdrop-blur-md flex items-start justify-center pt-20 z-50 px-4">
+        <div class="w-full max-w-4xl bg-[#0f0f0f] border border-[#333] rounded-xl shadow-2xl flex flex-col max-h-[85vh]">
+            <div class="p-5 border-b border-[#222] flex justify-between items-center">
+                <h2 class="text-2xl font-bold text-[#D4AF37]">ADD ASSET</h2>
+                <button @click="showSearch=false class="text-2xl text-gray-500 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
             </div>
 
-            <div class="p-8 flex gap-8 items-center">
+            <div class="p-6 flex gap-4">
                 <div class="relative flex-1">
-                    <input v-model="setQuery" @input="searchSets" placeholder="Type set name set..." class="w-full big-input text-2xl py-5 pl-16">
-                    <i class="fa-solid fa-magnifying-glass absolute left-6 top-7 text-gray-500 text-2xl"></i>
-                    <div v-if="setSuggestions.length" class="absolute top-full left-0 right-0 bg-black border-2 border-[#ffda6a]/50 max-h-64 overflow-y-auto z-10 rounded-b-xl">
-                        <div v-for="s in setSuggestions" @click="pickSet(s)" class="px-8 py-4 hover:bg-[#222] cursor-pointer text-xl">{{ s.name }}</div>
+                    <input v-model="setQuery" @input="fetchSets" placeholder="Set name (e.g. Evolving Skies)" 
+                           class="w-full bg-[#111] border border-[#333] text-white px-4 py-3 rounded-lg focus:border-[#D4AF37] outline-none">
+                    <div v-if="setSuggestions.length" class="absolute top-full left-0 right-0 bg-[#111] border border-[#333] max-h-48 overflow-y-auto z-10 rounded-b-lg">
+                        <div v-for="s in setSuggestions" @click="selectSet(s)" class="px-4 py-2 hover:bg-[#222] cursor-pointer">{{ s.name }}</div>
                     </div>
                 </div>
-
-                <input v-model="cardQuery" ref="searchBox" @keyup.enter="search" placeholder="Card name..." class="flex-1 big-input text-2xl py-5">
-
-                <button @click="search" class="px-20 py-6 gold-btn text-3xl shadow-2xl">SEARCH</button>
+                <input v-model="cardQuery" @keyup.enter="searchCards" placeholder="Card name..." ref="cardInput"
+                       class="flex-1 bg-[#111] border border-[#333] text-white px-4 py-3 rounded-lg focus:border-[#D4AF37] outline-none">
+                <button @click="searchCards" class="bg-[#D4AF37] hover:bg-[#ffea00] text-black font-bold px-10 py-3 rounded-lg">SEARCH</button>
             </div>
 
-            <div class="p-8 max-h-96 overflow-y-auto">
-                <div v-if="loading" class="text-center py-20 text-6xl text-[#ffda6a]"><i class="fa-solid fa-circle-notch fa-spin"></i></div>
-                <div v-else-if="results.length" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
-                    <div v-for="c in results" @click="add(c)" class="bg-[#111] rounded-2xl overflow-hidden card-hover cursor-pointer border-4 border-[#333]">
-                        <div class="relative">
-                            <img :src="c.images.large || c.images.small" class="w-full">
-                            <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black via-transparent to-transparent p-6 text-right">
-                                <div class="text-4xl font-black text-[#ffda6a] drop-shadow-2xl">${{ c.price || '???' }}</div>
-                            </div>
-                        </div>
-                        <div class="p-4 text-center">
-                            <div class="font-bold text-xl text-white truncate">{{ c.name }}</div>
-                            <div class="text-gray-500 text-lg">{{ c.set.name }} #{{ c.number }}</div>
+            <div class="flex-1 overflow-y-auto px-6 pb-6">
+                <div v-if="loading" class="text-center py-12 text-[#D4AF37] text-xl"><i class="fa-solid fa-spinner fa-spin"></i> Loading...</div>
+                <div v-else-if="results.length" class="grid grid-cols-3 md:grid-cols-5 gap-4">
+                    <div v-for="c in results" @click="add(c)" class="bg-[#111] border border-[#222] rounded-lg overflow-hidden hover:border-[#D4AF37] cursor-pointer transition">
+                        <img :src="c.images.small" class="w-full">
+                        <div class="p-2">
+                            <div class="text-xs font-bold text-white truncate">{{ c.name }}</div>
+                            <div class="text-[10px] text-gray-500">#{{ c.number }} • ${{ c.price || '??' }}</div>
                         </div>
                     </div>
                 </div>
-                <div v-else-if="hasSearched" class="text-center py-20 text-4xl text-gray-600">No cards found</div>
+                <div v-else-if="hasSearched" class="text-center py-12 text-gray-600">No cards found</div>
             </div>
         </div>
     </div>
+
 </div>
 
 <script>
@@ -181,8 +146,8 @@ createApp({
         results: [], loading: false, setSuggestions: [], selectedSetId: '', hasSearched: false, isUpdating: false
     }},
     mounted() {
-        const s = localStorage.getItem('gladiator_big');
-        if (s) this.cards = JSON.parse(s);
+        const saved = localStorage.getItem('gladiator_final');
+        if (saved) this.cards = JSON.parse(saved);
     },
     computed: {
         filteredCards() {
@@ -190,37 +155,31 @@ createApp({
             const q = this.filter.toLowerCase();
             return this.cards.filter(c => c.name.toLowerCase().includes(q) || c.set.toLowerCase().includes(q));
         },
-        totalCost() { return this.cards.reduce((a,c) => a + (c.raw||0) + (c.fee||0), 0); },
         totalProfit() { return this.cards.reduce((a,c) => a + this.getProfit(c), 0); }
     },
     methods: {
         formatNumber(n) { return Math.round(n||0).toLocaleString(); },
-        save() { localStorage.setItem('gladiator_big', JSON.stringify(this.cards)); },
-        getValue(c) { return c.target==10 ? c.psa10||0 : c.target==9 c.psa9||0 : c.psa8||0; },
-        updateValue(c,v) {
-            const val = parseFloat(v)||0;
-            if(c.target==10) c.psa10=val; else if(c.target==9) c.psa9=val; else c.psa8=val;
-            this.save();
-        },
+        save() { localStorage.setItem('gladiator_final', JSON.stringify(this.cards)); },
+        getValue(c) { return c.target==10?c.psa10:c.target==9?c.psa9:c.psa8||0; },
+        updateValue(c,v) { const val=parseFloat(v)||0; if(c.target==10)c.psa10=val; else if(c.target==9)c.psa9=val; else c.psa8=val; this.save(); },
         getProfit(c) { return this.getValue(c) - (c.raw||0) - (c.fee||0); },
 
-        async searchSets() {
-            if (this.setQuery.length < 2) { this.setSuggestions = []; return; }
+        // Instant set prediction
+        async fetchSets() {
+            if (this.setQuery.length < 2) { this.setSuggestions=[]; return; }
             const r = await fetch(`https://api.pokemontcg.io/v2/sets?q=name:*${this.setQuery}*`);
             const j = await r.json();
-            this.setSuggestions = j.data.slice(0,10);
+            this.setSuggestions = j.data.slice(0,8);
         },
-        pickSet(s) {
-            this.setQuery = s.name; this.selectedSetId = s.id; this.setSuggestions = [];
-            this.$refs.searchBox.focus();
-        },
-        async search() {
+        selectSet(s) { this.setQuery = s.name; this.selectedSetId = s.id; this.setSuggestions=[]; this.$refs.cardInput.focus(); },
+
+        // Fast card search
+        async searchCards() {
             if (!this.cardQuery.trim()) return;
             this.loading = true; this.hasSearched = true; this.results = [];
-            let url = `https://api.pokemontcg.io/v2/cards?q=name:*${encodeURIComponent(this.cardQuery)}*`;
-            if (this.selectedSetId) url += `+set.id:${this.selectedSetId}`;
-            url += `&pageSize=60&orderBy=number`;
-            const r = await fetch(url);
+            let q = `name:*${this.cardQuery.replace(/\s+/g,'* *')}*`;
+            if (this.selectedSetId) q += ` set.id:${this.selectedSetId}`;
+            const r = await fetch(`https://api.pokemontcg.io/v2/cards?q=${encodeURIComponent(q)}&pageSize=50&orderBy=number`);
             const j = await r.json();
             this.results = (j.data||[]).map(c=>({
                 ...c,
@@ -228,6 +187,7 @@ createApp({
             }));
             this.loading = false;
         },
+
         add(c) {
             const p = c.price || 0;
             this.cards.push({
@@ -237,16 +197,17 @@ createApp({
             });
             this.save(); this.showSearch = false;
         },
-        remove(i) { if(confirm('Delete?')) { this.cards.splice(i,1); this.save(); }},
 
+        remove(i) { if(confirm('Remove card?')) { this.cards.splice(i,1); this.save(); }},
+        openSearch() { this.showSearch=true; this.cardQuery=''; this.setQuery=''; this.selectedSetId=''; this.results=[]; this.hasSearched=false; this.$nextTick(()=>this.$refs.cardInput.focus()); },
+
+        // Fast price update
         async updatePrices() {
             this.isUpdating = true;
-            // same fast chunked update as before
             const ids = this.cards.filter(c=>c.id).map(c=>c.id);
-            const chunk = 20;
-            for(let i=0;i<ids.length;i+=chunk){
-                const q = ids.slice(i,i+chunk).map(id=>`id:${id}`).join(' OR ');
-                const r = await fetch(`https://api.pokemontcg.io/v2/cards?q=${q}`);
+            for(let i=0; i<ids.length; i+=20){
+                const chunk = ids.slice(i,i+20).map(id=>`id:${id}`).join(' OR ');
+                const r = await fetch(`https://api.pokemontcg.io/v2/cards?q=${chunk}`);
                 const j = await r.json();
                 j.data.forEach(api=>{
                     const card = this.cards.find(c=>c.id===api.id);
@@ -260,15 +221,15 @@ createApp({
                     }
                 });
             }
-            this.save(); this.isUpdating = false; alert('Prices updated!');
+            this.save(); this.isUpdating = false; alert('Prices refreshed!');
         },
 
         exportExcel() {
             const data = this.cards.map(c=>({Card:c.name,Set:c.set,Raw:c.raw,Fee:c.fee,Target:c.target,Value:this.getValue(c),Profit:this.getProfit(c)}));
             const ws = XLSX.utils.json_to_sheet(data);
             const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "Gladiator");
-            XLSX.writeFile(wb, "Gladiator_Export.xlsx");
+            XLSX.utils.book_append_sheet(wb, ws, "Vault");
+            XLSX.writeFile(wb, "Gladiator_Vault.xlsx");
         },
         backup() {
             const a = document.createElement('a');
@@ -281,11 +242,6 @@ createApp({
             const r = new FileReader();
             r.onload = ev => { this.cards = JSON.parse(ev.target.result); this.save(); };
             r.readAsText(f);
-        },
-        openSearch() {
-            this.showSearch = true; this.cardQuery = ''; this.setQuery = ''; this.selectedSetId = '';
-            this.results = []; this.hasSearched = false;
-            this.$nextTick(()=>this.$refs.searchBox?.focus());
         }
     }
 }).mount('#app');
