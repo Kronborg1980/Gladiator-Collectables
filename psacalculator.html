@@ -211,8 +211,8 @@
                 <div class="text-center">Image</div>
                 <div>Asset Details</div>
                 <div>Location</div>
-                <div class="text-right">Raw $</div>
-                <div class="text-right">Fee $</div>
+                <div class="text-right">Raw Cost</div>
+                <div class="text-right">Grade Fee</div>
                 <div class="text-center">Target</div>
                 <div class="text-right">Est. Value</div>
                 <div class="text-center">Decision</div>
@@ -373,8 +373,7 @@
 </div>
 
 <script>
-    // --- PASTE YOUR API KEYS HERE ---
-    // If you don't paste them, it will work in "Guest Mode" (local storage only)
+    // --- FIREBASE CONFIG ---
     const firebaseConfig = {
         apiKey: "AIzaSyBnb9VlLk4sNbj89beWtb2hmLGsvhgb6TE",
         authDomain: "gladiator-portfolio.firebaseapp.com",
@@ -397,7 +396,7 @@
     createApp({
         data() {
             return {
-                user: null, currentView: 'armory', currentBinder: null, 
+                user: null, currentView: 'dashboard', currentBinder: null, 
                 localBinders: [], localCards: [], cloudBinders: [], cloudCards: [],
                 showSearch: false, detailCard: null, setsLoading: false, isSearching: false,
                 allSets: [], eras: [], selectedEra: "", selectedSet: "", query: "", targetBinder: 'master', searchResults: [],
@@ -461,9 +460,9 @@
                     id: c.id, name: c.name, set: this.allSets.find(s=>s.id === this.selectedSet)?.name || 'Set', 
                     image: c.images.small, number: c.number, 
                     market: market, 
-                    rawCost: market, 
-                    fee: 15, 
-                    targetGrade: 10,
+                    rawCost: market, // AUTO-FILL: Default to Market Price
+                    fee: 15,         // AUTO-FILL: Default Fee
+                    targetGrade: 10, // AUTO-FILL: Default PSA 10
                     binderId: this.targetBinder === 'master' ? null : this.targetBinder
                 };
                 if(this.user) db.collection('users').doc(this.user.uid).collection('cards').add(cardData);
