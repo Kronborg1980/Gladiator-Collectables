@@ -15,37 +15,26 @@
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
-        :root { --bg-dark: #09090b; --panel-bg: #121214; --border: #27272a; --gold: #FACC15; --blue: #3B82F6; --text-muted: #71717a; }
-        body { font-family: 'Inter', sans-serif; background-color: #000000; color: #e4e4e7; height: 100vh; overflow: hidden; }
+        :root { --bg-dark: #09090b; --panel-bg: #121214; --border: #27272a; --gold: #D4AF37; }
+        body { font-family: 'Inter', sans-serif; background-color: #000; color: #e4e4e7; height: 100vh; overflow: hidden; }
         .font-brand { font-family: 'Cinzel', serif; }
         
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: #000; }
         ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: #444; }
         
         .search-input { background: #000; border: 1px solid #27272a; transition: all 0.2s; }
         .search-input:focus { border-color: var(--gold); outline: none; }
         
-        .table-input { background: transparent; border-bottom: 1px solid transparent; color: #fff; width: 100%; font-family: 'Inter', sans-serif; transition: 0.2s; }
-        .table-input:hover { border-bottom-color: #333; }
-        .table-input:focus { border-bottom-color: var(--gold); outline: none; }
-        
         [v-cloak] { display: none; }
-        .stat-box { background: #111; border: 1px solid #222; border-radius: 8px; padding: 10px 20px; min-width: 140px; }
-        .stat-label { font-size: 10px; font-weight: 700; text-transform: uppercase; color: #71717a; letter-spacing: 0.05em; margin-bottom: 4px; }
-        .stat-value { font-family: 'Inter', sans-serif; font-weight: 700; font-size: 20px; }
-        
-        select option { background-color: #000; color: #fff; padding: 12px; font-size: 14px; }
+        select option { background-color: #000; color: #fff; padding: 12px; }
 
-        /* LED / GLOW EFFECTS */
         .logo-container {
             position: relative; padding: 2px; border-radius: 12px;
             background: linear-gradient(135deg, #333 0%, #000 100%);
             box-shadow: 0 0 20px rgba(212, 175, 55, 0.15), inset 0 0 10px rgba(0,0,0,0.8);
             border: 1px solid #333;
         }
-        .logo-img { filter: drop-shadow(0 0 8px rgba(250, 204, 21, 0.4)); }
         .text-glow { text-shadow: 0 0 20px rgba(212, 175, 55, 0.3); }
         
         /* AUTOCOMPLETE */
@@ -57,13 +46,6 @@
         }
         .autocomplete-item { padding: 10px 12px; cursor: pointer; font-size: 11px; font-weight: bold; color: #ccc; border-bottom: 1px solid #222; }
         .autocomplete-item:hover { background: #222; color: #D4AF37; }
-        
-        /* STATUS LIGHT */
-        .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; }
-        .status-green { background: #10B981; box-shadow: 0 0 8px #10B981; }
-        .status-red { background: #EF4444; box-shadow: 0 0 8px #EF4444; }
-        .status-yellow { background: #F59E0B; box-shadow: 0 0 8px #F59E0B; animation: pulse 1.5s infinite; }
-        @keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
     </style>
 </head>
 <body class="flex flex-col h-screen">
@@ -73,7 +55,7 @@
     <header class="flex flex-col md:flex-row items-center justify-between px-6 py-4 border-b border-[#222] bg-[#050505] shrink-0 gap-6 shadow-xl z-20">
         <div class="flex items-center gap-5">
             <div class="logo-container w-14 h-14 flex items-center justify-center">
-                <img src="https://raw.githubusercontent.com/Kronborg1980/Gladiator-Collectables/main/logogla.webp" class="w-10 h-10 object-contain logo-img">
+                <img src="https://raw.githubusercontent.com/Kronborg1980/Gladiator-Collectables/main/logogla.webp" class="w-10 h-10 object-contain drop-shadow-md">
             </div>
             <div>
                 <h1 class="text-2xl font-brand font-bold text-white tracking-widest text-glow">
@@ -83,180 +65,132 @@
             </div>
         </div>
 
-        <div class="flex items-center gap-4 w-full md:w-auto overflow-x-auto pb-1 md:pb-0">
-            <div class="stat-box border-l-2 border-l-[#444]">
-                <div class="text-[9px] text-[#666] font-bold uppercase tracking-wider mb-1">Inventory</div>
+        <div class="flex items-center gap-4">
+            <div class="px-4 py-2 bg-[#111] border border-[#222] rounded text-right">
+                <div class="text-[9px] text-[#666] uppercase font-bold">Inventory</div>
                 <div class="text-lg font-bold text-white leading-none">{{ cards.length }}</div>
             </div>
-            <div class="stat-box border-l-2 border-l-[#3B82F6]">
-                <div class="text-[9px] text-[#3B82F6] font-bold uppercase tracking-wider mb-1">Cost Basis</div>
-                <div class="text-lg font-bold text-white leading-none">${{ formatNumber(totalCost) }}</div>
-            </div>
-            <div class="stat-box border-l-2 border-l-[#FACC15] bg-[#FACC15]/5">
-                <div class="text-[9px] text-[#FACC15] font-bold uppercase tracking-wider mb-1">Net Profit</div>
-                <div class="text-lg font-bold leading-none" :class="totalProfit >= 0 ? 'text-[#FACC15]' : 'text-red-500'">${{ formatNumber(totalProfit) }}</div>
+            <div class="px-4 py-2 bg-[#111] border border-[#222] rounded text-right">
+                <div class="text-[9px] text-[#D4AF37] uppercase font-bold">Profit</div>
+                <div class="text-lg font-bold leading-none" :class="totalProfit >= 0 ? 'text-[#D4AF37]' : 'text-red-500'">${{ formatNumber(totalProfit) }}</div>
             </div>
         </div>
     </header>
 
     <div class="px-6 py-3 bg-[#0a0a0a] border-b border-[#222] shrink-0">
-        <div class="flex flex-col md:flex-row gap-4 justify-between items-center">
-            <div class="relative w-full md:max-w-md group">
-                <i class="fa-solid fa-filter absolute left-4 top-1/2 -translate-y-1/2 text-[#444] group-focus-within:text-[#D4AF37] transition"></i>
-                <input v-model="filter" placeholder="FILTER INVENTORY..." class="w-full bg-[#0e0e0e] border border-[#222] text-xs font-bold text-white rounded pl-10 pr-4 py-2.5 outline-none focus:border-[#D4AF37] uppercase tracking-wide transition">
-            </div>
-
-            <div class="flex items-center gap-3">
-                <div class="flex bg-[#111] rounded border border-[#222] p-0.5">
-                    <button @click="forceRefreshSets" class="w-8 h-8 flex items-center justify-center text-[#555] hover:text-[#D4AF37] hover:bg-[#222] rounded transition" title="Refresh API"><i class="fa-solid fa-sync" :class="{'fa-spin': setsLoading}"></i></button>
-                    <div class="w-[1px] bg-[#222] my-1 mx-0.5"></div>
-                    <button @click="exportExcel" class="w-8 h-8 flex items-center justify-center text-[#555] hover:text-green-500 hover:bg-[#222] rounded transition"><i class="fa-solid fa-file-excel"></i></button>
-                    <button @click="exportPDF" class="w-8 h-8 flex items-center justify-center text-[#555] hover:text-red-500 hover:bg-[#222] rounded transition"><i class="fa-solid fa-file-pdf"></i></button>
-                    <div class="w-[1px] bg-[#222] my-1 mx-0.5"></div>
-                    <button @click="backup" class="w-8 h-8 flex items-center justify-center text-[#555] hover:text-blue-500 hover:bg-[#222] rounded transition"><i class="fa-solid fa-download"></i></button>
-                    <label class="w-8 h-8 flex items-center justify-center text-[#555] hover:text-purple-500 hover:bg-[#222] rounded transition cursor-pointer"><i class="fa-solid fa-upload"></i> <input type="file" @change="restore" class="hidden"></label>
-                </div>
-
-                <button @click="openSearch" class="flex items-center gap-2 bg-[#D4AF37] hover:bg-[#EAB308] text-black text-xs font-bold px-4 py-2.5 rounded shadow-[0_0_10px_rgba(212,175,55,0.2)] active:scale-95 uppercase tracking-wider">
-                    <i class="fa-solid fa-plus"></i> Add Assets
+        <div class="flex justify-between items-center">
+            <input v-model="filter" placeholder="FILTER INVENTORY..." class="bg-[#0e0e0e] border border-[#222] text-xs font-bold text-white rounded pl-4 pr-4 py-2.5 w-64 outline-none focus:border-[#D4AF37] uppercase tracking-wide transition">
+            
+            <div class="flex gap-2">
+                <button @click="updatePrices" class="bg-[#111] hover:bg-[#222] text-[#777] hover:text-white border border-[#222] px-3 py-2 rounded transition" title="Update Prices"><i class="fa-solid fa-arrows-rotate" :class="{'fa-spin': isUpdating}"></i></button>
+                <button @click="backup" class="bg-[#111] hover:bg-[#222] text-[#777] hover:text-blue-400 border border-[#222] px-3 py-2 rounded transition"><i class="fa-solid fa-download"></i></button>
+                <label class="bg-[#111] hover:bg-[#222] text-[#777] hover:text-purple-400 border border-[#222] px-3 py-2 rounded transition cursor-pointer"><i class="fa-solid fa-upload"></i> <input type="file" @change="restore" class="hidden"></label>
+                <button @click="openSearch" class="flex items-center gap-2 bg-[#D4AF37] hover:bg-[#EAB308] text-black text-xs font-bold px-5 py-2 rounded uppercase tracking-wider shadow-lg">
+                    <i class="fa-solid fa-plus"></i> Add Card
                 </button>
             </div>
         </div>
     </div>
 
-    <div class="flex-1 overflow-hidden bg-[#050505] relative flex flex-col">
-        <div class="grid grid-cols-[60px_2fr_1fr_1fr_1fr_1fr_1fr_1fr_50px] gap-4 px-6 py-3 border-b border-[#222] bg-[#0c0c0c] text-[9px] font-bold text-[#555] uppercase tracking-widest shrink-0 sticky top-0 z-10 hidden md:grid">
-            <div class="text-center">Img</div>
-            <div>Asset Details</div>
-            <div class="text-right">Raw $</div>
-            <div class="text-right">Fee $</div>
-            <div class="text-center">Target</div>
-            <div class="text-right">Est. Val</div>
-            <div class="text-center">Action</div>
-            <div class="text-right">Net</div>
-            <div></div>
+    <div class="flex-1 overflow-y-auto bg-[#050505] px-6 py-4">
+        <div v-if="filteredCards.length === 0" class="flex flex-col items-center justify-center h-full pb-20 opacity-50">
+            <i class="fa-solid fa-layer-group text-4xl mb-4 text-[#333]"></i>
+            <div class="text-sm font-bold uppercase tracking-widest text-[#555]">Inventory Empty</div>
         </div>
 
-        <div class="flex-1 overflow-y-auto px-6 py-2">
-            <div v-if="filteredCards.length === 0" class="h-full flex flex-col items-center justify-center text-center pb-20">
-                <div class="w-24 h-24 rounded-full bg-[#0a0a0a] border border-[#222] flex items-center justify-center mb-6 shadow-inner">
-                    <i class="fa-solid fa-layer-group text-4xl text-[#222]"></i>
-                </div>
-                <h2 class="text-xl font-brand font-bold text-[#444] uppercase tracking-widest mb-2">Armory Empty</h2>
-                <button @click="openSearch" class="text-[#D4AF37] text-xs font-bold uppercase tracking-widest hover:text-white border-b border-[#D4AF37] hover:border-white pb-0.5 transition">Initialize Database</button>
+        <div v-else class="grid gap-2">
+            <div class="grid grid-cols-[60px_2fr_1fr_1fr_1fr_1fr_1fr_1fr_50px] gap-4 text-[9px] font-bold text-[#555] uppercase tracking-widest px-4 mb-2">
+                <div class="text-center">Img</div>
+                <div>Details</div>
+                <div class="text-right">Raw</div>
+                <div class="text-right">Fee</div>
+                <div class="text-center">Grade</div>
+                <div class="text-right">Value</div>
+                <div class="text-center">Dec</div>
+                <div class="text-right">Net</div>
+                <div></div>
             </div>
 
-            <div v-else class="hidden md:flex flex-col gap-1">
-                <div v-for="(c, i) in filteredCards" :key="i" class="grid grid-cols-[60px_2fr_1fr_1fr_1fr_1fr_1fr_1fr_50px] gap-4 items-center py-2 border-b border-[#1a1a1a] hover:bg-[#111] group transition">
-                    <div class="flex justify-center">
-                        <div class="w-10 h-14 bg-black rounded border border-[#333] relative overflow-hidden group-hover:border-[#D4AF37] transition cursor-pointer">
-                            <img :src="c.img" class="w-full h-full object-cover">
-                        </div>
-                    </div>
-                    <div class="min-w-0">
-                        <div class="font-bold text-white text-sm truncate pr-2">{{ c.name }}</div>
-                        <div class="text-[9px] text-[#666] uppercase font-bold tracking-wide truncate">{{ c.set }}</div>
-                        <input v-model="c.condition" class="table-input text-[10px] text-[#888] mt-0.5 placeholder-[#333]" placeholder="Notes...">
-                    </div>
-                    <div class="text-right font-mono text-sm text-[#aaa]"><input v-model.number="c.raw" type="number" class="bg-transparent text-right w-full outline-none focus:text-white border-b border-transparent focus:border-[#D4AF37]"></div>
-                    <div class="text-right font-mono text-sm text-[#aaa]"><input v-model.number="c.fee" type="number" class="bg-transparent text-right w-full outline-none focus:text-white border-b border-transparent focus:border-[#D4AF37]"></div>
-                    <div class="flex justify-center">
-                        <select v-model="c.target" class="bg-[#0e0e0e] text-[#D4AF37] font-bold text-[10px] border border-[#222] rounded px-1 py-1 outline-none focus:border-[#D4AF37] cursor-pointer">
-                            <option value="10">PSA 10</option><option value="9">PSA 9</option><option value="8">PSA 8</option>
-                        </select>
-                    </div>
-                    <div class="text-right font-mono text-sm font-bold text-white"><input :value="getValue(c)" @input="updateValue(c, $event.target.value)" type="number" class="bg-transparent text-right w-full outline-none focus:border-b focus:border-[#D4AF37]"></div>
-                    <div class="text-center">
-                        <span v-if="getProfit(c) > 0" class="text-[9px] font-bold text-green-500 bg-green-900/20 border border-green-500/20 px-2 py-0.5 rounded uppercase tracking-wide">GRADE</span>
-                        <span v-else class="text-[9px] font-bold text-red-500 bg-red-900/20 border border-red-500/20 px-2 py-0.5 rounded uppercase tracking-wide">HOLD</span>
-                    </div>
-                    <div class="text-right font-mono text-sm font-bold" :class="getProfit(c) >= 0 ? 'text-[#FACC15]' : 'text-red-500'">{{ Math.round(getProfit(c)) }}</div>
-                    <div class="text-center"><button @click="remove(i)" class="text-[#333] hover:text-red-500 transition"><i class="fa-solid fa-times"></i></button></div>
+            <div v-for="(c, i) in filteredCards" :key="i" class="grid grid-cols-[60px_2fr_1fr_1fr_1fr_1fr_1fr_1fr_50px] gap-4 items-center bg-[#111] border border-[#1a1a1a] p-2 rounded hover:border-[#333] group transition">
+                <div class="flex justify-center h-16"><img :src="c.img" class="h-full object-contain"></div>
+                
+                <div class="min-w-0">
+                    <div class="font-bold text-white text-sm truncate">{{ c.name }}</div>
+                    <div class="text-[9px] text-[#666] uppercase font-bold truncate">{{ c.set }}</div>
+                    <input v-model="c.condition" class="bg-transparent text-[10px] text-[#888] w-full outline-none placeholder-[#333]" placeholder="Notes...">
                 </div>
-            </div>
 
-            <div class="md:hidden space-y-3 mt-2">
-                <div v-for="(c, i) in filteredCards" :key="i" class="bg-[#111] border border-[#222] rounded-lg p-3 flex gap-4">
-                     <div class="w-16 h-24 bg-black rounded border border-[#333] shrink-0 overflow-hidden"><img :src="c.img" class="w-full h-full object-cover"></div>
-                     <div class="flex-1 min-w-0 flex flex-col justify-between">
-                        <div>
-                            <div class="font-bold text-white text-sm truncate">{{ c.name }}</div>
-                            <div class="text-[10px] text-[#666] uppercase font-bold">{{ c.set }}</div>
-                        </div>
-                        <div class="flex justify-between items-end">
-                            <div class="font-mono font-bold text-[#FACC15]">${{ Math.round(getProfit(c)) }}</div>
-                            <button @click="remove(i)" class="text-[#444]"><i class="fa-solid fa-trash"></i></button>
-                        </div>
-                     </div>
+                <div class="text-right"><input v-model.number="c.raw" type="number" class="bg-transparent text-right w-full text-[#aaa] font-mono text-sm outline-none focus:text-white border-b border-transparent focus:border-[#D4AF37]"></div>
+                <div class="text-right"><input v-model.number="c.fee" type="number" class="bg-transparent text-right w-full text-[#aaa] font-mono text-sm outline-none focus:text-white border-b border-transparent focus:border-[#D4AF37]"></div>
+                
+                <div class="flex justify-center">
+                    <select v-model="c.target" class="bg-[#0a0a0a] text-[#D4AF37] font-bold text-[10px] border border-[#222] rounded outline-none cursor-pointer">
+                        <option value="10">PSA 10</option><option value="9">PSA 9</option><option value="8">PSA 8</option>
+                    </select>
                 </div>
+
+                <div class="text-right"><input :value="getValue(c)" @input="updateValue(c, $event.target.value)" type="number" class="bg-transparent text-right w-full text-white font-bold font-mono text-sm outline-none border-b border-transparent focus:border-[#D4AF37]"></div>
+                
+                <div class="text-center">
+                    <span v-if="getProfit(c) > 0" class="text-[9px] font-bold text-green-500 bg-green-900/20 px-2 py-0.5 rounded border border-green-500/20">GRADE</span>
+                    <span v-else class="text-[9px] font-bold text-red-500 bg-red-900/20 px-2 py-0.5 rounded border border-red-500/20">HOLD</span>
+                </div>
+
+                <div class="text-right font-mono font-bold text-sm" :class="getProfit(c) >= 0 ? 'text-[#FACC15]' : 'text-red-500'">{{ Math.round(getProfit(c)) }}</div>
+                <div class="text-center"><button @click="remove(i)" class="text-[#333] hover:text-red-500"><i class="fa-solid fa-times"></i></button></div>
             </div>
         </div>
     </div>
 
     <Transition name="modal">
     <div v-if="showSearch" class="fixed inset-0 bg-black/90 backdrop-blur-md z-50 flex items-center justify-center p-4">
-        <div class="bg-[#09090b] w-full max-w-4xl h-[80vh] rounded-xl border border-[#222] shadow-[0_0_50px_rgba(0,0,0,0.8)] flex flex-col overflow-hidden">
-            <div class="p-5 border-b border-[#222] flex justify-between items-center bg-[#0c0c0c]">
+        <div class="bg-[#09090b] w-full max-w-4xl h-[80vh] rounded-xl border border-[#222] shadow-2xl flex flex-col overflow-hidden">
+            
+            <div class="p-5 border-b border-[#222] bg-[#0c0c0c] flex justify-between items-center">
                 <div class="flex items-center gap-3">
                     <h2 class="font-brand font-bold text-xl text-[#FACC15] tracking-widest text-glow">ARMORY ACCESS</h2>
-                    <div class="flex items-center gap-2 px-3 py-1 bg-[#111] rounded border border-[#222]">
-                        <span class="status-dot" :class="dbStatusClass"></span>
-                        <span class="text-[9px] font-bold uppercase text-[#777]">{{ dbStatusText }}</span>
-                    </div>
+                    <span v-if="initLoading" class="text-[10px] text-[#555] animate-pulse uppercase font-bold">Connecting to Database...</span>
                 </div>
-                <button @click="showSearch=false" class="text-[#555] hover:text-white transition"><i class="fa-solid fa-xmark text-xl"></i></button>
+                <button @click="showSearch=false" class="text-[#555] hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
 
-            <div class="p-5 border-b border-[#222] bg-[#0c0c0c] grid grid-cols-1 md:grid-cols-10 gap-4">
-                <div class="md:col-span-3">
-                    <label class="text-[9px] text-[#555] font-bold uppercase mb-1.5 block tracking-wider">1. Select Era</label>
-                    <div class="relative">
-                        <select v-model="selectedEra" class="w-full bg-[#111] border border-[#333] text-white text-xs font-bold rounded p-3 outline-none focus:border-[#D4AF37] appearance-none uppercase cursor-pointer">
-                            <option value="">-- Choose Era --</option>
-                            <option v-for="era in eras" :value="era">{{ era }}</option>
-                        </select>
-                        <i class="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-[#555] text-xs pointer-events-none"></i>
-                    </div>
+            <div class="p-5 bg-[#0c0c0c] border-b border-[#222] grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label class="text-[9px] text-[#555] font-bold uppercase mb-1 block">1. Select Era</label>
+                    <select v-model="selectedEra" :disabled="initLoading" class="w-full bg-[#111] border border-[#333] text-white text-xs font-bold rounded p-3 outline-none focus:border-[#D4AF37] uppercase disabled:opacity-50">
+                        <option value="">-- Choose Era --</option>
+                        <option v-for="era in eras" :value="era">{{ era }}</option>
+                    </select>
                 </div>
-                <div class="md:col-span-3">
-                    <label class="text-[9px] text-[#555] font-bold uppercase mb-1.5 block tracking-wider">2. Select Set</label>
-                    <div class="relative">
-                        <select v-model="selectedSet" :disabled="!selectedEra" class="w-full bg-[#111] border border-[#333] text-white text-xs font-bold rounded p-3 outline-none focus:border-[#D4AF37] appearance-none uppercase cursor-pointer disabled:opacity-30">
-                            <option value="">-- Choose Set --</option>
-                            <option v-for="set in filteredSets" :value="set.id">{{ set.name }}</option>
-                        </select>
-                        <i class="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-[#555] text-xs pointer-events-none"></i>
-                    </div>
+
+                <div>
+                    <label class="text-[9px] text-[#555] font-bold uppercase mb-1 block">2. Select Set</label>
+                    <select v-model="selectedSet" :disabled="!selectedEra" class="w-full bg-[#111] border border-[#333] text-white text-xs font-bold rounded p-3 outline-none focus:border-[#D4AF37] uppercase disabled:opacity-50">
+                        <option value="">-- Choose Set --</option>
+                        <option v-for="set in filteredSets" :value="set.id">{{ set.name }} ({{ set.releaseDate ? set.releaseDate.substring(0,4) : 'N/A' }})</option>
+                    </select>
                 </div>
-                <div class="md:col-span-4 relative">
-                    <label class="text-[9px] text-[#555] font-bold uppercase mb-1.5 block tracking-wider">3. Pokemon Name</label>
-                    <div class="relative">
-                        <i class="fa-solid fa-bolt absolute left-3 top-1/2 -translate-y-1/2 text-[#444]"></i>
-                        <input v-model="query" @input="filterNames" :disabled="!selectedSet" placeholder="Start typing..." class="w-full bg-[#111] border border-[#333] text-white text-xs font-bold rounded p-3 pl-9 outline-none focus:border-[#D4AF37] uppercase disabled:opacity-30" autocomplete="off">
-                        
-                        <div v-if="showPredictions && predictedNames.length > 0" class="autocomplete-list">
-                            <div v-for="name in predictedNames" @click="selectName(name)" class="autocomplete-item">
-                                {{ name }}
-                            </div>
-                        </div>
+
+                <div class="relative">
+                    <label class="text-[9px] text-[#555] font-bold uppercase mb-1 block">3. Pokemon Name</label>
+                    <input v-model="query" @input="filterNames" :disabled="!selectedSet" placeholder="Type to search..." class="w-full bg-[#111] border border-[#333] text-white text-xs font-bold rounded p-3 outline-none focus:border-[#D4AF37] uppercase disabled:opacity-50" autocomplete="off">
+                    
+                    <div v-if="showPredictions && predictedNames.length > 0" class="autocomplete-list">
+                        <div v-for="name in predictedNames" @click="selectName(name)" class="autocomplete-item">{{ name }}</div>
                     </div>
                 </div>
             </div>
-            
-            <div class="px-5 py-3 bg-[#0c0c0c] border-b border-[#222] flex gap-3 justify-end">
-                <button @click="fetchCards(true)" :disabled="!query" class="bg-[#D4AF37] hover:bg-[#EAB308] disabled:opacity-50 disabled:cursor-not-allowed text-black text-xs font-bold px-6 py-2 rounded uppercase tracking-wider shadow-lg active:scale-95 transition">
-                    Search "{{ query }}"
-                </button>
-                 <div class="w-[1px] bg-[#333]"></div>
-                <button @click="fetchCards(false)" :disabled="!selectedSet" class="text-[#777] hover:text-white text-xs font-bold px-4 py-2 rounded uppercase tracking-wider border border-[#333] hover:border-[#777] transition">
-                    Show Whole Set
+
+            <div class="px-5 py-3 bg-[#0c0c0c] border-b border-[#222] flex justify-end">
+                <button @click="fetchCards" :disabled="!query" class="bg-[#D4AF37] hover:bg-[#EAB308] disabled:opacity-50 disabled:cursor-not-allowed text-black text-xs font-bold px-6 py-2 rounded uppercase tracking-wider shadow-lg">
+                    Search Database
                 </button>
             </div>
 
             <div class="flex-1 overflow-y-auto p-5 bg-[#050505]">
                 <div v-if="loading" class="h-full flex flex-col items-center justify-center text-[#D4AF37]">
                     <i class="fa-solid fa-circle-notch fa-spin text-3xl mb-3"></i>
-                    <div class="text-xs font-bold uppercase tracking-widest">Retrieving Asset Data...</div>
+                    <div class="text-xs font-bold uppercase tracking-widest">Downloading Assets...</div>
                 </div>
 
                 <div v-else-if="results.length > 0" class="grid grid-cols-2 md:grid-cols-5 gap-4">
@@ -274,14 +208,8 @@
 
                 <div v-else class="h-full flex flex-col items-center justify-center text-[#333]">
                     <i class="fa-solid fa-crosshairs text-5xl mb-4 text-[#222]"></i>
-                    <p class="text-xs font-bold uppercase tracking-widest text-[#555]">Target Acquired</p>
-                    <p class="text-[10px] text-[#444] mt-2">Select Name & Press Search</p>
+                    <p class="text-xs font-bold uppercase tracking-widest text-[#555]">Ready to Search</p>
                 </div>
-            </div>
-            
-             <div class="p-2 bg-[#080808] border-t border-[#222] flex justify-between px-4 text-[9px] text-[#444] uppercase font-bold">
-                <div>{{ results.length }} Results</div>
-                <div>Live Data</div>
             </div>
         </div>
     </div>
@@ -293,60 +221,29 @@
 <script>
     const { createApp } = Vue;
 
-    // --- HYBRID DATA: PRELOADED "MUST HAVES" + LIVE API ---
-    // This ensures your 2025/2026 sets exist NO MATTER WHAT.
-    const FALLBACK_SETS = [
-        // MEGA ERA (2025/2026 - Custom/Future Sets)
-        {id: "mega4", name: "Mega Evolutions", series: "Mega Era (2025)", releaseDate: "2025/08/15"},
-        {id: "mega3", name: "Phantasmal Flames", series: "Mega Era (2025)", releaseDate: "2025/05/10"},
-        {id: "mega2", name: "Destined Rivals", series: "Mega Era (2025)", releaseDate: "2025/03/22"},
-        {id: "mega1", name: "Journey Together", series: "Mega Era (2025)", releaseDate: "2025/02/08"},
-
-        // SCARLET & VIOLET (Standard)
-        {id: "sv8pt5", name: "Prismatic Evolutions", series: "Scarlet & Violet", releaseDate: "2025/01/17"},
-        {id: "sv8", name: "Surging Sparks", series: "Scarlet & Violet", releaseDate: "2024/11/08"},
-        {id: "sv7", name: "Stellar Crown", series: "Scarlet & Violet", releaseDate: "2024/09/13"},
-        {id: "sv6", name: "Twilight Masquerade", series: "Scarlet & Violet", releaseDate: "2024/05/24"},
-        {id: "sv5", name: "Temporal Forces", series: "Scarlet & Violet", releaseDate: "2024/03/22"},
-        {id: "sv3pt5", name: "151", series: "Scarlet & Violet", releaseDate: "2023/09/22"},
-        {id: "sv3", name: "Obsidian Flames", series: "Scarlet & Violet", releaseDate: "2023/08/11"},
-        
-        // SWORD & SHIELD
-        {id: "swsh12pt5", name: "Crown Zenith", series: "Sword & Shield", releaseDate: "2023/01/20"},
-        {id: "swsh11", name: "Lost Origin", series: "Sword & Shield", releaseDate: "2022/09/09"},
-        {id: "swsh7", name: "Evolving Skies", series: "Sword & Shield", releaseDate: "2021/08/27"},
-        
-        // CLASSIC
-        {id: "base1", name: "Base Set", series: "Classic", releaseDate: "1999/01/09"}
-    ];
-
     createApp({
         data() {
             return {
                 cards: [], filter: '', showSearch: false, query: '', 
-                results: [], loading: false, isUpdating: false,
+                results: [], loading: false, isUpdating: false, initLoading: false,
                 
-                // DATA
+                // DATA CONTAINERS
                 allSets: [], 
                 eras: [],
                 
-                // SELECTION
+                // SELECTION STATE
                 selectedEra: "", selectedSet: "",
                 
-                // PREDICTION
+                // PREDICTION ENGINE
                 allNamesInSet: [], 
                 predictedNames: [],
-                showPredictions: false,
-                namesLoading: false,
-                setsLoading: false
+                showPredictions: false
             }
         },
         mounted() {
             const db = localStorage.getItem('gladiator_v26');
             if(db) this.cards = JSON.parse(db);
-            
-            // LOAD SETS IMMEDIATELY
-            this.loadSets();
+            this.initializeDatabase();
         },
         computed: {
             filteredCards() {
@@ -358,16 +255,6 @@
             filteredSets() {
                 if (!this.selectedEra) return [];
                 return this.allSets.filter(s => s.series === this.selectedEra);
-            },
-            dbStatusText() {
-                if(this.setsLoading) return "Syncing...";
-                if(this.allSets.length > 0) return "Online";
-                return "Offline";
-            },
-            dbStatusClass() {
-                if(this.setsLoading) return "status-yellow";
-                if(this.allSets.length > 0) return "status-green";
-                return "status-red";
             }
         },
         watch: {
@@ -375,11 +262,87 @@
                 this.query = ''; 
                 this.results = []; 
                 this.allNamesInSet = [];
-                if(newVal) this.fetchSetNames(newVal);
+                if(newVal) this.fetchNamesForPrediction(newVal);
             },
             selectedEra() { this.selectedSet = ""; }
         },
         methods: {
+            // --- 1. INITIALIZE (LOAD ERAS & SETS) ---
+            async initializeDatabase() {
+                this.initLoading = true;
+                try {
+                    // Fetch ALL sets from API (up to 250 covering all modern history)
+                    const res = await fetch('https://api.pokemontcg.io/v2/sets?orderBy=-releaseDate&pageSize=250');
+                    const data = await res.json();
+                    
+                    this.allSets = data.data;
+                    
+                    // EXTRACT ERAS DYNAMICALLY from the API data
+                    const uniqueSeries = [...new Set(this.allSets.map(s => s.series))];
+                    
+                    // Sort them logically (Newest first)
+                    // We prioritize common eras, push others to end
+                    const priority = ["Scarlet & Violet", "Sword & Shield", "Sun & Moon", "XY", "Black & White", "HeartGold & SoulSilver", "Platinum", "Diamond & Pearl", "EX", "Base"];
+                    
+                    this.eras = uniqueSeries.sort((a,b) => {
+                        const idxA = priority.indexOf(a);
+                        const idxB = priority.indexOf(b);
+                        if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+                        if (idxA !== -1) return -1;
+                        if (idxB !== -1) return 1;
+                        return 0; 
+                    });
+                    
+                } catch(e) {
+                    alert("Failed to connect to PokemonTCG.io API. Check internet.");
+                } finally {
+                    this.initLoading = false;
+                }
+            },
+
+            // --- 2. PREDICTION ENGINE (LIGHTWEIGHT) ---
+            async fetchNamesForPrediction(setId) {
+                // Downloads ONLY names (kb size) to populate autocomplete
+                try {
+                    const url = `https://api.pokemontcg.io/v2/cards?q=set.id:${setId}&select=name`;
+                    const res = await fetch(url);
+                    const data = await res.json();
+                    // Deduplicate names
+                    this.allNamesInSet = [...new Set(data.data.map(c => c.name))].sort();
+                } catch(e) { console.error("Autocomplete failed"); }
+            },
+
+            filterNames() {
+                if(!this.query) { this.showPredictions = false; return; }
+                const q = this.query.toLowerCase();
+                this.predictedNames = this.allNamesInSet.filter(n => n.toLowerCase().startsWith(q)).slice(0, 10);
+                this.showPredictions = true;
+            },
+            selectName(name) {
+                this.query = name;
+                this.showPredictions = false;
+            },
+
+            // --- 3. FINAL SEARCH (HEAVY LOAD) ---
+            async fetchCards() {
+                if(!this.selectedSet || !this.query) return;
+                this.loading = true;
+                this.results = [];
+                try {
+                    // Search for specific name in specific set
+                    const q = `set.id:${this.selectedSet} name:"${this.query}"`;
+                    const url = `https://api.pokemontcg.io/v2/cards?q=${q}&pageSize=250&select=id,name,number,images,tcgplayer,rarity&orderBy=number`;
+                    const res = await fetch(url);
+                    const data = await res.json();
+                    this.results = data.data || [];
+                } catch(e) {
+                    alert("Search failed.");
+                } finally {
+                    this.loading = false;
+                }
+            },
+
+            // --- STANDARD FUNCTIONS ---
             formatNumber(n) { return (n||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}); },
             save() { localStorage.setItem('gladiator_v26', JSON.stringify(this.cards)); },
             getValue(c) {
@@ -395,102 +358,6 @@
                 this.save();
             },
             getProfit(c) { return this.getValue(c) - ((c.raw || 0) + (c.fee || 0)); },
-            
-            // --- 1. SET LOADER (HYBRID MODE) ---
-            async loadSets() {
-                // STEP 1: LOAD FALLBACKS INSTANTLY (0ms)
-                this.processSets(FALLBACK_SETS);
-                
-                // STEP 2: TRY CACHE
-                const cached = localStorage.getItem('gladiator_sets_hybrid_v1');
-                if(cached) {
-                    this.processSets(JSON.parse(cached));
-                }
-                
-                // STEP 3: SYNC BACKGROUND
-                this.fetchSetsFromApi();
-            },
-            async forceRefreshSets() {
-                localStorage.removeItem('gladiator_sets_hybrid_v1');
-                await this.fetchSetsFromApi();
-                alert("Database Refreshed");
-            },
-            async fetchSetsFromApi() {
-                this.setsLoading = true;
-                try {
-                    const res = await fetch('https://api.pokemontcg.io/v2/sets?orderBy=-releaseDate&pageSize=250');
-                    const data = await res.json();
-                    
-                    // MERGE API DATA WITH OUR CUSTOM "FALLBACK" DATA
-                    // This keeps your custom sets alive even after API updates
-                    const apiSets = data.data;
-                    const customSets = FALLBACK_SETS.filter(fs => !apiSets.find(as => as.id === fs.id));
-                    const mergedSets = [...customSets, ...apiSets];
-                    
-                    localStorage.setItem('gladiator_sets_hybrid_v1', JSON.stringify(mergedSets));
-                    this.processSets(mergedSets);
-                } catch(e) { console.log("API Sync failed, using fallback"); }
-                finally { this.setsLoading = false; }
-            },
-            processSets(data) {
-                this.allSets = data;
-                const uniqueSeries = [...new Set(data.map(s => s.series))];
-                const priority = ["Mega Era (2025)", "Scarlet & Violet", "Sword & Shield", "Sun & Moon", "XY", "Black & White", "Classic"];
-                this.eras = uniqueSeries.sort((a,b) => {
-                    const idxA = priority.indexOf(a); const idxB = priority.indexOf(b);
-                    if(idxA !== -1 && idxB !== -1) return idxA - idxB;
-                    if(idxA !== -1) return -1; if(idxB !== -1) return 1; return 0;
-                });
-            },
-
-            // --- 2. NAME FETCHER ---
-            async fetchSetNames(setId) {
-                this.namesLoading = true;
-                try {
-                    // Try fetch from API
-                    const url = `https://api.pokemontcg.io/v2/cards?q=set.id:${setId}&select=name`;
-                    const res = await fetch(url);
-                    const data = await res.json();
-                    const names = [...new Set(data.data.map(c => c.name))].sort();
-                    this.allNamesInSet = names;
-                } catch(e) { 
-                    // If custom set (no API data), we can't autocomplete, but search still works
-                    this.allNamesInSet = []; 
-                }
-                finally { this.namesLoading = false; }
-            },
-
-            // --- 3. AUTOCOMPLETE ---
-            filterNames() {
-                if(!this.query) { this.showPredictions = false; return; }
-                const q = this.query.toLowerCase();
-                this.predictedNames = this.allNamesInSet.filter(n => n.toLowerCase().startsWith(q)).slice(0, 10);
-                this.showPredictions = true;
-            },
-            selectName(name) {
-                this.query = name;
-                this.showPredictions = false;
-            },
-
-            // --- 4. SEARCH ---
-            async fetchCards(searchByName) {
-                if(!this.selectedSet) return;
-                this.loading = true;
-                this.results = [];
-                try {
-                    let q = `set.id:${this.selectedSet}`;
-                    if(searchByName && this.query) q += ` name:"${this.query}"`;
-                    
-                    const url = `https://api.pokemontcg.io/v2/cards?q=${q}&pageSize=250&select=id,name,number,images,tcgplayer,rarity&orderBy=number`;
-                    const res = await fetch(url);
-                    const data = await res.json();
-                    this.results = data.data || [];
-                } catch(e) {
-                    // If custom set, mock empty result or handle differently
-                    alert("No API data found for this set yet (Unreleased/Custom).");
-                }
-                finally { this.loading = false; }
-            },
             
             async updatePrices() {
                 this.isUpdating = true;
@@ -526,7 +393,8 @@
             openSearch() { this.showSearch = true; this.selectedEra = ""; this.selectedSet = ""; this.query = ""; this.results = []; this.allNamesInSet = []; },
             add(item) {
                 const rawPrice = this.getPrice(item);
-                const setObj = this.allSets.find(s=>s.id === this.selectedSet);
+                // Find set name purely from data
+                const setObj = this.allSets.find(s => s.id === this.selectedSet);
                 const newCard = {
                     id: item.id, name: item.name, set: setObj ? setObj.name : "Unknown", img: item.images.small,
                     condition: '', raw: rawPrice, fee: 15, target: 10,
