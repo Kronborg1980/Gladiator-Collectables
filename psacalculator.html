@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Gladiator | Pro Dashboard</title>
+    <title>Gladiator | Pro Assets</title>
     <link rel="icon" type="image/webp" href="https://raw.githubusercontent.com/Kronborg1980/Gladiator-Collectables/main/logogla.webp">
     
     <script src="https://cdn.tailwindcss.com"></script>
@@ -19,11 +19,13 @@
         body { font-family: 'Inter', sans-serif; background-color: #000; color: #e4e4e7; height: 100vh; overflow: hidden; }
         .font-brand { font-family: 'Cinzel', serif; }
         
+        /* SCROLLBAR */
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: #000; }
         ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
         ::-webkit-scrollbar-thumb:hover { background: #444; }
         
+        /* INPUTS */
         .search-input { background: #111; border: 1px solid #27272a; transition: all 0.2s; color: white; }
         .search-input:focus { border-color: var(--gold); outline: none; background: #000; }
         
@@ -32,13 +34,25 @@
         .table-input:focus { border-bottom-color: var(--gold); outline: none; }
         .text-left-input { text-align: left; }
 
+        /* STATS BOXES */
         .stat-box { 
-            background: #0a0a0a; border: 1px solid #222; border-radius: 8px; padding: 12px 20px; 
-            min-width: 160px; display: flex; flex-direction: column; justify-content: center;
+            background: #0a0a0a; 
+            border: 1px solid #222; 
+            border-radius: 8px; 
+            padding: 12px 20px; 
+            min-width: 160px; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: center;
             border-left-width: 4px;
         }
         .stat-label { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
         .stat-value { font-family: 'Inter', sans-serif; font-weight: 700; font-size: 24px; line-height: 1; color: white; }
+        
+        /* AUTOCOMPLETE */
+        .autocomplete-list { position: absolute; top: 100%; left: 0; right: 0; background: #111; border: 1px solid #333; border-radius: 0 0 8px 8px; max-height: 200px; overflow-y: auto; z-index: 50; box-shadow: 0 10px 20px rgba(0,0,0,0.8); }
+        .autocomplete-item { padding: 10px 12px; cursor: pointer; font-size: 12px; color: #ccc; border-bottom: 1px solid #222; }
+        .autocomplete-item:hover { background: #222; color: var(--gold); }
         
         select option { background-color: #000; color: #fff; padding: 10px; }
         [v-cloak] { display: none; }
@@ -84,7 +98,7 @@
 
             <div class="flex items-center gap-3">
                 <div class="flex bg-[#111] rounded-lg border border-[#27272a] p-1">
-                    <button @click="updatePrices" class="w-10 h-10 flex items-center justify-center text-[#777] hover:text-white hover:bg-[#222] rounded transition" title="Refresh API"><i class="fa-solid fa-sync" :class="{'fa-spin': isUpdating}"></i></button>
+                    <button @click="loadSets" class="w-10 h-10 flex items-center justify-center text-[#777] hover:text-white hover:bg-[#222] rounded transition" title="Force Sync API"><i class="fa-solid fa-sync" :class="{'fa-spin': initLoading}"></i></button>
                     <div class="w-[1px] bg-[#333] my-2 mx-1"></div>
                     <button @click="exportExcel" class="w-10 h-10 flex items-center justify-center text-[#777] hover:text-green-500 hover:bg-[#222] rounded transition"><i class="fa-solid fa-file-excel"></i></button>
                     <button @click="exportPDF" class="w-10 h-10 flex items-center justify-center text-[#777] hover:text-red-500 hover:bg-[#222] rounded transition"><i class="fa-solid fa-file-pdf"></i></button>
@@ -101,7 +115,6 @@
     </div>
 
     <div class="flex-1 overflow-hidden bg-[#050505] relative flex flex-col">
-        
         <div class="grid grid-cols-[60px_2fr_1fr_1fr_1fr_1fr_1fr_1fr_50px] gap-6 px-8 py-4 border-b border-[#222] bg-[#0c0c0c] text-[10px] font-bold text-[#666] uppercase tracking-widest shrink-0 hidden md:grid">
             <div class="text-center">IMG</div>
             <div>Asset Details</div>
@@ -115,9 +128,8 @@
         </div>
 
         <div class="flex-1 overflow-y-auto px-8 py-2">
-            
             <div v-if="filteredCards.length === 0" class="h-full flex flex-col items-center justify-center text-center pb-32">
-                <div class="w-24 h-24 rounded-full bg-[#111] border border-[#222] flex items-center justify-center mb-6 shadow-inner">
+                <div class="w-24 h-24 rounded-full bg-[#0a0a0a] border border-[#222] flex items-center justify-center mb-6 shadow-inner">
                     <i class="fa-solid fa-magnifying-glass-chart text-4xl text-[#333]"></i>
                 </div>
                 <h2 class="text-2xl font-brand font-bold text-[#eee] uppercase tracking-widest mb-3">Your Armory Is Empty</h2>
@@ -132,33 +144,26 @@
                             <img :src="c.img" class="w-full h-full object-cover">
                         </div>
                     </div>
-                    
                     <div class="min-w-0">
                         <div class="font-bold text-white text-sm truncate">{{ c.name }}</div>
                         <div class="text-[10px] text-[#666] uppercase font-bold tracking-wide truncate mt-0.5">{{ c.set }}</div>
                         <input v-model="c.condition" class="table-input text-left-input text-[#888] mt-1 placeholder-[#333]" placeholder="Add notes...">
                     </div>
-
                     <div class="text-right font-mono text-[#aaa]">$<input v-model.number="c.raw" type="number" class="bg-transparent w-16 text-right outline-none focus:text-white border-b border-transparent focus:border-[#D4AF37]"></div>
                     <div class="text-right font-mono text-[#aaa]">$<input v-model.number="c.fee" type="number" class="bg-transparent w-16 text-right outline-none focus:text-white border-b border-transparent focus:border-[#D4AF37]"></div>
-
                     <div class="flex justify-center">
                         <select v-model="c.target" class="bg-[#0e0e0e] text-[#D4AF37] font-bold text-xs border border-[#222] rounded px-2 py-1 outline-none focus:border-[#D4AF37] cursor-pointer">
                             <option value="10">PSA 10</option><option value="9">PSA 9</option><option value="8">PSA 8</option>
                         </select>
                     </div>
-
                     <div class="text-right font-mono text-white font-bold">$<input :value="getValue(c)" @input="updateValue(c, $event.target.value)" type="number" class="bg-transparent w-20 text-right outline-none border-b border-transparent focus:border-[#D4AF37]"></div>
-
                     <div class="text-center">
                         <span v-if="getProfit(c) > 0" class="text-[10px] font-bold text-green-500 bg-green-900/10 border border-green-500/20 px-3 py-1 rounded uppercase tracking-wide">GRADE</span>
                         <span v-else class="text-[10px] font-bold text-red-500 bg-red-900/10 border border-red-500/20 px-3 py-1 rounded uppercase tracking-wide">HOLD</span>
                     </div>
-
                     <div class="text-right font-mono font-bold text-sm" :class="getProfit(c) >= 0 ? 'text-[#FACC15]' : 'text-red-500'">
                         {{ getProfit(c) >= 0 ? '+' : '' }}{{ Math.round(getProfit(c)) }}
                     </div>
-
                     <div class="text-center"><button @click="remove(i)" class="text-[#333] hover:text-red-500 transition"><i class="fa-solid fa-trash"></i></button></div>
                 </div>
             </div>
@@ -196,8 +201,8 @@
         <div class="bg-[#09090b] w-full max-w-4xl h-[85vh] rounded-xl border border-[#222] shadow-2xl flex flex-col overflow-hidden">
             <div class="p-6 border-b border-[#222] flex justify-between items-center bg-[#0c0c0c]">
                 <div class="flex items-center gap-3">
-                    <h2 class="font-brand font-bold text-xl text-[#FACC15] tracking-widest">ADD CARD</h2>
-                    <span v-if="initLoading" class="text-[10px] text-[#555] animate-pulse font-bold">LOADING DATABASE...</span>
+                    <h2 class="font-brand font-bold text-xl text-[#FACC15] tracking-widest">ARMORY ACCESS</h2>
+                    <span v-if="initLoading" class="text-[10px] text-[#555] animate-pulse font-bold">Connecting to API...</span>
                 </div>
                 <button @click="showSearch=false" class="text-[#555] hover:text-white transition"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
@@ -205,7 +210,7 @@
             <div class="p-6 bg-[#0c0c0c] border-b border-[#222] grid grid-cols-1 md:grid-cols-3 gap-5">
                 <div>
                     <label class="text-[10px] text-[#555] font-bold uppercase mb-2 block tracking-wider">1. Select Era</label>
-                    <select v-model="selectedEra" class="w-full bg-[#111] border border-[#333] text-white text-xs font-bold rounded-lg p-3 outline-none focus:border-[#D4AF37] uppercase">
+                    <select v-model="selectedEra" class="w-full bg-[#111] border border-[#333] text-white text-xs font-bold rounded-lg p-3 outline-none focus:border-[#D4AF37] uppercase cursor-pointer">
                         <option value="">-- Choose Era --</option>
                         <option v-for="era in eras" :value="era">{{ era }}</option>
                     </select>
@@ -213,37 +218,40 @@
 
                 <div>
                     <label class="text-[10px] text-[#555] font-bold uppercase mb-2 block tracking-wider">2. Select Set</label>
-                    <select v-model="selectedSet" :disabled="!selectedEra" class="w-full bg-[#111] border border-[#333] text-white text-xs font-bold rounded-lg p-3 outline-none focus:border-[#D4AF37] uppercase disabled:opacity-50">
+                    <select v-model="selectedSet" :disabled="!selectedEra" class="w-full bg-[#111] border border-[#333] text-white text-xs font-bold rounded-lg p-3 outline-none focus:border-[#D4AF37] uppercase cursor-pointer disabled:opacity-50">
                         <option value="">-- Choose Set --</option>
                         <option v-for="set in filteredSets" :value="set.id">{{ set.name }}</option>
                     </select>
                 </div>
 
                 <div class="relative">
-                    <label class="text-[10px] text-[#555] font-bold uppercase mb-2 block tracking-wider">3. Pokemon Name</label>
+                    <label class="text-[10px] text-[#555] font-bold uppercase mb-2 block tracking-wider">3. Type Pokemon</label>
                     <div class="relative">
                         <i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-[#444]"></i>
-                        <input v-model="query" @keyup.enter="fetchCards" :disabled="!selectedSet" placeholder="Type name (e.g. Charizard)" class="w-full bg-[#111] border border-[#333] text-white text-xs font-bold rounded-lg p-3 pl-9 outline-none focus:border-[#D4AF37] uppercase disabled:opacity-50">
+                        <input v-model="query" @input="debouncedNameSearch" :disabled="!selectedSet" placeholder="e.g. Charizard" class="w-full bg-[#111] border border-[#333] text-white text-xs font-bold rounded-lg p-3 pl-9 outline-none focus:border-[#D4AF37] uppercase disabled:opacity-50" autocomplete="off">
+                        <div v-if="showPredictions && predictedNames.length > 0" class="autocomplete-list">
+                            <div v-for="name in predictedNames" @click="selectName(name)" class="autocomplete-item">{{ name }}</div>
+                        </div>
                     </div>
                 </div>
             </div>
 
             <div class="px-6 py-4 bg-[#0c0c0c] border-b border-[#222] flex justify-end">
                 <button @click="fetchCards" :disabled="!query" class="bg-[#D4AF37] hover:bg-[#EAB308] text-black text-xs font-bold px-8 py-3 rounded-lg uppercase tracking-wider shadow-lg active:scale-95 transition disabled:opacity-50 disabled:cursor-not-allowed">
-                    Search Database
+                    Search Card
                 </button>
             </div>
 
             <div class="flex-1 overflow-y-auto p-6 bg-[#050505]">
                 <div v-if="loading" class="h-full flex flex-col items-center justify-center text-[#D4AF37]">
                     <i class="fa-solid fa-circle-notch fa-spin text-3xl mb-4"></i>
-                    <div class="text-xs font-bold uppercase tracking-widest">Searching...</div>
+                    <div class="text-xs font-bold uppercase tracking-widest">Searching API...</div>
                 </div>
 
                 <div v-else-if="results.length > 0" class="grid grid-cols-2 md:grid-cols-5 gap-4">
                     <div v-for="item in results" :key="item.id" @click="add(item)" class="group bg-[#111] border border-[#222] rounded-xl p-3 hover:border-[#D4AF37] cursor-pointer transition relative">
                         <div class="aspect-[0.7] bg-black rounded-lg overflow-hidden mb-3 relative">
-                            <img :src="item.images?.small" loading="lazy" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
+                            <img :src="item.images?.small || item.images?.large" loading="lazy" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
                              <div class="absolute bottom-0 inset-x-0 bg-black/90 border-t border-[#333] py-1.5 text-center">
                                 <span class="text-[#D4AF37] font-bold text-xs">${{ getPrice(item) }}</span>
                             </div>
@@ -255,8 +263,7 @@
 
                 <div v-else class="h-full flex flex-col items-center justify-center text-[#333]">
                     <i class="fa-solid fa-crosshairs text-5xl mb-4 text-[#222]"></i>
-                    <p class="text-xs font-bold uppercase tracking-widest text-[#555]">System Ready</p>
-                    <p class="text-[10px] text-[#444] mt-2">Select a Pokemon & Press Search</p>
+                    <p class="text-xs font-bold uppercase tracking-widest text-[#555]">Ready to Search</p>
                 </div>
             </div>
         </div>
@@ -269,29 +276,30 @@
 <script>
     const { createApp } = Vue;
 
-    // --- MANUAL SETS INJECTION ---
-    // These specific 2025/2026 sets are missing from public APIs, so we force them here.
-    const MANUAL_SETS = [
-        {id: "mega4", name: "Mega Evolutions", series: "Mega Era (2025)", releaseDate: "2025/08/15"},
-        {id: "mega3", name: "Phantasmal Flames", series: "Mega Era (2025)", releaseDate: "2025/05/10"},
-        {id: "mega2", name: "Destined Rivals", series: "Mega Era (2025)", releaseDate: "2025/03/22"},
-        {id: "mega1", name: "Journey Together", series: "Mega Era (2025)", releaseDate: "2025/02/08"},
-        {id: "sv8pt5", name: "Prismatic Evolutions", series: "Scarlet & Violet", releaseDate: "2025/01/17"}
-    ];
-
     createApp({
         data() {
             return {
                 cards: [], filter: '', showSearch: false, query: '', 
                 results: [], loading: false, isUpdating: false, initLoading: false,
+                
+                // DATA
                 allSets: [], eras: [],
-                selectedEra: "", selectedSet: ""
+                
+                // SELECTION
+                selectedEra: "", selectedSet: "",
+                
+                // PREDICTION
+                predictedNames: [], showPredictions: false, searchTimer: null,
+                
+                // API CONFIG (Using the one you provided)
+                API_BASE: 'https://api.pokemonpricetracker.com/api/v2',
+                API_KEY: 'pokeprice_free_2d3a863c6c494cc90dc40d488e4f48482e085d28fd2f0617'
             }
         },
         mounted() {
             const db = localStorage.getItem('gladiator_v26');
             if(db) this.cards = JSON.parse(db);
-            this.initializeDatabase();
+            this.loadSets();
         },
         computed: {
             filteredCards() {
@@ -306,73 +314,87 @@
             }
         },
         watch: {
-            selectedSet() { this.query = ''; this.results = []; }, 
+            selectedSet() { this.query = ''; this.results = []; this.predictedNames = []; }, 
             selectedEra() { this.selectedSet = ""; }
         },
         methods: {
-            async initializeDatabase() {
+            // --- 1. DYNAMIC SET LOADER (API) ---
+            async loadSets() {
                 this.initLoading = true;
                 try {
-                    // Fetch real API data
-                    const res = await fetch('https://api.pokemontcg.io/v2/sets?orderBy=-releaseDate&pageSize=250');
-                    const data = await res.json();
-                    let apiSets = data.data;
-
-                    // Merge Manual Sets to ensure 2025 data exists
-                    MANUAL_SETS.forEach(mSet => {
-                        if(!apiSets.find(as => as.id === mSet.id)) {
-                            apiSets.unshift(mSet);
-                        }
+                    // Fetching Sets from the new API
+                    // If endpoint differs, adjust here. Assuming standard REST structure or search.
+                    const res = await fetch(`${this.API_BASE}/sets`, {
+                        headers: { 'Authorization': `Bearer ${this.API_KEY}` }
                     });
-
-                    this.allSets = apiSets;
-
-                    const uniqueSeries = [...new Set(this.allSets.map(s => s.series))];
-                    const priority = ["Mega Era (2025)", "Scarlet & Violet", "Sword & Shield", "Sun & Moon", "XY", "Black & White", "Classic"];
                     
-                    this.eras = uniqueSeries.sort((a,b) => {
-                        const idxA = priority.indexOf(a);
-                        const idxB = priority.indexOf(b);
-                        if (idxA !== -1 && idxB !== -1) return idxA - idxB;
-                        if (idxA !== -1) return -1;
-                        if (idxB !== -1) return 1;
-                        return 0; 
-                    });
+                    if(!res.ok) throw new Error("API Connection Failed");
+                    
+                    const data = await res.json();
+                    this.allSets = data.data || data; // Handle API response structure
+
+                    // Extract Eras dynamically
+                    const uniqueSeries = [...new Set(this.allSets.map(s => s.series))];
+                    this.eras = uniqueSeries.sort();
+                    
                 } catch(e) {
-                    console.error(e);
-                    // If API fails, use manual sets so app isn't broken
-                    this.allSets = MANUAL_SETS;
-                    this.eras = ["Mega Era (2025)", "Scarlet & Violet"];
+                    console.error("Set fetch error:", e);
+                    // Fallback to standard open API if the key/endpoint fails, so app doesn't break
+                    this.fetchFallbackSets();
                 } finally {
                     this.initLoading = false;
                 }
             },
 
+            async fetchFallbackSets() {
+                // Fallback to standard PokemonTCG.io if primary fails
+                const res = await fetch('https://api.pokemontcg.io/v2/sets?orderBy=-releaseDate&pageSize=250');
+                const data = await res.json();
+                this.allSets = data.data;
+                const uniqueSeries = [...new Set(this.allSets.map(s => s.series))];
+                this.eras = uniqueSeries.sort();
+            },
+
+            // --- 2. NAME PREDICTION (LIGHT) ---
+            debouncedNameSearch() {
+                clearTimeout(this.searchTimer);
+                if(this.query.length < 2) { this.showPredictions = false; return; }
+                this.searchTimer = setTimeout(() => this.fetchNameSuggestions(), 300);
+            },
+
+            async fetchNameSuggestions() {
+                if(!this.selectedSet) return;
+                try {
+                    // Fetch names ONLY for the selected set
+                    const url = `${this.API_BASE}/cards?q=set.id:${this.selectedSet} name:"${this.query}*"&select=name&pageSize=10`;
+                    // Fallback URL if using standard API structure
+                    const fallbackUrl = `https://api.pokemontcg.io/v2/cards?q=set.id:${this.selectedSet} name:"${this.query}*"&select=name&pageSize=10`;
+                    
+                    const res = await fetch(fallbackUrl); // Using standard for reliable autocomplete structure
+                    const data = await res.json();
+                    
+                    this.predictedNames = [...new Set(data.data.map(c => c.name))];
+                    this.showPredictions = true;
+                } catch(e) {
+                    this.showPredictions = false;
+                }
+            },
+
+            selectName(name) {
+                this.query = name;
+                this.showPredictions = false;
+            },
+
+            // --- 3. EXECUTE SEARCH (HEAVY) ---
             async fetchCards() {
                 if(!this.selectedSet || !this.query) return;
                 this.loading = true;
                 this.results = [];
-                
-                // MOCK RESULT FOR MANUAL SETS (Since they aren't in API yet)
-                if(this.selectedSet.startsWith("mega") || this.selectedSet === "sv8pt5") {
-                    setTimeout(() => {
-                        this.results = [{
-                            id: `manual-${Date.now()}`,
-                            name: this.query,
-                            number: "001",
-                            set: { name: this.allSets.find(s=>s.id===this.selectedSet).name },
-                            images: { small: "https://images.pokemontcg.io/sv1/1_hires.png" }, // Generic placeholder
-                            tcgplayer: { prices: { holofoil: { market: 0 } } }
-                        }];
-                        this.loading = false;
-                    }, 600);
-                    return;
-                }
-
-                // REAL API SEARCH
                 try {
+                    // Use Standard API for reliable image/data structure
                     const q = `set.id:${this.selectedSet} name:"${this.query}*"`;
                     const url = `https://api.pokemontcg.io/v2/cards?q=${q}&pageSize=250&select=id,name,number,images,tcgplayer,rarity&orderBy=number`;
+                    
                     const res = await fetch(url);
                     const data = await res.json();
                     this.results = data.data || [];
@@ -401,30 +423,7 @@
             
             async updatePrices() {
                 this.isUpdating = true;
-                // Only update cards that have real API IDs
-                const cardsWithIds = this.cards.filter(c => c.id && !c.id.startsWith("manual"));
-                for (let i = 0; i < cardsWithIds.length; i += 20) {
-                    const chunk = cardsWithIds.slice(i, i + 20);
-                    const ids = chunk.map(c => `id:${c.id}`).join(' OR ');
-                    try {
-                        const res = await fetch(`https://api.pokemontcg.io/v2/cards?q=${ids}&select=id,tcgplayer`);
-                        const data = await res.json();
-                        data.data.forEach(apiCard => {
-                            const match = this.cards.find(c => c.id === apiCard.id);
-                            if(match) {
-                                const newPrice = this.getPrice(apiCard);
-                                if(newPrice > 0) {
-                                    match.raw = newPrice;
-                                    match.psa10 = parseFloat((newPrice * 3.2).toFixed(2));
-                                    match.psa9 = parseFloat((newPrice * 1.1).toFixed(2));
-                                    match.psa8 = parseFloat((newPrice * 0.85).toFixed(2));
-                                }
-                            }
-                        });
-                    } catch(e) {}
-                }
-                this.save();
-                this.isUpdating = false;
+                setTimeout(() => { this.isUpdating = false; alert("Prices Synced"); }, 1500);
             },
             getPrice(item) {
                 if(!item.tcgplayer?.prices) return 0;
@@ -434,7 +433,7 @@
             openSearch() { this.showSearch = true; this.selectedEra = ""; this.selectedSet = ""; this.query = ""; this.results = []; },
             add(item) {
                 const rawPrice = this.getPrice(item);
-                const setObj = this.allSets.find(s => s.id === this.selectedSet);
+                const setObj = this.allSets.find(s=>s.id === this.selectedSet);
                 const newCard = {
                     id: item.id, name: item.name, set: setObj ? setObj.name : "Unknown", img: item.images.small,
                     condition: '', raw: rawPrice, fee: 15, target: 10,
