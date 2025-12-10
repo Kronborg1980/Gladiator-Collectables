@@ -541,9 +541,9 @@
                 // SEARCH PAGINATION
                 searchPage: 1, searchPerPage: 30, addedIds: [], selectedIds: [], searchSort: 'number',
 
-                // MOD: New state for mobile navigation
+                // FIX: New structure for screen size detection (Grok's proposed intent)
                 showMobileNav: false,
-                isDesktop: true, // Will be updated on mount
+                windowWidth: window.innerWidth, // Reactive property to store the current window width
             }
         },
         watch: {
@@ -567,9 +567,9 @@
             this.loadLocalData();
             this.loadSetsAPI(); 
             
-            // MOD: Listen for resize events to update isDesktop
+            // FIX: Use the reactive resize handler
             window.addEventListener('resize', this.checkIsDesktop);
-            this.checkIsDesktop();
+            this.checkIsDesktop(); // Initial check
             
             if(auth) {
                 auth.onAuthStateChanged(u => {
@@ -582,10 +582,9 @@
             window.removeEventListener('resize', this.checkIsDesktop);
         },
         computed: {
-            // MOD: Helper to determine if we are on a desktop-sized screen (md breakpoint: 768px)
-            // Used to toggle mobile-specific UI elements.
+            // FIX: isDesktop is now a computed property based on reactive data
             isDesktop() {
-                return window.innerWidth >= 768;
+                return this.windowWidth >= 768;
             },
             binders() { return this.user ? this.cloudBinders : this.localBinders; },
             cards() { return this.user ? this.cloudCards : this.localCards; },
@@ -696,9 +695,9 @@
             topCard() { return [...this.cards].sort((a,b) => b.market - a.market)[0]; }
         },
         methods: {
-            // MOD: Method to force close mobile nav on resize/interaction
+            // FIX: Updated to only write to the reactive data property
             checkIsDesktop() {
-                this.isDesktop = window.innerWidth >= 768;
+                this.windowWidth = window.innerWidth;
                 if (this.isDesktop) {
                     this.showMobileNav = false;
                 }
@@ -735,6 +734,7 @@
                     else this.localCards = this.localCards.filter(c => c.uid !== uid);
                 });
                 this.selectedIds = [];
+                this.saveData();
             },
 
             // --- SORT & PAGE METHODS (LOCAL) ---
