@@ -391,7 +391,7 @@
                     <div><label class="text-[10px] text-gray-500 font-bold uppercase mb-2 block tracking-widest">2. Set</label><select v-model="selectedSet" :disabled="!selectedEra" class="glass-input disabled:opacity-30"><option value="">Select Set</option><option v-for="s in filteredSets" :value="s.id">{{ s.name }}</option></select></div>
                     <div class="col-span-2 md:col-span-1">
                         <label class="text-[10px] text-gray-500 font-bold uppercase mb-2 block tracking-widest">3. Name</label>
-                        <input v-model="query" @input="debouncedSearch" :disabled="!selectedSet" placeholder="e.g. Charizard" class="glass-input disabled:opacity-30 lowercase placeholder:uppercase">
+                        <input v-model="query" :disabled="!selectedSet" placeholder="e.g. Charizard" class="glass-input disabled:opacity-30 lowercase placeholder:uppercase">
                     </div>
                     <div>
                         <label class="text-[10px] text-[#00f2ff] font-bold uppercase mb-2 block tracking-widest">4. Sort</label>
@@ -406,8 +406,8 @@
                 
                 <div class="px-4 md:px-8 py-4 bg-[#050505] flex justify-between items-center border-b border-white/5 shrink-0">
                     <div class="text-[10px] text-gray-500 font-bold uppercase">Adding to: <span class="text-white">{{ targetBinder === 'master' ? 'Master Collection' : getBinderName(targetBinder) }}</span></div>
-                    <button @click="fetchCards(1, true)" :disabled="isSearching || !selectedSet" class="bg-[#00f2ff] hover:bg-white text-black text-xs font-bold px-4 py-2 md:px-10 md:py-3 rounded shadow-lg uppercase tracking-widest transition transform active:scale-95 disabled:opacity-50 disabled:scale-100 flex items-center gap-2">
-                        <i v-if="isSearching" class="fa-solid fa-circle-notch fa-spin"></i> {{ isSearching ? 'Scanning...' : 'Manual Search' }}
+                    <button @click="fetchCards(1)" :disabled="isSearching || !selectedSet" class="bg-[#00f2ff] hover:bg-white text-black text-xs font-bold px-4 py-2 md:px-10 md:py-3 rounded shadow-lg uppercase tracking-widest transition transform active:scale-95 disabled:opacity-50 disabled:scale-100 flex items-center gap-2">
+                        <i v-if="isSearching" class="fa-solid fa-circle-notch fa-spin"></i> {{ isSearching ? 'Scanning...' : 'Search' }}
                     </button>
                 </div>
                 
@@ -514,7 +514,7 @@
 
     const { createApp } = Vue;
     
-    // --- DEBOUNCE UTILITY FUNCTION ---
+    // --- DEBOUNCE UTILITY FUNCTION (NO LONGER USED, KEPT FOR REFERENCE) ---
     function debounce(fn, delay = 500) {
         let timeout;
         return function(...args) {
@@ -552,8 +552,7 @@
                 showMobileNav: false,
                 isDesktop: true,
                 
-                // DEBOUNCE INSTANCE
-                debouncedSearch: debounce(this.autoFetchCards, 500)
+                // REMOVED: debouncedSearch: debounce(this.autoFetchCards, 500)
             }
         },
         watch: {
@@ -565,23 +564,21 @@
                     this.query = "";
                 }
             },
+            // REMOVED: Auto-search from selectedSet watcher
             selectedSet(newSet, oldSet) {
                 if (newSet !== oldSet) {
                     this.searchResults = []; 
                     this.searchPage = 1;
+                    // Reset query display but DO NOT start search
                     this.query = "";
-                    // NEW: Auto-load full set when a set is selected
-                    if (newSet) { // Only search if a set is actually selected (not setting to empty)
-                       this.fetchCards(1, true);
-                    }
                 }
             },
+            // REMOVED: Auto-search from query watcher
             query(newQuery) {
-                // If query is cleared, immediately load the full set (if one is selected)
-                if (newQuery === '' && this.selectedSet) {
-                    this.fetchCards(1, true);
+                // If the user clears the search box, clear results immediately for better UX
+                if (newQuery === '') {
+                    this.searchResults = [];
                 }
-                // If query is 1 or 2 characters, do nothing (debounce will not fire search)
             }
         },
         mounted() {
@@ -940,26 +937,19 @@
                 }
             },
             
-            // MODIFIED: Method called by debounce
-            autoFetchCards() {
-                // Run automatic search only if the query length is 0 (full set) or 3+ (type-ahead filter)
-                if (this.query.length === 0 || this.query.length >= 3) {
-                    this.fetchCards(1, true);
-                }
-                // If query is 1 or 2 characters, this function does nothing, making the name field fast.
-            },
+            // REMOVED: autoFetchCards()
 
             /**
              * HIGH RELIABILITY CARD SEARCH FETCH with URL Encoding and Session Caching
              */
-            async fetchCards(page = 1, forceSearch = false) {
-                if(!this.selectedSet) return;
+            async fetchCards(page = 1) {
+                if(!this.selectedSet) {
+                    alert("Please select a Series and a Set before searching.");
+                    return;
+                }
                 
                 let nameQuery = this.query ? this.query.trim() : '';
                 
-                // Block search if not explicitly forced, and the query is too short (1 or 2 characters)
-                if (!forceSearch && nameQuery.length > 0 && nameQuery.length < 3) return;
-
                 this.isSearching = true; 
                 this.searchPage = page; 
 
@@ -967,7 +957,7 @@
                 let q = `set.id:"${this.selectedSet}"`; 
                 
                 if(nameQuery) {
-                    // FIX: Use the specific Lucene syntax for wildcard search, ensuring proper quotes and handling of name
+                    // FIX: Simplified query for reliable wildcard match. Encodes quotes within the query.
                     const cleanedQuery = nameQuery.replace(/"/g, '\\"');
                     q += ` name:"${cleanedQuery}*"`; 
                 }
@@ -1001,13 +991,12 @@
                 const url = `https://api.pokemontcg.io/v2/cards?q=${encodedQuery}&pageSize=250&select=id,name,number,images,tcgplayer&orderBy=${orderByParam}`;
                 
                 try {
+                    console.log("Running API Query:", url);
                     const res = await fetch(url);
                     
                     if (!res.ok) {
                         console.error(`Card search failed. Status: ${res.status}. Query: ${url}`); 
-                        if (forceSearch && nameQuery.length > 0) {
-                             alert(`Card search failed (Error: ${res.status}). Please try again.`);
-                        }
+                        alert(`Card search failed (Error: ${res.status}). Please try again.`);
                         throw new Error(`API fetch failed with status: ${res.status}`);
                     }
                     
