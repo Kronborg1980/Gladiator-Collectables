@@ -440,7 +440,7 @@
                         </div>
                         
                         <div class="flex justify-center gap-4 items-center pt-4 border-t border-white/10 pb-8">
-                            <button @click="searchPage > 1 ? fetchCards(searchPage - 1) : null" :disabled="searchPage === 1" class="pagination-btn">Prev</button>
+                            <button @click="fetchCards(searchPage > 1 ? searchPage - 1 : 1)" :disabled="searchPage === 1" class="pagination-btn">Prev</button>
                             <span class="text-xs font-bold text-[#00f2ff]">Page {{ searchPage }} / {{ totalSearchPagesFromAPI || 1 }}</span>
                             <button @click="fetchCards(searchPage + 1)" :disabled="searchPage >= totalSearchPagesFromAPI" class="pagination-btn">Next</button>
                         </div>
@@ -528,7 +528,7 @@
                 
                 // SEARCH PAGINATION
                 searchPage: 1, searchPerPage: 30, addedIds: [], selectedIds: [], searchSort: 'number',
-                totalCount: 0, // Stores the total count from the API metadata
+                totalCount: 0, 
                 
                 // Caching: 30 minutes TTL for search results
                 cacheTTL: 1000 * 60 * 30 
@@ -556,9 +556,8 @@
             
             // DISPLAY LOGIC
             displayCards() { 
-                let list = this.cards; // Default to all
+                let list = this.cards; 
                 
-                // If viewing a specific binder, filter
                 if (this.currentView === 'single_binder' && this.currentBinder) {
                     list = list.filter(c => c.binderId === this.currentBinder.id);
                 }
@@ -594,7 +593,6 @@
 
             cardsBySet() {
                 const grouped = {};
-                // COLLECTION VIEW ALWAYS SHOWS ALL CARDS (Master View)
                 this.cards.forEach(c => {
                     if(!grouped[c.set]) grouped[c.set] = [];
                     grouped[c.set].push(c);
@@ -750,8 +748,7 @@
             getBinderCount(id) { return this.cards.filter(c => c.binderId === id).length; },
             openSearch() { 
                 this.showSearch = true; this.searchResults = []; this.searchPage = 1; this.query = '';
-                this.totalCount = 0; // Reset total count when opening search
-                // Smart select: if inside a binder, default add to that binder
+                this.totalCount = 0; 
                 if(this.currentView === 'single_binder' && this.currentBinder) this.targetBinder = this.currentBinder.id;
                 else this.targetBinder = 'master';
             },
@@ -762,15 +759,17 @@
                 const prices = c.tcgplayer?.prices;
                 if (!prices) return 0;
                 
-                const marketPrices = [
-                    prices.holofoil?.market,
-                    prices.reverseHolofoil?.market,
-                    prices.normal?.market,
-                    prices['1stEditionHolofoil']?.market,
-                    prices['unlimitedHolofoil']?.market,
-                    prices.market 
-                ].filter(p => p > 0); 
+                // Extract all non-zero market prices from all known fields
+                const marketPrices = Object.values(prices)
+                    .map(priceDetail => priceDetail?.market)
+                    .filter(price => price > 0); 
+                
+                // Add the general market price if it exists and is non-zero
+                if (c.tcgplayer?.market && c.tcgplayer.market > 0) {
+                    marketPrices.push(c.tcgplayer.market);
+                }
 
+                // Return the highest price found, or 0 if none are available
                 return marketPrices.length > 0 ? Math.max(...marketPrices) : 0;
             },
             
@@ -808,45 +807,47 @@
                 }
             },
             
+            // --- FIX FOR INSTANT PAGE SWITCHING AND LOGIC ---
             async fetchCards(page = 1) {
                 if(!this.selectedSet) return;
-                this.isSearching = true; 
-                this.searchPage = page; 
+                
+                // Ensure pagination doesn't go below 1
+                page = Math.max(1, page); 
 
                 // 1. Prepare Query and Cache Key
                 let nameQuery = this.query ? this.query.trim().toLowerCase() : '';
                 
-                // FIX: Construct q based on whether the name query is provided.
+                // FIX: Conditionally construct query based on if a name is provided
                 let q = `set.id:${this.selectedSet}`; 
                 if(nameQuery) {
                     q += ` name:"${nameQuery}*"`;
                 }
                 
+                // The cache key MUST include the page number and the query/set
                 const cacheKey = `search_${this.selectedSet}_${nameQuery}_${page}`;
                 const now = Date.now();
                 
-                // 2. Check Session Cache for fast retrieval
+                // 2. Check Session Cache (Instant Page Switch)
                 const cachedData = sessionStorage.getItem(cacheKey);
                 if (cachedData) {
                     try {
                         const cache = JSON.parse(cachedData);
                         if (now - cache.timestamp < this.cacheTTL) {
-                            console.log(`[Cache] Hit for ${cacheKey}. Using cached data.`);
+                            console.log(`[Cache] Hit for ${cacheKey}. Loading instant data.`);
                             this.searchResults = cache.results;
                             this.totalCount = cache.totalCount; 
-                            this.isSearching = false;
+                            this.searchPage = page; // Set current page AFTER loading cached results
                             return;
                         } else {
-                            console.log(`[Cache] Expired for ${cacheKey}. Re-fetching.`);
                             sessionStorage.removeItem(cacheKey);
                         }
                     } catch (e) {
-                        console.error("Error parsing cached data:", e);
                         sessionStorage.removeItem(cacheKey);
                     }
                 }
 
-                // 3. Fetch from API
+                // 3. Fetch from API (New or Expired Cache)
+                this.isSearching = true;
                 try {
                     const res = await fetch(`https://api.pokemontcg.io/v2/cards?q=${q}&pageSize=${this.searchPerPage}&page=${page}&select=id,name,number,images,tcgplayer`);
                     
@@ -856,10 +857,9 @@
                     
                     const data = await res.json();
                     this.searchResults = data.data || [];
-                    
-                    // Update totalCount from API metadata
                     this.totalCount = data.totalCount || 0; 
-                    
+                    this.searchPage = page;
+
                     // 4. Cache Result
                     const cache = {
                         timestamp: now,
@@ -867,7 +867,6 @@
                         totalCount: this.totalCount
                     };
                     sessionStorage.setItem(cacheKey, JSON.stringify(cache));
-                    console.log(`[Cache] Stored new results for ${cacheKey}.`);
 
                 } catch(e) { 
                     console.error("API Fetch Error:", e);
