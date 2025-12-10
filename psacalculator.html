@@ -199,12 +199,7 @@
                 <div v-for="(setCards, setName) in cardsBySet" :key="setName">
                     <div class="flex items-center gap-4 mb-4 border-b border-white/10 pb-2">
                         <h3 class="text-white font-bold text-lg font-brand uppercase tracking-widest">{{ setName }}</h3>
-                        <span class="text-xs text-[#00f2ff] font-bold bg-[#00f2ff]/10 px-2 py-0.5 rounded border border-[#00f2ff]/30">
-                            {{ setCards.length }} / {{ getSetTotal(setName) }} Collected
-                        </span>
-                        <div class="h-1 bg-white/10 rounded w-32 ml-4 relative overflow-hidden">
-                            <div class="absolute top-0 left-0 h-full bg-[#00f2ff]" :style="{width: (setCards.length / getSetTotal(setName) * 100) + '%'}"></div>
-                        </div>
+                        <span class="text-xs text-gray-500 font-bold bg-white/5 px-2 py-0.5 rounded">{{ setCards.length }} Cards</span>
                     </div>
                     <div class="grid grid-cols-2 md:grid-cols-5 lg:grid-cols-6 gap-6">
                         <div v-for="card in setCards" :key="card.uid" @click="openCardDetail(card)" class="bg-[#0a0f18] p-3 rounded-xl cursor-pointer hover:border-[#00f2ff] border border-white/5 group relative transition duration-200">
@@ -284,7 +279,7 @@
             </div>
         </div>
 
-        <div v-else-if="currentView === 'single_binder'" class="flex-1 glass-panel overflow-y-auto p-8">
+         <div v-else-if="currentView === 'single_binder'" class="flex-1 glass-panel overflow-y-auto p-8">
             <div class="flex justify-between items-center mb-6 border-b border-white/10 pb-4">
                 <div>
                     <h2 class="text-xl font-brand font-bold text-white tracking-widest">{{ currentBinder.name }}</h2>
@@ -293,7 +288,7 @@
                 <button @click="currentView='binders'" class="text-xs text-[#00f2ff] hover:text-white font-bold uppercase tracking-wider"><i class="fa-solid fa-arrow-left"></i> Back</button>
             </div>
              
-            <div v-if="displayCards.length === 0" class="flex flex-col items-center justify-center py-20 opacity-30">
+             <div v-if="displayCards.length === 0" class="flex flex-col items-center justify-center py-20 opacity-30">
                 <i class="fa-regular fa-folder-open text-6xl mb-4 text-[#00f2ff]"></i>
                 <p class="uppercase tracking-widest font-bold text-sm">Binder Empty</p>
                 <button @click="openSearch" class="mt-4 text-[#00f2ff] hover:text-white text-xs uppercase underline">Add Cards</button>
@@ -329,7 +324,7 @@
                     <div><label class="text-[10px] text-gray-500 font-bold uppercase mb-2 block tracking-widest">1. Era</label><select v-model="selectedEra" class="glass-input"><option value="">Select Era</option><option v-for="era in eras" :value="era">{{ era }}</option></select></div>
                     <div><label class="text-[10px] text-gray-500 font-bold uppercase mb-2 block tracking-widest">2. Set</label><select v-model="selectedSet" :disabled="!selectedEra" class="glass-input disabled:opacity-30"><option value="">Select Set</option><option v-for="s in filteredSets" :value="s.id">{{ s.name }}</option></select></div>
                     <div><label class="text-[10px] text-gray-500 font-bold uppercase mb-2 block tracking-widest">3. Name</label><input v-model="query" @keyup.enter="fetchCards(1)" :disabled="!selectedSet" placeholder="e.g. Charizard" class="glass-input disabled:opacity-30 lowercase placeholder:uppercase"></div>
-                    <div><label class="text-[10px] text-[#00f2ff] font-bold uppercase mb-2 block tracking-widest">4. Add To</label><select v-model="targetBinder" class="glass-input border-[#00f2ff] text-[#00f2ff]"><option value="master">All Cards (Master)</option><option v-for="b in binders" :value="b.id">{{ b.name }}</option></select></div>
+                    <div><label class="text-[10px] text-[#00f2ff] font-bold uppercase mb-2 block tracking-widest">4. Add To</label><select v-model="targetBinder" class="glass-input border-[#00f2ff] text-[#00f2ff]"><option value="master">Master Collection</option><option v-for="b in binders" :value="b.id">{{ b.name }}</option></select></div>
                 </div>
                 
                 <div class="px-8 py-4 bg-[#050505] flex justify-end border-b border-white/5">
@@ -340,12 +335,6 @@
                 </div>
                 
                 <div class="flex-1 overflow-y-auto p-8 bg-[#050508] relative">
-                     <div v-if="paginatedSearchResults.length > 0" class="flex justify-center gap-4 mb-4">
-                        <button @click="searchPage > 1 ? searchPage-- : null" :disabled="searchPage === 1" class="pagination-btn">< Prev</button>
-                        <span class="text-xs font-bold text-[#00f2ff] px-2">Page {{ searchPage }} of {{ totalSearchPages || 1 }}</span>
-                        <button @click="searchPage < totalSearchPages ? searchPage++ : null" :disabled="searchPage === totalSearchPages" class="pagination-btn">Next ></button>
-                     </div>
-
                     <div v-if="isSearching" class="absolute inset-0 flex flex-col items-center justify-center bg-black/80 z-20 backdrop-blur-sm">
                         <i class="fa-solid fa-satellite-dish text-6xl text-[#00f2ff] mb-4 animate-pulse"></i>
                         <p class="uppercase font-bold tracking-[0.3em] text-xs text-[#00f2ff]">Acquiring Data...</p>
@@ -358,7 +347,7 @@
                     
                     <div v-else>
                         <div class="grid grid-cols-2 md:grid-cols-5 gap-6 mb-6">
-                            <div v-for="card in paginatedSearchResults" :key="card.id" @click="addCard(card)" class="bg-[#0a0f18] p-3 rounded-xl cursor-pointer hover:border-[#00f2ff] border border-white/5 group relative transition duration-200">
+                            <div v-for="card in searchResults" :key="card.id" @click="addCard(card)" class="bg-[#0a0f18] p-3 rounded-xl cursor-pointer hover:border-[#00f2ff] border border-white/5 group relative transition duration-200">
                                 <img :src="card.images.small" class="w-full rounded-lg mb-3 shadow-lg">
                                 <div class="text-center text-xs font-bold text-white truncate">{{ card.name }}</div>
                                 <div class="absolute top-2 right-2 bg-black/90 backdrop-blur text-[#00f2ff] text-[9px] font-bold px-2 py-1 rounded border border-[#00f2ff] shadow-lg">${{ getCardPrice(card) }}</div>
@@ -398,7 +387,7 @@
                     
                     <div class="flex-1 p-10 relative">
                         <label class="text-[10px] text-gray-500 font-bold uppercase mb-2 block tracking-widest">Binder Location</label>
-                        <select v-model="detailCard.binderId" @change="updateCardBinder(detailCard)" class="table-select w-64 bg-[#050505] border-[#00f2ff] text-[#00f2ff]">
+                        <select v-model="detailCard.binderId" @change="updateCardBinder(detailCard)" class="table-select bg-[#050505] w-64 border-[#00f2ff] text-[#00f2ff]">
                             <option :value="null">Master Only</option>
                             <option v-for="b in binders" :value="b.id">{{ b.name }}</option>
                         </select>
@@ -449,7 +438,7 @@
                 
                 // SORT & PAGINATION
                 sortBy: 'profit', sortDesc: true, currentPage: 1, itemsPerPage: 30,
-                searchPage: 1, searchPerPage: 30, addedIds: [], selectedIds: [], searchSort: 'number'
+                searchPage: 1, addedIds: [], selectedIds: []
             }
         },
         mounted() {
@@ -472,12 +461,13 @@
                 return 'ROI Calculator';
             },
             
+            // DISPLAY CARDS LOGIC
             displayCards() { 
-                // If in single binder view, filter by that binder
-                if (this.currentView === 'single_binder' && this.currentBinder) {
+                // If viewing a specific binder, filter by ID
+                if (this.currentBinder) {
                     return this.cards.filter(c => c.binderId === this.currentBinder.id);
                 }
-                // If in Collection/Calculator/Armory, show ALL cards (Master View)
+                // Otherwise (Collection / Calculator), show ALL cards
                 return this.cards;
             },
             
@@ -509,31 +499,11 @@
 
             cardsBySet() {
                 const grouped = {};
-                // Always group ALL cards for the main collection view
                 this.cards.forEach(c => {
                     if(!grouped[c.set]) grouped[c.set] = [];
                     grouped[c.set].push(c);
                 });
                 return grouped;
-            },
-
-            // SEARCH PAGINATION
-            filteredSearchList() {
-                let list = [...this.searchResults];
-                if(this.query) { list = list.filter(c => c.name.toLowerCase().includes(this.query.toLowerCase())); }
-                
-                list.sort((a, b) => {
-                    if (this.searchSort === 'price-desc') return this.getCardPrice(b) - this.getCardPrice(a);
-                    if (this.searchSort === 'price-asc') return this.getCardPrice(a) - this.getCardPrice(b);
-                    if (this.searchSort === 'name') return a.name.localeCompare(b.name);
-                    return a.number.localeCompare(b.number, undefined, {numeric: true});
-                });
-                return list;
-            },
-            totalSearchPages() { return Math.ceil(this.filteredSearchList.length / this.searchPerPage); },
-            paginatedSearchResults() {
-                const start = (this.searchPage - 1) * this.searchPerPage;
-                return this.filteredSearchList.slice(start, start + this.searchPerPage);
             },
 
             totalCardsCount() { return this.cards.length; },
@@ -550,13 +520,9 @@
                 return this.sortDesc ? 'fa-caret-down text-[#00f2ff]' : 'fa-caret-up text-[#00f2ff]';
             },
             getBinderName(id) {
-                if(!id || id==='master') return 'Master';
+                if(id==='master') return 'Master';
                 const b = this.binders.find(x => x.id === id);
                 return b ? b.name : 'Unknown';
-            },
-            getSetTotal(setName) {
-                const s = this.allSets.find(x => x.name === setName);
-                return s ? s.printedTotal : '?';
             },
 
             toggleSelectAll() {
@@ -584,8 +550,6 @@
             },
             nextPage() { if(this.currentPage < this.totalPages) this.currentPage++; },
             prevPage() { if(this.currentPage > 1) this.currentPage--; },
-            
-            sortSearchResults() { this.searchPage = 1; },
 
             loadLocalData() {
                 const b = localStorage.getItem('glad_binders'); if(b) this.localBinders = JSON.parse(b);
@@ -651,7 +615,7 @@
             openSearch() { 
                 this.showSearch = true; this.searchResults = []; this.searchPage = 1; this.query = '';
                 // Smart select: if inside a binder, default add to that binder
-                if(this.currentView === 'single_binder' && this.currentBinder) this.targetBinder = this.currentBinder.id;
+                if(this.currentBinder) this.targetBinder = this.currentBinder.id;
                 else this.targetBinder = 'master';
             },
             openCardDetail(c) { this.detailCard = c; },
@@ -666,7 +630,7 @@
                     this.setsLoading = false;
                     return; 
                 }
-                const res = await fetch('https://api.pokemontcg.io/v2/sets?select=id,name,series,releaseDate,printedTotal&orderBy=-releaseDate');
+                const res = await fetch('https://api.pokemontcg.io/v2/sets?select=id,name,series,releaseDate&orderBy=-releaseDate');
                 const data = await res.json();
                 this.allSets = data.data; this.eras = [...new Set(data.data.map(s => s.series))];
                 localStorage.setItem(this.cacheKey, JSON.stringify({sets: this.allSets, eras: this.eras}));
@@ -679,7 +643,7 @@
                 this.searchPage = page; 
                 let q = `set.id:${this.selectedSet}`; if(this.query) q += ` name:"${this.query}*"`;
                 try {
-                    const res = await fetch(`https://api.pokemontcg.io/v2/cards?q=${q}&pageSize=30&page=${page}&select=id,name,number,images,tcgplayer`);
+                    const res = await fetch(`https://api.pokemontcg.io/v2/cards?q=${q}&pageSize=10&page=${page}&select=id,name,number,images,tcgplayer`);
                     const data = await res.json();
                     this.searchResults = data.data || [];
                 } catch(e) { console.error(e); } 
