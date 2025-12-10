@@ -952,23 +952,24 @@
                 const cacheKey = `search_${this.selectedSet}_${nameQuery}`; 
                 const now = Date.now();
                 
-                const cachedData = sessionStorage.getItem(cacheKey);
-                if (cachedData) {
-                    try {
+                // 1. Try to load from Cache
+                try {
+                    const cachedData = sessionStorage.getItem(cacheKey);
+                    if (cachedData) {
                         const cache = JSON.parse(cachedData);
                         if (now - cache.timestamp < 1000 * 60 * 30) { 
                             this.searchResults = cache.results;
                             this.searchPage = page;
                             this.isSearching = false; 
                             return;
-                        } else {
-                            sessionStorage.removeItem(cacheKey);
                         }
-                    } catch (e) {
-                        sessionStorage.removeItem(cacheKey);
                     }
+                } catch (e) {
+                    // If cache reading fails, just ignore and fetch fresh
+                    console.log("Cache read error, fetching fresh.");
                 }
 
+                // 2. Fetch from API
                 try {
                     const res = await fetch(`https://api.pokemontcg.io/v2/cards?q=${q}&pageSize=250&select=id,name,number,images,tcgplayer&orderBy=${this.searchSort.replace('-', '')}`);
                     
@@ -980,14 +981,23 @@
                     this.searchResults = data.data || [];
                     this.searchPage = page;
 
+                    // 3. Try to Save to Cache (Safety Block)
+                    // If this fails (Quota Exceeded), it won't crash the app anymore
                     if (this.searchResults.length > 0) {
-                        const cache = { timestamp: now, results: this.searchResults };
-                        sessionStorage.setItem(cacheKey, JSON.stringify(cache));
+                        try {
+                            const cache = { timestamp: now, results: this.searchResults };
+                            sessionStorage.setItem(cacheKey, JSON.stringify(cache));
+                        } catch (storageError) {
+                            console.warn("Session storage is full. Search results will not be cached for next time.", storageError);
+                            // Optional: Clear cache to make room for next time
+                            // sessionStorage.clear(); 
+                        }
                     }
 
                 } catch(e) { 
                     console.error("API Fetch Error:", e);
                     this.searchResults = []; 
+                    alert("Search failed. Please try again.");
                 } 
                 finally { 
                     this.isSearching = false; 
