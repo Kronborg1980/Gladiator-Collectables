@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GLADIATOR X</title>
+<title>GLADIATOR • Empire Tracker</title>
 <link rel="icon" type="image/webp" href="https://raw.githubusercontent.com/Kronborg1980/Gladiator-Collectables/main/logogla.webp">
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
@@ -12,136 +12,141 @@
 <style>
   :root { --a:#00f2ff; --d:#020408; --g:rgba(10,15,25,0.94); }
   body { margin:0; background:var(--d); color:white; font-family:'Inter',sans-serif; }
-  .glass { background:var(--g); backdrop-filter:blur(30px); border:1px solid rgba(0,242,255,0.2); }
-  .glow { text-shadow:0 0 30px var(--a); }
-  .grade-yes { background:rgba(0,255,100,0.12); border-left:4px solid #0f0; }
-  .grade-no  { background:rgba(255,0,0,0.12);   border-left:4px solid #f66; }
+  .glass { background:var(--g); backdrop-filter:blur(30px); border:1px solid rgba(0,242,255,0.2); border-radius:16px; }
+  .glow { text-shadow:0 0 40px var(--a); }
+  .card-hover { transition:all .3s; }
+  .card-hover:hover { transform:scale(1.05); box-shadow:0 0 30px rgba(0,242,255,0.4); }
 </style>
 </head>
-<body>
+<body class="min-h-screen p-6">
 
-<div id="app" v-cloak class="min-h-screen flex flex-col">
-  <header class="glass p-4 flex justify-between items-center border-b border-white/10">
-    <div class="flex items-center gap-4">
-      <img src="https://raw.githubusercontent.com/Kronborg1980/Gladiator-Collectables/main/logogla.webp" class="w-12 h-12">
+<div id="app" class="max-w-7xl mx-auto">
+
+  <!-- Header -->
+  <div class="glass p-8 mb-8 text-center">
+    <img src="https://raw.githubusercontent.com/Kronborg1980/Gladiator-Collectables/main/logogla.webp" class="w-24 h-24 mx-auto mb-4">
+    <h1 class="text-6xl font-bold" style="font-family:Cinzel;color:var(--a)" class="glow">GLADIATOR</h1>
+    <p class="text-xl text-cyan-400 mt-2">Empire Tracker • {{cards.length}} cards • ${{totalValue}}</p>
+  </div>
+
+  <!-- 3-Step Card Search -->
+  <div class="glass p-8 mb-8">
+    <h2 class="text-3xl font-bold text-[var(--a)] mb-8 text-center">Add Card to Empire</h2>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+      <!-- Step 1: Era -->
       <div>
-        <h1 class="text-3xl font-bold" style="font-family:Cinzel;color:var(--a)" class="glow">GLADIATOR X</h1>
-        <p class="text-sm text-cyan-400">Empire: ${{f(totalValue)}} • {{cards.length}} cards</p>
+        <label class="block text-sm uppercase text-gray-400 mb-2">1. Era</label>
+        <select v-model="selectedEra" @change="selectedSet=''; cardsInSet=[]" class="w-full p-4 rounded-lg bg-white/10 border border-white/20 focus:border-[var(--a)] outline-none">
+          <option value="">Choose Era</option>
+          <option v-for="era in eras" :value="era">{{era}}</option>
+        </select>
+      </div>
+
+      <!-- Step 2: Set -->
+      <div>
+        <label class="block text-sm uppercase text-gray-400 mb-2">2. Set</label>
+        <select v-model="selectedSet" :disabled="!selectedEra" @change="loadCardsInSet" class="w-full p-4 rounded-lg bg-white/10 border border-white/20 focus:border-[var(--a)] outline-none">
+          <option value="">Choose Set</option>
+          <option v-for="set in setsInEra" :value="set.id">{{set.name}} ({{set.printedTotal}} cards)</option>
+        </select>
+      </div>
+
+      <!-- Step 3: Card -->
+      <div>
+        <label class="block text-sm uppercase text-gray-400 mb-2">3. Card</label>
+        <select v-model="selectedCard" :disabled="!selectedSet" class="w-full p-4 rounded-lg bg-white/10 border border-white/20 focus:border-[var(--a)] outline-none">
+          <option value="">Choose Card</option>
+          <option v-for="card in cardsInSet" :value="card">
+            {{card.name}} #{{card.number}} — ${{cardPrice(card)}}
+          </option>
+        </select>
       </div>
     </div>
-    <button @click="showSearch=true" class="bg-[var(--a)] hover:bg-white text-black font-bold px-6 py-3 rounded-lg">Add Card</button>
-  </header>
 
-  <div class="flex flex-1">
-    <aside class="w-80 glass border-r border-white/10 overflow-y-auto">
-      <nav class="p-4 space-y-1">
-        <button @click="view='collection'" :class="view==='collection'?'text-[var(--a)] font-bold':''" class="w-full text-left p-3 rounded hover:bg-white/5">Collection</button>
-        <button @click="view='roi'"        :class="view==='roi'?'text-[var(--a)] font-bold':''"        class="w-full text-left p-3 rounded hover:bg-white/5">ROI Arena</button>
-        <button @click="view='binders'"    :class="view==='binders'?'text-[var(--a)] font-bold':''"    class="w-full text-left p-3 rounded hover:bg-white/5">Binders</button>
-      </nav>
-      <div class="p-4 border-t border-white/10">
-        <div class="flex justify-between mb-2"><span class="text-xs uppercase text-gray-400">Binders</span><button @click="newBinder" class="text-[var(--a)] text-xs">+ New</button></div>
-        <div v-for="b in binders" class="flex justify-between py-1 px-2 rounded hover:bg-white/5 group">
-          <span @click="currentBinder=b; view='roi'" class="cursor-pointer">{{b.name}} ({{count(b.id)}})</span>
-          <button v-if="b.id!=='master'" @click="delBinder(b.id)" class="opacity-0 group-hover:opacity-100 text-red-400 text-xs">Delete</button>
-        </div>
-      </div>
-    </aside>
-
-    <main class="flex-1 p-6 overflow-y-auto">
-      <div v-if="view==='collection'" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-6">
-        <div v-for="c in cards" :key="c.uid" @click="detail=c" class="glass rounded-xl overflow-hidden cursor-pointer hover:ring-2 ring-[var(--a)] transition">
-          <img :src="c.image" class="w-full aspect-[0.7] object-cover">
-          <div class="p-3">
-            <p class="font-bold text-sm truncate">{{c.name}}</p>
-            <p class="text-xs text-gray-400">{{c.set}}</p>
-            <p class="text-[var(--a)] font-bold">${{c.market.toFixed(0)}}</p>
-          </div>
-        </div>
-      </div>
-
-      <div v-if="view==='roi'" class="glass rounded-2xl overflow-hidden">
-        <table class="w-full text-sm">
-          <thead class="bg-white/5 text-xs uppercase text-gray-400">
-            <tr>
-              <th class="p-4 text-left">Card</th>
-              <th class="p-4 text-right">Raw Cost</th>
-              <th class="p-4 text-right">Fee</th>
-              <th class="p-4 text-right">PSA10</th>
-              <th class="p-4 text-right">Profit</th>
-              <th class="p-4 text-center">Decision</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="c in visible" :key="c.uid" :class="profit(c)>100?'grade-yes':'grade-no'" class="border-t border-white/5 hover:bg-white/5">
-              <td class="p-4 flex items-center gap-3">
-                <img :src="c.image" class="w-12 rounded">
-                <div><div class="font-bold">{{c.name}}</div><div class="text-xs text-gray-400">{{c.set}}</div></div>
-              </td>
-              <td class="p-4 text-right"><input v-model.number="c.rawCost" @change="save" type="number" class="bg-transparent w-20 text-right border-b border-gray-600 focus:border-[var(--a)] outline-none"></td>
-              <td class="p-4 text-right"><input v-model.number="c.fee" @change="save" type="number" class="bg-transparent w-16 text-right border-b border-gray-600 focus:border-[var(--a)] outline-none"></td>
-              <td class="p-4 text-right text-[var(--a)] font-bold">${{Math.round(c.market*3.5)}}</td>
-              <td class="p-4 text-right font-bold" :class="profit(c)>0?'text-green-400':'text-red-400'">{{profit(c)>0?'+':''}}{{profit(c)}}</td>
-              <td class="p-4 text-center"><span class="px-4 py-1 rounded-full text-xs font-bold" :class="profit(c)>100?'bg-green-900/50 text-green-300':'bg-red-900/50 text-red-300'">{{profit(c)>100?'GRADE NOW':'HOLD'}}</span></td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </main>
+    <div class="text-center mt-8">
+      <button @click="addCardToCollection" :disabled="!selectedCard" class="bg-[var(--a)] hover:bg-white text-black font-bold text-xl px-12 py-5 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition shadow-lg shadow-[var(--a)]/30">
+        CONQUER THIS CARD
+      </button>
+    </div>
   </div>
 
-  <!-- SEARCH MODAL -->
-  <div v-if="showSearch" class="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4">
-    <div class="glass w-full max-w-5xl max-h-[90vh] overflow-y-auto rounded-2xl p-8">
-      <div class="flex justify-between mb-6"><h2 class="text-2xl font-bold text-[var(--a)]">Add Card</h2><button @click="showSearch=false" class="text-3xl">×</button></div>
-      <input v-model="q" @keyup.enter="search" placeholder="Card name..." class="w-full p-4 rounded-xl bg-white/5 border border-white/10 focus:border-[var(--a)] outline-none mb-6">
-      <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
-        <div v-for="c in results" :key="c.id" @click="add(c)" class="cursor-pointer hover:ring-2 hover:ring-[var(--a)] rounded-xl overflow-hidden">
-          <img :src="c.images.small">
-          <div class="p-3 bg-black/60"><p class="font-bold text-sm truncate">{{c.name}}</p><p class="text-xs text-cyan-400">${{price(c)}}</p></div>
+  <!-- Collection Grid -->
+  <div class="glass p-8">
+    <h2 class="text-3xl font-bold text-[var(--a)] mb-6">Your Empire ({{cards.length}} cards)</h2>
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-6">
+      <div v-for="c in cards" :key="c.id" class="glass rounded-xl overflow-hidden card-hover cursor-pointer" @click="alert(c.name + ' — $' + c.market)">
+        <img :src="c.image" class="w-full aspect-[0.7] object-cover">
+        <div class="p-3">
+          <p class="font-bold text-sm truncate">{{c.name}}</p>
+          <p class="text-xs text-gray-400">{{c.set}}</p>
+          <p class="text-[var(--a)] font-bold text-lg">${{c.market}}</p>
         </div>
       </div>
     </div>
   </div>
+
 </div>
 
 <script>
-const { createApp, ref, computed } = Vue;
+const { createApp, ref, computed, onMounted } = Vue;
 
 createApp({
   data() { return {
-    cards: JSON.parse(localStorage.getItem('gx_cards')||'[]'),
-    binders: JSON.parse(localStorage.getItem('gx_binders')||'[{"id":"master","name":"All Cards"}]'),
-    currentBinder: {id:'master',name:'All Cards'},
-    view: 'collection',
-    showSearch: false,
-    q: '',
-    results: [],
-    detail: null
+    eras: [],
+    sets: [],
+    selectedEra: '',
+    selectedSet: '',
+    selectedCard: null,
+    cardsInSet: [],
+    cards: JSON.parse(localStorage.getItem('gladiator_cards') || '[]')
   }},
   computed: {
-    totalValue() { return this.cards.reduce((s,c)=>s+c.market,0) },
-    visible() { return this.currentBinder.id==='master' ? this.cards : this.cards.filter(c=>c.binderId===this.currentBinder.id) },
-    f() { return n=>n.toLocaleString() }
+    setsInEra() { return this.selectedEra ? this.sets.filter(s => s.series === this.selectedEra) : [] },
+    totalValue() { return this.cards.reduce((s,c) => s + c.market, 0).toFixed(0) }
   },
   methods: {
-    profit(c) { return Math.round(c.market*3.5 - (c.rawCost||c.market) - (c.fee||20)) },
-    price(c) { const p=c.tcgplayer?.prices; return p?.holofoil?.market||p?.normal?.market||50 },
-    count(id) { return id==='master'?this.cards.length:this.cards.filter(c=>c.binderId===id).length },
-    save() { localStorage.setItem('gx_cards',JSON.stringify(this.cards)); localStorage.setItem('gx_binders',JSON.stringify(this.binders)) },
-    async search() {
-      if(!this.q) return;
-      const r = await fetch(`https://api.pokemontcg.io/v2/cards?q=name:"*${this.q}*"&pageSize=48`,{headers:{'X-Api-Key':'7191ffb5-91d7-4fb7-bc30-94f1b854ee6e'}});
-      const d = await r.json();
-      this.results = d.data||[];
+    async loadAllData() {
+      const res = await fetch('https://api.pokemontcg.io/v2/sets?orderBy=-releaseDate', {
+        headers: { 'X-Api-Key': '7191ffb5-91d7-4fb7-bc30-94f1b854ee6e' }
+      });
+      const data = await res.json();
+      this.sets = data.data;
+      this.eras = [...new Set(data.data.map(s => s.series))].sort();
     },
-    add(c) {
-      const m = this.price(c);
-      const nc = {uid:Date.now(),name:c.name,set:c.set.name,image:c.images.small,market:m,rawCost:m,fee:20,binderId:this.currentBinder.id==='master'?null:this.currentBinder.id};
-      this.cards.push(nc); this.save(); this.showSearch=false; this.q='';
+    async loadCardsInSet() {
+      if (!this.selectedSet) return;
+      const res = await fetch(`https://api.pokemontcg.io/v2/cards?q=set.id:${this.selectedSet}`, {
+        headers: { 'X-Api-Key': '7191ffb5-91d7-4fb7-bc30-94f1b854ee6e' }
+      });
+      const data = await res.json();
+      this.cardsInSet = data.data;
     },
-    newBinder() { const n=prompt('Name:'); if(n) this.binders.push({id:Date.now().toString(),name:n}); this.save(); },
-    delBinder(id) { if(confirm('Delete?')) { this.binders=this.binders.filter(b=>b.id!==id); this.cards.forEach(c=>{if(c.binderId===id)c.binderId=null}); this.save(); }}
+    cardPrice(c) {
+      const p = c.tcgplayer?.prices;
+      return p?.holofoil?.market || p?.reverseHolofoil?.market || p?.normal?.market || '??';
+    },
+    addCardToCollection() {
+      if (!this.selectedCard) return;
+      const market = this.cardPrice(this.selectedCard);
+      const newCard = {
+        id: this.selectedCard.id,
+        name: this.selectedCard.name,
+        set: this.selectedCard.set.name,
+        image: this.selectedCard.images.small,
+        market: parseFloat(market) || 50
+      };
+      this.cards.unshift(newCard);
+      localStorage.setItem('gladiator_cards', JSON.stringify(this.cards));
+      // Reset
+      this.selectedCard = null;
+      this.selectedSet = '';
+      this.cardsInSet = [];
+    }
+  },
+  mounted() {
+    this.loadAllData();
   }
 }).mount('#app');
 </script>
