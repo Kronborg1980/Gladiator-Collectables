@@ -20,7 +20,7 @@
             --accent: #00f2ff; 
             --accent-dim: rgba(0, 242, 255, 0.1);
             --bg-dark: #020408;
-            --glass-surface: rgba(10, 15, 25, 0.9);
+            --glass-surface: rgba(10, 15, 25, 0.9); /* Slightly darker for mobile readability */
             --glass-edge: rgba(0, 242, 255, 0.2);
         }
         
@@ -31,6 +31,8 @@
                 radial-gradient(circle at 15% 50%, rgba(0, 242, 255, 0.05) 0%, transparent 25%),
                 radial-gradient(circle at 85% 30%, rgba(40, 100, 255, 0.08) 0%, transparent 25%);
             color: #fff; 
+            height: 100vh; 
+            overflow: hidden; 
         }
         .font-brand { font-family: 'Cinzel', serif; }
         [v-cloak] { display: none; }
@@ -109,20 +111,11 @@
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
         ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
-
-        /* FIX 2: Ensure the app container itself can stretch and manage flow */
-        @media (max-width: 767px) {
-            .app-mobile-flow {
-                display: block !important;
-                height: auto !important;
-                min-height: 100vh;
-            }
-        }
     </style>
 </head>
 <body class="flex flex-col h-screen">
 
-<div id="app" v-cloak class="flex h-full w-full max-w-[1920px] mx-auto relative md:p-4 md:gap-4 app-mobile-flow">
+<div id="app" v-cloak class="flex h-full w-full max-w-[1920px] mx-auto relative md:p-4 md:gap-4">
 
     <div class="md:hidden flex items-center justify-between px-4 py-3 bg-[#020408] border-b border-white/10 shrink-0 z-50">
         <button @click="mobileMenuOpen = true" class="text-white text-xl p-2"><i class="fa-solid fa-bars"></i></button>
@@ -388,27 +381,9 @@
 
             <template v-else>
                 <div class="p-4 md:p-8 bg-[#080a10] grid grid-cols-2 md:grid-cols-4 gap-4 border-b border-white/5 shrink-0">
-                    <div class="col-span-1">
-                        <label class="text-[9px] text-gray-500 font-bold uppercase mb-1 block">1. Era</label>
-                        <select v-model="selectedEra" class="glass-input"><option value="">Select Era</option><option v-for="era in eras" :value="era">{{ era }}</option></select>
-                    </div>
-                    <div class="col-span-1">
-                        <label class="text-[9px] text-gray-500 font-bold uppercase mb-1 block">2. Set</label>
-                        <select v-model="selectedSet" :disabled="!selectedEra" class="glass-input disabled:opacity-30"><option value="">Select Set</option><option v-for="s in filteredSets" :value="s.id">{{ s.name }}</option></select>
-                    </div>
-                    <div class="col-span-2 md:col-span-1">
-                        <label class="text-[9px] text-gray-500 font-bold uppercase mb-1 block">3. Search Name</label>
-                        <input v-model="query" @keyup.enter="fetchCards(1)" :disabled="!selectedSet" placeholder="e.g. Charizard" class="glass-input disabled:opacity-30 lowercase placeholder:uppercase">
-                    </div>
-                    <div class="col-span-2 md:col-span-1">
-                        <label class="text-[9px] text-gray-500 font-bold uppercase mb-1 block">4. Sort By</label>
-                        <select v-model="searchSort" @change="sortSearchResults" class="glass-input">
-                            <option value="number">Card Number</option>
-                            <option value="name">Alphabetical</option>
-                            <option value="price-desc">Price (Highest)</option>
-                            <option value="price-asc">Price (Lowest)</option>
-                        </select>
-                    </div>
+                    <div class="col-span-1"><label class="text-[9px] text-gray-500 font-bold uppercase mb-1 block">1. Era</label><select v-model="selectedEra" class="glass-input"><option value="">Select Era</option><option v-for="era in eras" :value="era">{{ era }}</option></select></div>
+                    <div class="col-span-1"><label class="text-[9px] text-gray-500 font-bold uppercase mb-1 block">2. Set</label><select v-model="selectedSet" :disabled="!selectedEra" class="glass-input disabled:opacity-30"><option value="">Select Set</option><option v-for="s in filteredSets" :value="s.id">{{ s.name }}</option></select></div>
+                    <div class="col-span-2"><label class="text-[9px] text-gray-500 font-bold uppercase mb-1 block">3. Name</label><input v-model="query" @keyup.enter="fetchCards(1)" :disabled="!selectedSet" placeholder="e.g. Charizard" class="glass-input disabled:opacity-30 lowercase placeholder:uppercase"></div>
                 </div>
                 
                 <div class="px-6 py-3 bg-[#050505] flex justify-between items-center border-b border-white/5 shrink-0">
@@ -440,9 +415,9 @@
                         </div>
                         
                         <div class="flex justify-center gap-4 items-center pt-4 border-t border-white/10 pb-8">
-                            <button @click="fetchCards(searchPage > 1 ? searchPage - 1 : 1)" :disabled="searchPage === 1" class="pagination-btn">Prev</button>
-                            <span class="text-xs font-bold text-[#00f2ff]">Page {{ searchPage }} / {{ totalSearchPagesFromAPI || 1 }}</span>
-                            <button @click="fetchCards(searchPage + 1)" :disabled="searchPage >= totalSearchPagesFromAPI" class="pagination-btn">Next</button>
+                            <button @click="searchPage > 1 ? fetchCards(searchPage - 1) : null" :disabled="searchPage === 1" class="pagination-btn">Prev</button>
+                            <span class="text-xs font-bold text-[#00f2ff]">Page {{ searchPage }}</span>
+                            <button @click="fetchCards(searchPage + 1)" class="pagination-btn">Next</button>
                         </div>
                     </div>
                 </div>
@@ -520,18 +495,14 @@
                 localBinders: [], localCards: [], cloudBinders: [], cloudCards: [],
                 showSearch: false, detailCard: null, setsLoading: false, isSearching: false,
                 allSets: [], eras: [], selectedEra: "", selectedSet: "", query: "", targetBinder: 'master', searchResults: [],
-                cacheKey: 'gladiator_sets_v9',
+                cacheKey: 'gladiator_sets_v9', // <<< NEW KEY: v9 - Please check console for network errors if it still hangs.
                 collectionFilter: '',
                 
                 // MAIN PAGINATION
                 sortBy: 'profit', sortDesc: true, currentPage: 1, itemsPerPage: 30,
                 
                 // SEARCH PAGINATION
-                searchPage: 1, searchPerPage: 30, addedIds: [], selectedIds: [], searchSort: 'number',
-                totalCount: 0, 
-                
-                // Caching: 30 minutes TTL for search results
-                cacheTTL: 1000 * 60 * 30 
+                searchPage: 1, searchPerPage: 30, addedIds: [], selectedIds: [], searchSort: 'number'
             }
         },
         mounted() {
@@ -556,8 +527,9 @@
             
             // DISPLAY LOGIC
             displayCards() { 
-                let list = this.cards; 
+                let list = this.cards; // Default to all
                 
+                // If viewing a specific binder, filter
                 if (this.currentView === 'single_binder' && this.currentBinder) {
                     list = list.filter(c => c.binderId === this.currentBinder.id);
                 }
@@ -593,35 +565,23 @@
 
             cardsBySet() {
                 const grouped = {};
+                // COLLECTION VIEW ALWAYS SHOWS ALL CARDS (Master View)
                 this.cards.forEach(c => {
                     if(!grouped[c.set]) grouped[c.set] = [];
                     grouped[c.set].push(c);
                 });
                 return grouped;
             },
-            
-            // Calculates total pages from API metadata
-            totalSearchPagesFromAPI() {
-                if (this.totalCount === 0) return 1;
-                return Math.ceil(this.totalCount / this.searchPerPage);
-            },
 
-            // SEARCH PAGINATION AND SORTING LOGIC 
+            // SEARCH PAGINATION
             filteredSearchList() {
                 let list = [...this.searchResults];
                 if(this.query) { list = list.filter(c => c.name.toLowerCase().includes(this.query.toLowerCase())); }
                 
                 list.sort((a, b) => {
-                    const priceA = this.getCardPrice(a);
-                    const priceB = this.getCardPrice(b);
-
-                    // Sort by Price (Descending)
-                    if (this.searchSort === 'price-desc') return priceB - priceA;
-                    // Sort by Price (Ascending)
-                    if (this.searchSort === 'price-asc') return priceA - priceB;
-                    // Sort by Name (Alphabetical)
+                    if (this.searchSort === 'price-desc') return this.getCardPrice(b) - this.getCardPrice(a);
+                    if (this.searchSort === 'price-asc') return this.getCardPrice(a) - this.getCardPrice(b);
                     if (this.searchSort === 'name') return a.name.localeCompare(b.name);
-                    // Default/Fallback: Sort by Card Number
                     return a.number.localeCompare(b.number, undefined, {numeric: true});
                 });
                 return list;
@@ -654,6 +614,7 @@
             getSetTotal(setName) {
                 const s = this.allSets.find(x => x.name === setName);
                 if (!s) return '?';
+                // Prioritize 'total' (Master Set size), only fall back to 'printedTotal' if 'total' is missing or 0
                 return (s.total && s.total > 0) ? s.total : s.printedTotal;
             },
             
@@ -748,31 +709,15 @@
             getBinderCount(id) { return this.cards.filter(c => c.binderId === id).length; },
             openSearch() { 
                 this.showSearch = true; this.searchResults = []; this.searchPage = 1; this.query = '';
-                this.totalCount = 0; 
+                // Smart select: if inside a binder, default add to that binder
                 if(this.currentView === 'single_binder' && this.currentBinder) this.targetBinder = this.currentBinder.id;
                 else this.targetBinder = 'master';
             },
             openCardDetail(c) { this.detailCard = c; },
             formatNumber(n) { return (n||0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}); },
+            getCardPrice(c) { return c.tcgplayer?.prices?.holofoil?.market || c.tcgplayer?.prices?.normal?.market || 0; },
             
-            getCardPrice(c) { 
-                const prices = c.tcgplayer?.prices;
-                if (!prices) return 0;
-                
-                // Extract all non-zero market prices from all known fields
-                const marketPrices = Object.values(prices)
-                    .map(priceDetail => priceDetail?.market)
-                    .filter(price => price > 0); 
-                
-                // Add the general market price if it exists and is non-zero
-                if (c.tcgplayer?.market && c.tcgplayer.market > 0) {
-                    marketPrices.push(c.tcgplayer.market);
-                }
-
-                // Return the highest price found, or 0 if none are available
-                return marketPrices.length > 0 ? Math.max(...marketPrices) : 0;
-            },
-            
+            // --- FIXED API LOAD METHOD ---
             async loadSetsAPI() {
                 this.setsLoading = true;
                 const c = localStorage.getItem(this.cacheKey);
@@ -784,13 +729,16 @@
                         return;
                     } catch (e) {
                         console.error("Error parsing cached sets:", e);
+                        // Force API fetch if cache is corrupted
                     }
                 }
                 
                 try {
+                    // Fetching the 'total' field for Master Set size
                     const res = await fetch('https://api.pokemontcg.io/v2/sets?select=id,name,series,releaseDate,printedTotal,total&orderBy=-releaseDate');
                     
                     if (!res.ok) {
+                        // Throw an error if HTTP status is not 200-299
                         throw new Error(`API fetch failed with status: ${res.status}`);
                     }
 
@@ -801,81 +749,28 @@
                     localStorage.setItem(this.cacheKey, JSON.stringify({sets: this.allSets, eras: this.eras}));
                     
                 } catch(error) {
+                    // This catches network errors and failed HTTP responses.
                     console.error("CRITICAL: Failed to synchronize set database. Check network connection.", error);
+                    // This keeps setsLoading=true, so the user sees the error message until they refresh.
+                    // If you want to force the modal closed on failure, you can set an alert here.
                 } finally {
+                    // GUARANTEED TO RUN: Ends the loading spinner state.
                     this.setsLoading = false;
                 }
             },
+            // -----------------------------
             
-            // --- FIX FOR INSTANT PAGE SWITCHING AND LOGIC ---
             async fetchCards(page = 1) {
                 if(!this.selectedSet) return;
-                
-                // Ensure pagination doesn't go below 1
-                page = Math.max(1, page); 
-
-                // 1. Prepare Query and Cache Key
-                let nameQuery = this.query ? this.query.trim().toLowerCase() : '';
-                
-                // FIX: Conditionally construct query based on if a name is provided
-                let q = `set.id:${this.selectedSet}`; 
-                if(nameQuery) {
-                    q += ` name:"${nameQuery}*"`;
-                }
-                
-                // The cache key MUST include the page number and the query/set
-                const cacheKey = `search_${this.selectedSet}_${nameQuery}_${page}`;
-                const now = Date.now();
-                
-                // 2. Check Session Cache (Instant Page Switch)
-                const cachedData = sessionStorage.getItem(cacheKey);
-                if (cachedData) {
-                    try {
-                        const cache = JSON.parse(cachedData);
-                        if (now - cache.timestamp < this.cacheTTL) {
-                            console.log(`[Cache] Hit for ${cacheKey}. Loading instant data.`);
-                            this.searchResults = cache.results;
-                            this.totalCount = cache.totalCount; 
-                            this.searchPage = page; // Set current page AFTER loading cached results
-                            return;
-                        } else {
-                            sessionStorage.removeItem(cacheKey);
-                        }
-                    } catch (e) {
-                        sessionStorage.removeItem(cacheKey);
-                    }
-                }
-
-                // 3. Fetch from API (New or Expired Cache)
-                this.isSearching = true;
+                this.isSearching = true; 
+                this.searchPage = page; 
+                let q = `set.id:${this.selectedSet}`; if(this.query) q += ` name:"${this.query}*"`;
                 try {
-                    const res = await fetch(`https://api.pokemontcg.io/v2/cards?q=${q}&pageSize=${this.searchPerPage}&page=${page}&select=id,name,number,images,tcgplayer`);
-                    
-                    if (!res.ok) {
-                        throw new Error(`API fetch failed with status: ${res.status}`);
-                    }
-                    
+                    const res = await fetch(`https://api.pokemontcg.io/v2/cards?q=${q}&pageSize=30&page=${page}&select=id,name,number,images,tcgplayer`);
                     const data = await res.json();
                     this.searchResults = data.data || [];
-                    this.totalCount = data.totalCount || 0; 
-                    this.searchPage = page;
-
-                    // 4. Cache Result
-                    const cache = {
-                        timestamp: now,
-                        results: this.searchResults,
-                        totalCount: this.totalCount
-                    };
-                    sessionStorage.setItem(cacheKey, JSON.stringify(cache));
-
-                } catch(e) { 
-                    console.error("API Fetch Error:", e);
-                    this.searchResults = []; 
-                    this.totalCount = 0;
-                } 
-                finally { 
-                    this.isSearching = false; 
-                }
+                } catch(e) { console.error(e); } 
+                finally { this.isSearching = false; }
             }
         }
     }).mount('#app');
