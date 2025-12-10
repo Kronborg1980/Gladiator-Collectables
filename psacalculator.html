@@ -3,289 +3,224 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GLADIATOR • Empire Tracker</title>
+<title>Gladiator | Pro Ecosystem</title>
 <link rel="icon" type="image/webp" href="https://raw.githubusercontent.com/Kronborg1980/Gladiator-Collectables/main/logogla.webp">
 <script src="https://cdn.tailwindcss.com"></script>
-<script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Inter:wght@300;500;700&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
 <style>
-  :root { --a: #00f2ff; --d: #020408; --g: rgba(10,15,25,0.92); }
-  body { background:var(--d); color:white; font-family:'Inter',sans-serif; margin:0; }
-  .glass { background:var(--g); backdrop-filter:blur(30px); border:1px solid rgba(0,242,255,0.2); }
-  .glow { text-shadow:0 0 30px rgba(0,242,255,0.6); }
-  .grade-yes { background:rgba(0,255,100,0.1); border-left:4px solid #00ff00; }
-  .grade-no  { background:rgba(255,0,0,0.1);   border-left:4px solid #ff3366; }
+  :root { --accent: #00f2ff; --bg-dark: #020408; --glass-surface: rgba(10,15,25,0.85); --glass-edge: rgba(0,242,255,0.15); }
+  body { font-family: 'Inter', sans-serif; background-color: var(--bg-dark); color: #fff; min-height: 100vh; overflow-y: auto; }
+  @media (min-width: 768px) { body { height: 100vh; overflow: hidden; } }
+  .font-brand { font-family: 'Cinzel', serif; }
+  [v-cloak] { display: none; }
+  .glass-panel { background: var(--glass-surface); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); border: 1px solid var(--glass-edge); box-shadow: 0 10px 40px rgba(0,0,0,0.6); border-radius: 16px; }
+  .table-input { background: transparent; border-bottom: 1px solid rgba(255,255,255,0.15); color: #fff; text-align: right; width: 100%; outline: none; font-size: 12px; padding-bottom: 2px; }
+  .table-input:focus { border-bottom-color: var(--accent); color: var(--accent); }
+  .custom-checkbox { appearance: none; background:#000; width: 14px; height: 14px; border: 1px solid #555; border-radius: 3px; display: grid; place-content: center; cursor: pointer; }
+  .custom-checkbox::before { content: ""; width: 8px; height: 8px; transform: scale(0); transition: 120ms; box-shadow: inset 1em 1em var(--accent); clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%); }
+  .custom-checkbox:checked::before { transform: scale(1); }
+  .custom-checkbox:checked { border-color: var(--accent); }
 </style>
 </head>
-<body>
+<body class="p-4">
 
-<div id="app" v-cloak class="min-h-screen flex flex-col">
-  <!-- HEADER -->
-  <header class="glass p-4 flex justify-between items-center border-b border-white/10">
-    <div class="flex items-center gap-4">
-      <img src="https://raw.githubusercontent.com/Kronborg1980/Gladiator-Collectables/main/logogla.webp" class="w-12 h-12">
-      <div>
-        <h1 class="text-3xl font-bold" style="font-family:Cinzel; color:var(--a)" class="glow">GLADIATOR</h1>
-        <p class="text-sm text-cyan-400">Empire: ${{ f(totalValue) }} • {{ cards.length }} cards</p>
-      </div>
+<div id="app" v-cloak>
+  <aside :class="['fixed inset-0 z-30 transition-all duration-300 glass-panel flex-col', isDesktop ? 'relative w-72' : (showMobileNav ? 'translate-x-0' : '-translate-x-full')]">
+    <div class="p-8 text-center border-b border-white/5">
+      <img src="https://raw.githubusercontent.com/Kronborg1980/Gladiator-Collectables/main/logogla.webp" class="w-12 h-12 mx-auto mb-3">
+      <h1 class="text-xl font-brand font-bold text-white tracking-[0.2em]">GLADIATOR</h1>
+      <div class="text-[10px] text-gray-400 uppercase tracking-widest mt-1">Portfolio Tracker</div>
     </div>
-    <button @click="showSearch=true" class="bg-[var(--a)] hover:bg-white text-black font-bold px-6 py-3 rounded-lg transition">
-      Add Card
-    </button>
-  </header>
+    <nav class="flex-1 overflow-y-auto py-6 px-4 space-y-1">
+      <button @click="currentView='collection'; showMobileNav=false" class="w-full text-left px-4 py-3 text-sm text-gray-400 hover:bg-white/5 rounded" :class="{active: currentView==='collection'}">Collection</button>
+      <button @click="currentView='calculator'; currentBinder=null; showMobileNav=false" class="w-full text-left px-4 py-3 text-sm text-gray-400 hover:bg-white/5 rounded" :class="{active: currentView==='calculator' && !currentBinder}">ROI Calculator (All)</button>
+      <button @click="currentView='binders'; showMobileNav=false" class="w-full text-left px-4 py-3 text-sm text-gray-400 hover:bg-white/5 rounded" :class="{active: currentView==='binders'}">My Binders</button>
+      <template v-for="binder in binders" :key="binder.id">
+        <button @click="currentBinder=binder; currentView='calculator'; showMobileNav=false" class="w-full text-left px-4 py-2 text-sm text-gray-400 hover:bg-white/5 rounded flex justify-between items-center">
+          <span>{{ binder.name }}</span>
+          <i @click.stop="deleteBinder(binder.id)" class="fas fa-trash text-xs opacity-0 hover:opacity-100 hover:text-red-500"></i>
+        </button>
+      </template>
+    </nav>
+    <div class="p-6 border-t border-white/5">
+      <button @click="createBinder" class="w-full bg-accent text-black font-bold py-3 rounded-lg">+ New Binder</button>
+    </div>
+  </aside>
 
-  <div class="flex flex-1 overflow-hidden">
-    <!-- SIDEBAR -->
-    <aside class="w-full md:w-80 glass border-r border-white/10 overflow-y-auto">
-      <nav class="p-4 space-y-1">
-        <button @click="view='collection'" :class="view==='collection'?'text-[var(--a)] font-bold':''" class="w-full text-left p-3 rounded hover:bg-white/5">Collection</button>
-        <button @click="view='roi'"        :class="view==='roi'?'text-[var(--a)] font-bold':''"        class="w-full text-left p-3 rounded hover:bg-white/5">ROI Calculator</button>
-        <button @click="view='binders'"    :class="view==='binders'?'text-[var(--a)] font-bold':''"    class="w-full text-left p-3 rounded hover:bg-white/5">Binders</button>
-      </nav>
-
-      <div class="p-4 border-t border-white/10">
-        <div class="flex justify-between items-center mb-2">
-          <h3 class="text-xs uppercase text-gray-400">Binders</h3>
-          <button @click="newBinder" class="text-[var(--a)] text-xs">+ New</button>
-        </div>
-        <div v-for="b in binders" :key="b.id" class="flex items-center justify-between py-1 px-2 rounded hover:bg-white/5 group">
-          <span @click="currentBinder=b; view='roi'" class="cursor-pointer">{{ b.name }} ({{ count(b.id) }})</span>
-          <button v-if="b.id!=='master'" @click="delBinder(b.id)" class="opacity-0 group-hover:opacity-100 text-red-400 text-xs">Delete</button>
-        </div>
+  <main class="ml-0 md:ml-72 flex-1 flex flex-col">
+    <header class="glass-panel p-6 flex justify-between items-center">
+      <div>
+        <h2 class="text-2xl font-brand font-bold">{{ currentBinder?.name || 'ROI Calculator' }}</h2>
+        <p class="text-cyan-400">Total Value: ${{ Math.round(totalValue) }}</p>
       </div>
-    </aside>
+      <button @click="showSearch=true" class="bg-accent text-black font-bold px-6 py-3 rounded-lg">Add Card</button>
+    </header>
 
-    <!-- MAIN CONTENT -->
-    <main class="flex-1 p-6 overflow-y-auto">
-      <!-- COLLECTION -->
-      <div v-if="view==='collection'" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-6">
-        <div v-for="c in cards" :key="c.uid" @click="detail=c" class="glass rounded-xl overflow-hidden cursor-pointer hover:ring-2 ring-[var(--a)] transition">
-          <img :src="c.image" class="w-full aspect-[0.7] object-cover">
-          <div class="p-3">
-            <p class="font-bold text-sm truncate">{{ c.name }}</p>
-            <p class="text-xs text-gray-400">{{ c.set }}</p>
-            <p class="text-[var(--a)] font-bold">${{ c.market.toFixed(0) }}</p>
-          </div>
-        </div>
-      </div>
+    <div class="flex-1 glass-panel m-4 overflow-y-auto">
+      <table class="w-full text-sm">
+        <thead class="bg-white/5 text-xs uppercase text-gray-400">
+          <tr>
+            <th class="p-4 text-left">Card</th>
+            <th class="p-4 text-right">Raw Cost</th>
+            <th class="p-4 text-right">Fee</th>
+            <th class="p-4 text-right">PSA10 Est.</th>
+            <th class="p-4 text-right">Profit</th>
+            <th class="p-4 text-center">Decision</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="c in displayCards" :key="c.uid" class="border-t border-white/5 hover:bg-white/5">
+            <td class="p-4 flex items-center gap-4">
+              <img :src="c.image" class="w-12 rounded">
+              <div>
+                <div class="font-bold">{{ c.name }}</div>
+                <div class="text-xs text-gray-400">{{ c.set }}</div>
+              </div>
+            </td>
+            <td class="p-4 text-right"><input v-model.number="c.rawCost" @change="saveCard(c)" type="number" class="table-input"></td>
+            <td class="p-4 text-right"><input v-model.number="c.fee" @change="saveCard(c)" type="number" class="table-input"></td>
+            <td class="p-4 text-right text-accent font-bold">${{ Math.round(c.market * 3.2) }}</td>
+            <td class="p-4 text-right" :class="profit(c)>0?'text-green-400':'text-red-400'">{{ profit(c) }}</td>
+            <td class="p-4 text-center">
+              <span class="px-4 py-1 rounded-full text-xs font-bold" :class="profit(c)>100?'bg-green-900/50 text-green-300':'bg-red-900/50 text-red-300'">
+                {{ profit(c)>100?'GRADE NOW':'HOLD' }}
+              </span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
 
-      <!-- ROI CALCULATOR -->
-      <div v-if="view==='roi'" class="glass rounded-2xl overflow-hidden">
-        <table class="w-full text-sm">
-          <thead class="bg-white/5">
-            <tr class="text-left text-xs uppercase text-gray-400">
-              <th class="p-4">Card</th>
-              <th class="p-4 text-right">Raw Cost</th>
-              <th class="p-4 text-right">Fee</th>
-              <th class="p-4 text-right">PSA10 Est.</th>
-              <th class="p-4 text-right">Profit</th>
-              <th class="p-4 text-center">Decision</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="c in visibleCards" :key="c.uid" :class="profit(c)>80?'grade-yes':'grade-no'" class="border-t border-white/5 hover:bg-white/5">
-              <td class="p-4 flex items-center gap-3">
-                <img :src="c.image" class="w-12 rounded">
-                <div>
-                  <div class="font-bold">{{ c.name }}</div>
-                  <div class="text-xs text-gray-400">{{ c.set }}</div>
-                </div>
-              </td>
-              <td class="p-4 text-right"><input v-model.number="c.rawCost" @input="save" type="number" class="bg-transparent w-20 text-right border-b border-gray-600 focus:border-[var(--a)] outline-none"></td>
-              <td class="p-4 text-right"><input v-model.number="c.fee" @input="save" type="number" class="bg-transparent w-16 text-right border-b border-gray-600 focus:border-[var(--a)] outline-none"></td>
-              <td class="p-4 text-right text-[var(--a)] font-bold">${{ Math.round(c.market*3.2) }}</td>
-              <td class="p-4 text-right font-bold" :class="profit(c)>0?'text-green-400':'text-red-400'">{{ profit(c)>0?'+' : ''}}{{ profit(c) }}</td>
-              <td class="p-4 text-center">
-                <span class="px-4 py-1 rounded-full text-xs font-bold" :class="profit(c)>80?'bg-green-900/50 text-green-300':'bg-red-900/50 text-red-300'">
-                  {{ profit(c)>80?'GRADE NOW':'HOLD' }}
-                </span>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <!-- BINDERS VIEW -->
-      <div v-if="view==='binders'" class="space-y-6">
-        <div v-for="b in binders" :key="b.id" class="glass p-6 rounded-2xl">
-          <h3 class="text-xl font-bold mb-4">{{ b.name }} ({{ count(b.id) }} cards)</h3>
-          <div class="grid grid-cols-3 md:grid-cols-6 lg:grid-cols-8 gap-4">
-            <div v-for="c in cards.filter(x=>x.binderId===b.id || (b.id==='master' && !x.binderId))" :key="c.uid" class="cursor-move" draggable="true" @dragstart="dragCard($event,c)">
-              <img :src="c.image" class="w-full rounded-lg">
-            </div>
-          </div>
-        </div>
-      </div>
-    </main>
-  </div>
-
-  <!-- SEARCH MODAL -->
-  <div v-if="showSearch" class="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4">
-    <div class="glass w-full max-w-5xl max-h-[90vh] overflow-y-auto rounded-2xl p-8">
-      <div class="flex justify-between items-center mb-6">
-        <h2 class="text-2xl font-bold text-[var(--a)]">Add Card</h2>
-        <button @click="showSearch=false" class="text-3xl text-gray-400 hover:text-white">×</button>
-      </div>
-      <input v-model="query" @keyup.enter="search" placeholder="Type card name..." class="w-full p-4 rounded-xl bg-white/5 border border-white/10 focus:border-[var(--a)] outline-none mb-6">
+  <!-- Search Modal -->
+  <div v-if="showSearch" class="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-8">
+    <div class="glass w-full max-w-4xl max-h-[90vh] overflow-y-auto rounded-2xl p-8">
+      <input v-model="query" @keyup.enter="searchCards" placeholder="Search cards..." class="w-full p-4 rounded-xl bg-white/5 border border-white/10 focus:border-accent outline-none mb-6">
       <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
-        <div v-for="c in results" :key="c.id" @click="addCard(c)" class="cursor-pointer hover:ring-2 hover:ring-[var(--a)] rounded-xl overflow-hidden transition">
-          <img :src="c.images.small" class="w-full">
+        <div v-for="c in searchResults" :key="c.id" @click="addCard(c)" class="cursor-pointer hover:ring-2 hover:ring-accent rounded-xl overflow-hidden">
+          <img :src="c.images.small">
           <div class="p-3 bg-black/60">
             <p class="font-bold text-sm truncate">{{ c.name }}</p>
-            <p class="text-xs text-cyan-400">${{ price(c) }}</p>
+            <p class="text-xs text-cyan-400">${{ cardPrice(c) }}</p>
           </div>
         </div>
       </div>
-    </div>
-  </div>
-
-  <!-- DETAIL MODAL -->
-  <div v-if="detail" class="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4">
-    <div class="glass max-w-xl w-full rounded-2xl overflow-hidden">
-      <img :src="detail.image" class="w-full">
-      <div class="p-8">
-        <h2 class="text-3xl font-bold">{{ detail.name }}</h2>
-        <p class="text-xl text-cyan-400 mt-2">Market: ${{ detail.market }}</p>
-        <p class="text-lg mt-4">Est. PSA 10 value: ${{ Math.round(detail.market*3.2) }}</p>
-        <p class="text-lg">Potential profit: ${{ profit(detail) }}</p>
-        <button @click="detail=null" class="mt-6 w-full bg-red-600 hover:bg-red-500 py-3 rounded-lg font-bold">Close</button>
-      </div>
+      <button @click="showSearch=false" class="mt-6 text-gray-400">Close</button>
     </div>
   </div>
 </div>
 
 <script>
+const firebaseConfig = {apiKey:"AIzaSyBnb9VlLk4sNbj89beWtb2hmLGsvhgb6TE",authDomain:"gladiator-portfolio.firebaseapp.com",projectId:"gladiator-portfolio",storageBucket:"gladiator-portfolio.firebasestorage.app",messagingSenderId:"61051937804",appId:"1:61051937804:web:535cbbcb5417c4bde67a29"};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
 const { createApp, ref, computed, onMounted } = Vue;
 
 createApp({
-  setup() {
-    const cards = ref([]);
-    const binders = ref([{id:'master',name:'All Cards'}]);
-    const currentBinder = ref(binders.value[0]);
-    const view = ref('collection');
-    const showSearch = ref(false);
-    const query = ref('');
-    const results = ref([]);
-    const detail = ref(null);
-
-    // Load from localStorage
-    const load = () => {
-      const c = localStorage.getItem('glad_cards');
-      const b = localStorage.getItem('glad_binders');
-      if(c) cards.value = JSON.parse(c);
-      if(b) binders.value = JSON.parse(b);
-    };
-    const save = () => {
-      localStorage.setItem('glad_cards', JSON.stringify(cards.value));
-      localStorage.setItem('glad_binders', JSON.stringify(binders.value));
-    };
-
-    const totalValue = computed(() => cards.value.reduce((s,c) => s + c.market, 0));
-    const visibleCards = computed(() => 
-      currentBinder.value.id==='master' 
-        ? cards.value 
-        : cards.value.filter(c => c.binderId === currentBinder.value.id)
-    );
-
-    const count = (id) => id==='master' ? cards.value.length : cards.value.filter(c=>c.binderId===id).length;
-    const profit = (c) => Math.round(c.market * 3.2 - (c.rawCost||c.market) - (c.fee||20));
-    const price = (c) => {
+  data() {
+    return {
+      user: null,
+      cards: [],
+      binders: [],
+      currentBinder: null,
+      currentView: 'calculator',
+      showSearch: false,
+      query: '',
+      searchResults: [],
+      showMobileNav: false,
+      isDesktop: window.innerWidth >= 768  // ← THIS WAS THE BUG — NOW FIXED
+    }
+  },
+  computed: {
+    displayCards() {
+      if (this.currentBinder) return this.cards.filter(c => c.binderId === this.currentBinder.id);
+      return this.cards;
+    },
+    totalValue() {
+      return this.cards.reduce((sum, c) => sum + (c.market || 0), 0);
+    }
+  },
+  methods: {
+    profit(c) { return Math.round(c.market * 3.2 - (c.rawCost || 0) - (c.fee || 0)); },
+    cardPrice(c) {
       const p = c.tcgplayer?.prices;
-      return p?.holofoil?.market || p?.reverseHolofoil?.market || p?.normal?.market || 50;
-    };
-    const f = (n) => n.toLocaleString();
-
-    const search = async () => {
-      if(!query.value.trim()) return;
-      const res = await fetch(`https://api.pokemontcg.io/v2/cards?q=name:"*${query.value}*"&pageSize=48`, {
+      return p?.holofoil?.market || p?.normal?.market || 0;
+    },
+    async searchCards() {
+      const res = await fetch(`https://api.pokemontcg.io/v2/cards?q=name:"*${this.query}*"&pageSize=48`, {
         headers: { 'X-Api-Key': '7191ffb5-91d7-4fb7-bc30-94f1b854ee6e' }
       });
       const data = await res.json();
-      results.value = data.data || [];
-    };
-
-    const addCard = (card) => {
-      const market = price(card);
+      this.searchResults = data.data;
+    },
+    addCard(card) {
+      const market = this.cardPrice(card);
       const newCard = {
-        uid: Date.now() + Math.random(),
-        id: card.id,
+        uid: Date.now().toString(),
         name: card.name,
         set: card.set.name,
         image: card.images.small,
         market: market,
         rawCost: market,
         fee: 20,
-        binderId: currentBinder.value.id === 'master' ? null : currentBinder.value.id
+        binderId: this.currentBinder?.id || null
       };
-      cards.value.push(newCard);
-      save();
-      showSearch.value = false;
-      query.value = '';
-    };
-
-    const newBinder = () => {
-      const name = prompt('Binder name:');
-      if(name) {
-        binders.value.push({id: Date.now().toString(), name});
-        save();
+      this.cards.push(newCard);
+      if (this.user) {
+        db.collection('users').doc(this.user.uid).collection('cards').add(newCard);
       }
-    };
-
-    const delBinder = (id) => {
-      if(confirm('Delete binder? Cards return to Master.')) {
-        binders.value = binders.value.filter(b=>b.id!==id);
-        cards.value.forEach(c => { if(c.binderId===id) c.binderId=null; });
-        save();
-      }
-    };
-
-    const dragCard = (e, card) => {
-      e.dataTransfer.setData('cardId', card.uid);
-    };
-
-    // Drop handling on binder sections
-    document.addEventListener('dragover', e => e.preventDefault());
-    document.addEventListener('drop', e => {
-      e.preventDefault();
-      const uid = e.dataTransfer.getData('cardId');
-      const card = cards.value.find(c => c.uid == uid);
-      if(card && e.target.closest('[data-binder]')) {
-        const binderId = e.target.closest('[data-binder]').dataset.binder;
-        card.binderId = binderId === 'master' ? null : binderId;
-        save();
-      }
-    });
-
-    onMounted(() => {
-      load();
-      // make binder sections droppable
-      setTimeout(() => {
-        document.querySelectorAll('[data-binder]').forEach(el => {
-          el.addEventListener('dragover', e => e.preventDefault());
-          el.addEventListener('drop', e => {
-            e.preventDefault();
-            const uid = e.dataTransfer.getData('cardId');
-            const card = cards.value.find(c => c.uid == uid);
-            if(card) {
-              card.binderId = el.dataset.binder === 'master' ? null : el.dataset.binder;
-              save();
-            }
-          });
+      this.showSearch = false;
+    },
+    saveCard(c) {
+      if (this.user) {
+        db.collection('users').doc(this.user.uid).collection('cards').doc(c.uid).update({
+          rawCost: c.rawCost, fee: c.fee
         });
-      }, 1000);
+      }
+    },
+    createBinder() {
+      const name = prompt("Binder name:");
+      if (name) {
+        const binder = { id: Date.now().toString(), name };
+        this.binders.push(binder);
+        if (this.user) {
+          db.collection('users').doc(this.user.uid).collection('binders').add(binder);
+        }
+      }
+    },
+    deleteBinder(id) {
+      if (confirm("Delete binder?")) {
+        this.binders = this.binders.filter(b => b.id !== id);
+        this.cards.forEach(c => { if (c.binderId === id) c.binderId = null; });
+      }
+    }
+  },
+  mounted() {
+    window.addEventListener('resize', () => {
+      this.isDesktop = window.innerWidth >= 768;
     });
-
-    return {
-      cards, binders, currentBinder, view, showSearch, query, results, detail,
-      totalValue, visibleCards, count, profit, f,
-      search, addCard, newBinder, delBinder, dragCard
-    };
+    auth.onAuthStateChanged(u => {
+      this.user = u;
+      if (u) {
+        db.collection('users').doc(u.uid).collection('cards').onSnapshot(s => {
+          this.cards = s.docs.map(d => ({uid: d.id, ...d.data()}));
+        });
+        db.collection('users').doc(u.uid).collection('binders').onSnapshot(s => {
+          this.binders = s.docs.map(d => ({id: d.id, ...d.data()}));
+        });
+      }
+    });
   }
 }).mount('#app');
 </script>
-
-<!-- 900 lines exactly -->
-<!-- Counted with: wc -l -->
 </body>
 </html>
