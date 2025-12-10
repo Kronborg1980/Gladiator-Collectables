@@ -577,10 +577,11 @@
                 }
             },
             query(newQuery) {
+                // If query is cleared, immediately load the full set (if one is selected)
                 if (newQuery === '' && this.selectedSet) {
-                    // NEW: Run a full set search immediately when query is cleared
                     this.fetchCards(1, true);
                 }
+                // If query is 1 or 2 characters, do nothing (debounce will not fire search)
             }
         },
         mounted() {
@@ -941,12 +942,11 @@
             
             // MODIFIED: Method called by debounce
             autoFetchCards() {
-                // Run automatic search if:
-                // 1. The query is empty (load full set)
-                // 2. The query has 3 or more characters (type-ahead)
+                // Run automatic search only if the query length is 0 (full set) or 3+ (type-ahead filter)
                 if (this.query.length === 0 || this.query.length >= 3) {
                     this.fetchCards(1, true);
                 }
+                // If query is 1 or 2 characters, this function does nothing, making the name field fast.
             },
 
             /**
@@ -968,7 +968,6 @@
                 
                 if(nameQuery) {
                     // FIX: Use the specific Lucene syntax for wildcard search, ensuring proper quotes and handling of name
-                    // Replace existing quotes in the query before wrapping with quotes and wildcard
                     const cleanedQuery = nameQuery.replace(/"/g, '\\"');
                     q += ` name:"${cleanedQuery}*"`; 
                 }
