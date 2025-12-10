@@ -958,11 +958,12 @@
                 
                 if(nameQuery) {
                     const cleanedQuery = nameQuery.toLowerCase().replace(/"/g, '\\"');
+                    // Use name:*query* for reliable partial matching
                     q += ` name:*${cleanedQuery}*`; 
                 }
                 
-                // 2. Cache Busting Check
-                // This is the cache key for our custom sessionStorage cache
+                // 2. Cache Check (Bypass HTTP Cache using unique URL parameter)
+                const cacheBuster = Date.now(); // Unique value for every request
                 const sessionStorageKey = `search_${encodeURIComponent(q).toLowerCase()}`; 
                 const now = Date.now();
                 
@@ -988,14 +989,12 @@
                 // 3. API Fetch with Cache Buster in URL
                 const orderByParam = 'number';
                 const encodedQuery = encodeURIComponent(q); 
-                
-                // CRITICAL: Add a random number to the URL to bypass the browser's HTTP cache on every search
-                const cacheBuster = Date.now();
+                // CRITICAL: Add the cacheBuster to the URL
                 const url = `https://api.pokemontcg.io/v2/cards?q=${encodedQuery}&pageSize=250&select=id,name,number,images,tcgplayer&orderBy=${orderByParam}&_=${cacheBuster}`;
                 
                 try {
                     console.log("Running API Query:", url);
-                    // Use 'no-cache' to tell the browser not to rely on HTTP cache, even with the cache buster
+                    // Also explicitly set the cache to 'no-store' for good measure
                     const res = await fetch(url, { headers, cache: 'no-store' }); 
                     
                     if (!res.ok) {
