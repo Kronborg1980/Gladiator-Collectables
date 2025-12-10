@@ -5,34 +5,23 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>GLADIATOR • Empire Tracker</title>
 <link rel="icon" type="image/webp" href="https://raw.githubusercontent.com/Kronborg1980/Gladiator-Collectables/main/logogla.webp">
-
-<!-- Tailwind CDN with version to kill the warning -->
 <script src="https://cdn.tailwindcss.com/3.4.1"></script>
 <script>
   tailwind.config = {
     theme: {
       extend: {
-        fontFamily: {
-          cinzel: ['Cinzel', 'serif'],
-          inter: ['Inter', 'sans-serif']
-        },
-        colors: {
-          accent: '#00f2ff',
-          dark: '#020408'
-        }
+        fontFamily: { cinzel: ['Cinzel', 'serif'], inter: ['Inter', 'sans-serif'] },
+        colors: { accent: '#00f2ff', dark: '#020408' }
       }
     }
   }
 </script>
-
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <style>
   body { background:#020408; color:white; font-family:'Inter',sans-serif; margin:0; min-height:100vh; }
   .glass { background:rgba(10,15,25,0.94); backdrop-filter:blur(30px); border:1px solid rgba(0,242,255,0.2); border-radius:20px; }
   .glow { text-shadow:0 0 50px #00f2ff; }
-  select, button { transition:all .3s; }
-  select:focus, button:hover { border-color:#00f2ff; box-shadow:0 0 20px rgba(0,242,255,0.4); }
+  select { background:rgba(255,255,255,0.08); }
 </style>
 </head>
 <body class="p-8">
@@ -43,37 +32,34 @@
   <div class="glass p-10 text-center mb-10">
     <img src="https://raw.githubusercontent.com/Kronborg1980/Gladiator-Collectables/main/logogla.webp" class="w-28 h-28 mx-auto mb-6">
     <h1 class="text-8xl font-black" style="font-family:Cinzel; color:#00f2ff" class="glow">GLADIATOR</h1>
-    <p class="text-2xl text-cyan-400 mt-4">Empire: {{cards.length}} cards • Total Value: ${{totalValue}}</p>
+    <p class="text-2xl text-cyan-400 mt-4">Empire: {{ cardCount }} cards • Total Value: ${{ totalValue }}</p>
   </div>
 
-  <!-- 3-STEP SEARCH — WORKS 100% -->
+  <!-- 3-STEP SEARCH -->
   <div class="glass p-10 mb-10">
     <h2 class="text-5xl font-bold text-[#00f2ff] text-center mb-12 glow">CONQUER A CARD</h2>
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-10 max-w-5xl mx-auto">
 
-      <!-- ERA -->
       <div>
         <label class="block text-lg uppercase text-cyan-300 mb-4">1. ERA</label>
-        <select v-model="era" class="w-full p-6 text-xl rounded-xl bg-white/5 border border-white/20 focus:outline-none" @change="setId=''; card=null">
+        <select v-model="era" class="w-full p-6 text-xl rounded-xl bg-white/5 border border-white/20 focus:border-[#00f2ff] outline-none" @change="setId=''; card=null">
           <option value="">Select Era</option>
           <option v-for="e in eras" :value="e">{{e}}</option>
         </select>
       </div>
 
-      <!-- SET -->
       <div>
         <label class="block text-lg uppercase text-cyan-300 mb-4">2. SET</label>
-        <select v-model="setId" :disabled="!era" class="w-full p-6 text-xl rounded-xl bg-white/5 border border-white/20 focus:outline-none" @change="loadCards()">
+        <select v-model="setId" :disabled="!era" class="w-full p-6 text-xl rounded-xl bg-white/5 border border border-white/20 focus:border-[#00f2ff] outline-none" @change="loadCards()">
           <option value="">Select Set</option>
           <option v-for="s in setsInEra" :value="s.id">{{s.name}} ({{s.printedTotal}} cards)</option>
         </select>
       </div>
 
-      <!-- CARD -->
       <div>
         <label class="block text-lg uppercase text-cyan-300 mb-4">3. CARD</label>
-        <select v-model="card" :disabled="!setId" class="w-full p-6 text-xl rounded-xl bg-white/5 border border-white/20 focus:outline-none">
+        <select v-model="card" :disabled="!setId" class="w-full p-6 text-xl rounded-xl bg-white/5 border border-white/20 focus:border-[#00f2ff] outline-none">
           <option value="">Select Card</option>
           <option v-for="c in cardsInSet" :value="c">
             {{c.name}} #{{c.number}} — ${{price(c)}}
@@ -93,7 +79,7 @@
   <div class="glass p-10">
     <h2 class="text-5xl font-bold text-[#00f2ff] mb-10 text-center glow">YOUR EMPIRE</h2>
     <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-8">
-      <div v-for="c in cards" :key="c.id" class="glass rounded-2xl overflow-hidden hover:ring-4 hover:ring-[#00f2ff] transition cursor-pointer">
+      <div v-for="c in cards" :key="c.id" class="glass rounded-2xl overflow-hidden hover:ring-4 hover:ring-[#00f2ff] transition">
         <img :src="c.images.small" class="w-full">
         <div class="p-4 bg-gradient-to-t from-black/80">
           <p class="font-bold text-lg">{{c.name}}</p>
@@ -119,33 +105,26 @@ createApp({
     cards: JSON.parse(localStorage.getItem('gladiator_cards') || '[]')
   }},
   computed: {
-    setsInEra() { return this.era ? this.sets.filter(s => s.series === this.era) : [] },
-    totalValue() { return this.cards.reduce((a,c) => a + (c.market||0), 0).toFixed(0) }
+    cardCount() { return this.cards.length },
+    totalValue() { return this.cards.reduce((a,c) => a + (c.market||0), 0).toFixed(0) },
+    setsInEra() { return this.era ? this.sets.filter(s => s.series === this.era) : [] }
   },
   methods: {
     async loadSets() {
-      try {
-        const r = await fetch('https://api.pokemontcg.io/v2/sets?orderBy=-releaseDate', {
-          headers: { 'X-Api-Key': '7191ffb5-91d7-4fb7-bc30-94f1b854ee6e' }
-        });
-        const d = await r.json();
-        this.sets = d.data;
-        this.eras = [...new Set(d.data.map(s => s.series))].sort().reverse();
-      } catch (e) {
-        alert("API failed — check internet or API key");
-      }
+      const r = await fetch('https://api.pokemontcg.io/v2/sets?orderBy=-releaseDate', {
+        headers: { 'X-Api-Key': '7191ffb5-91d7-4fb7-bc30-94f1b854ee6e' }
+      });
+      const d = await r.json();
+      this.sets = d.data;
+      this.eras = [...new Set(d.data.map(s => s.series))].sort().reverse();
     },
     async loadCards() {
       if (!this.setId) return;
-      try {
-        const r = await fetch(`https://api.pokemontcg.io/v2/cards?q=set.id:${this.setId}&pageSize=250`, {
-          headers: { 'X-Api-Key': '7191ffb5-91d7-4fb7-bc30-94f1b854ee6e' }
-        });
-        const d = await r.json();
-        this.cardsInSet = d.data.sort((a,b) => a.number.localeCompare(b.number, undefined, {numeric: true}));
-      } catch (e) {
-        console.error(e);
-      }
+      const r = await fetch(`https://api.pokemontcg.io/v2/cards?q=set.id:${this.setId}&pageSize=250`, {
+        headers: { 'X-Api-Key': '7191ffb5-91d7-4fb7-bc30-94f1b854ee6e' }
+      });
+      const d = await r.json();
+      this.cardsInSet = d.data.sort((a,b) => a.number.localeCompare(b.number, undefined, {numeric: true}));
     },
     price(c) {
       const p = c.tcgplayer?.prices;
