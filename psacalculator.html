@@ -369,9 +369,31 @@
 
             <template v-else>
                 <div class="px-4 md:px-8 py-4 md:py-8 bg-[#080a10] grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 border-b border-white/5 shrink-0">
-                    <div><label class="text-[10px] text-gray-500 font-bold uppercase mb-2 block tracking-widest">1. Era</label><select v-model="selectedEra" class="glass-input"><option value="">Select Era</option><option v-for="era in eras" :value="era">{{ era }}</option></select></div>
-                    <div><label class="text-[10px] text-gray-500 font-bold uppercase mb-2 block tracking-widest">2. Set</label><select v-model="selectedSet" :disabled="!selectedEra" class="glass-input disabled:opacity-30"><option value="">Select Set</option><option v-for="s in filteredSets" :value="s.id">{{ s.name }}</option></select></div>
-                    <div class="col-span-2 md:col-span-1"><label class="text-[10px] text-gray-500 font-bold uppercase mb-2 block tracking-widest">3. Name</label><input v-model="query" @keyup.enter="fetchCards(1)" :disabled="!selectedSet" placeholder="e.g. Charizard" class="glass-input disabled:opacity-30 lowercase placeholder:uppercase"></div>
+                    <div>
+                        <label class="text-[10px] text-gray-500 font-bold uppercase mb-2 block tracking-widest">1. Era</label>
+                        <select v-model="selectedEra" class="glass-input">
+                            <option value="">Select Era</option>
+                            <option v-for="era in eras" :value="era">{{ era }}</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="text-[10px] text-gray-500 font-bold uppercase mb-2 block tracking-widest">2. Set</label>
+                        <select v-model="selectedSet" :disabled="!selectedEra" class="glass-input disabled:opacity-30">
+                            <option value="">Select Set</option>
+                            <option v-for="s in filteredSets" :value="s.id">{{ s.name }}</option>
+                        </select>
+                    </div>
+
+                    <div class="col-span-2 md:col-span-1">
+                        <label class="text-[10px] text-gray-500 font-bold uppercase mb-2 block tracking-widest">3. Card Name</label>
+                        <input v-if="!selectedSet" disabled placeholder="Select Set First" class="glass-input disabled:opacity-30">
+                        <select v-else v-model="selectedPokemon" class="glass-input" @change="query = ''">
+                            <option value="all" class="font-bold text-[#00f2ff]">★ LOAD FULL SET ★</option>
+                            <option v-for="name in setPokemonList" :value="name">{{ name }}</option>
+                        </select>
+                    </div>
+
                     <div>
                         <label class="text-[10px] text-[#00f2ff] font-bold uppercase mb-2 block tracking-widest">4. Sort</label>
                         <select v-model="searchSort" class="glass-input border-[#00f2ff] text-[#00f2ff]">
@@ -495,35 +517,39 @@
                 user: null, currentView: 'collection', currentBinder: null, 
                 localBinders: [], localCards: [], cloudBinders: [], cloudCards: [],
                 showSearch: false, detailCard: null, setsLoading: false, isSearching: false,
-                allSets: [], eras: [], selectedEra: "", selectedSet: "", query: "", targetBinder: 'master', searchResults: [],
-                cacheKey: 'gladiator_sets_v6',
                 
+                // DATA FOR DROPDOWNS
+                allSets: [], eras: [], 
+                setPokemonList: [], // Stores the list of names for the 3rd dropdown
+                
+                // SELECTIONS
+                selectedEra: "", 
+                selectedSet: "", 
+                selectedPokemon: "all", // Default to 'all' (Load Full Set)
+                
+                query: "", targetBinder: 'master', searchResults: [],
+                cacheKey: 'gladiator_sets_v6',
                 totalSetData: {}, 
                 
-                // MAIN PAGINATION
                 sortBy: 'profit', sortDesc: true, currentPage: 1, itemsPerPage: 30, 
-                
-                // SEARCH PAGINATION
                 searchPage: 1, searchPerPage: 30, addedIds: [], selectedIds: [], searchSort: 'number',
-
-                // MOD: New state for mobile navigation
-                showMobileNav: false,
-                isDesktop: true, // Will be updated on mount
+                showMobileNav: false, isDesktop: true,
             }
         },
         watch: {
             selectedEra(newEra, oldEra) {
                 if (newEra !== oldEra) {
                     this.selectedSet = ""; 
+                    this.setPokemonList = []; // Clear pokemon list
+                    this.selectedPokemon = "all";
                     this.searchResults = [];
-                    this.searchPage = 1;
-                    this.query = "";
                 }
             },
             selectedSet(newSet, oldSet) {
                 if (newSet !== oldSet) {
                     this.searchResults = []; 
-                    this.searchPage = 1;
+                    this.fetchSetPokemon(newSet); // Fetch names when set changes
+                    this.selectedPokemon = "all";
                     this.query = "";
                 }
             }
@@ -531,8 +557,6 @@
         mounted() {
             this.loadLocalData();
             this.loadSetsAPI(); 
-            
-            // MOD: Listen for resize events to update isDesktop
             window.addEventListener('resize', this.checkIsDesktop);
             this.checkIsDesktop();
             
@@ -547,39 +571,19 @@
             window.removeEventListener('resize', this.checkIsDesktop);
         },
         computed: {
-            // MOD: Helper to determine if we are on a desktop-sized screen (md breakpoint: 768px)
-            // Used to toggle mobile-specific UI elements.
-            isDesktop() {
-                return window.innerWidth >= 768;
-            },
+            isDesktop() { return window.innerWidth >= 768; },
             binders() { return this.user ? this.cloudBinders : this.localBinders; },
             cards() { return this.user ? this.cloudCards : this.localCards; },
-            headerTitle() {
-                if(this.currentView === 'collection') return 'Collection';
-                if(this.currentView === 'binders') return 'My Binders';
-                // MODIFIED: Display the current binder's name if set, otherwise "ROI Calculator"
-                return this.currentBinder ? this.currentBinder.name : 'ROI Calculator';
-            },
+            headerTitle() { return this.currentBinder ? this.currentBinder.name : 'ROI Calculator'; },
             
-            // FIX: This filter logic is updated to correctly filter cards
             displayCards() { 
                 let list = this.cards; 
-                
-                // If a specific binder object is selected, filter the list
                 if (this.currentBinder) {
-                    // Filter: only show cards where the binderId matches the currentBinder's ID.
                     list = this.cards.filter(c => c.binderId === this.currentBinder.id);
                 }
-                // If currentBinder is null (ROI Calculator/All Cards), list remains the full this.cards array.
-                
                 return list;
             },
-            
-            isAllSelected() {
-                return this.displayCards.length > 0 && this.selectedIds.length === this.displayCards.length;
-            },
-
-            // --- SMART SORTING (ROI TABLE) ---
+            isAllSelected() { return this.displayCards.length > 0 && this.selectedIds.length === this.displayCards.length; },
             sortedCards() {
                 let list = [...this.displayCards];
                 return list.sort((a, b) => {
@@ -595,54 +599,39 @@
                     return 0;
                 });
             },
-
-            // --- LOCAL PAGINATION ---
             totalPages() { return Math.ceil(this.sortedCards.length / this.itemsPerPage); },
             paginatedCards() {
                 const start = (this.currentPage - 1) * this.itemsPerPage;
                 return this.sortedCards.slice(start, start + this.itemsPerPage);
             },
-
-            // --- GROUP BY SET (COLLECTION VIEW) ---
             cardsBySet() {
                 const grouped = {};
-                
                 this.cards.forEach(c => {
-                    if(!grouped[c.set]) {
-                        grouped[c.set] = { cards: [], uniqueCardIds: new Set(), cardCounts: {}, uniqueCount: 0 };
-                    }
-                    
+                    if(!grouped[c.set]) grouped[c.set] = { cards: [], uniqueCardIds: new Set(), cardCounts: {}, uniqueCount: 0 };
                     grouped[c.set].cards.push(c);
                     grouped[c.set].uniqueCardIds.add(c.id); 
                     grouped[c.set].cardCounts[c.id] = (grouped[c.set].cardCounts[c.id] || 0) + 1;
                 });
-
                 for (const setName in grouped) {
                     grouped[setName].uniqueCount = grouped[setName].uniqueCardIds.size;
                     grouped[setName].cards.sort((a,b) => a.number.localeCompare(b.number, undefined, {numeric: true}));
                     const uniqueCards = [];
                     const seenIds = new Set();
                     grouped[setName].cards.forEach(card => {
-                        if (!seenIds.has(card.id)) {
-                            uniqueCards.push(card);
-                            seenIds.add(card.id);
-                        }
+                        if (!seenIds.has(card.id)) { uniqueCards.push(card); seenIds.add(card.id); }
                     });
                     grouped[setName].cards = uniqueCards;
                 }
-                
                 return grouped;
             },
-
-            // --- SEARCH SORT & PAGINATION (CLIENT-SIDE) ---
             filteredSearchList() {
                 let list = [...this.searchResults];
+                // Note: Client-side filtering is mostly redundant now since we filter via API, but good for backup
                 if(this.query) { list = list.filter(c => c.name.toLowerCase().includes(this.query.toLowerCase())); }
                 
                 list.sort((a, b) => {
                     const priceA = this.getCardPrice(a);
                     const priceB = this.getCardPrice(b);
-
                     if (this.searchSort === 'price-desc') return priceB - priceA;
                     if (this.searchSort === 'price-asc') return priceA - priceB;
                     if (this.searchSort === 'name') return a.name.localeCompare(b.name);
@@ -655,23 +644,17 @@
                 const start = (this.searchPage - 1) * this.searchPerPage;
                 return this.filteredSearchList.slice(start, start + this.searchPerPage);
             },
-
             totalValue() { return this.displayCards.reduce((sum, c) => sum + (c.market || 0), 0); },
             filteredSets() { return this.allSets.filter(s => s.series === this.selectedEra); },
             topCard() { return [...this.cards].sort((a,b) => b.market - a.market)[0]; }
         },
         methods: {
-            // MOD: Method to force close mobile nav on resize/interaction
             checkIsDesktop() {
                 this.isDesktop = window.innerWidth >= 768;
-                if (this.isDesktop) {
-                    this.showMobileNav = false;
-                }
+                if (this.isDesktop) this.showMobileNav = false;
             },
             loginWithGoogle() { if(auth) auth.signInWithPopup(provider).catch(e => alert(e.message)); },
             logout() { if(auth) auth.signOut(); },
-
-            // --- UI HELPERS ---
             getSortIcon(key) {
                 if(this.sortBy !== key) return 'fa-sort text-gray-700';
                 return this.sortDesc ? 'fa-caret-down text-[#00f2ff]' : 'fa-caret-up text-[#00f2ff]';
@@ -681,14 +664,11 @@
                 const b = this.binders.find(x => x.id === id);
                 return b ? b.name : 'Unknown';
             },
-            
             getSetTotal(setName) {
                 const set = this.totalSetData[setName];
                 if (!set) return '?';
                 return (set.total && set.total > 0) ? set.total : set.printedTotal;
             },
-            
-            // --- BULK DELETE ---
             toggleSelectAll() {
                 if (this.isAllSelected) this.selectedIds = [];
                 else this.selectedIds = this.displayCards.map(c => c.uid);
@@ -702,15 +682,8 @@
                 this.selectedIds = [];
                 this.saveData();
             },
-
-            // --- SORT & PAGE METHODS (LOCAL) ---
             setSort(key) {
-                if(this.sortBy === key) {
-                    this.sortDesc = !this.sortDesc; 
-                } else {
-                    this.sortBy = key;
-                    this.sortDesc = true; 
-                }
+                if(this.sortBy === key) { this.sortDesc = !this.sortDesc; } else { this.sortBy = key; this.sortDesc = true; }
                 this.currentPage = 1; 
             },
             nextPage() { 
@@ -727,12 +700,7 @@
                     if(this.searchPage > 1) this.searchPage--;
                 }
             },
-            
-            sortSearchResults() { 
-                this.searchPage = 1; 
-            },
-
-            // --- DATA ---
+            sortSearchResults() { this.searchPage = 1; },
             loadLocalData() {
                 const b = localStorage.getItem('glad_binders'); if(b) this.localBinders = JSON.parse(b);
                 const c = localStorage.getItem('glad_cards'); if(c) this.localCards = JSON.parse(c);
@@ -745,71 +713,39 @@
             },
             initCloudData() {
                 db.collection('users').doc(this.user.uid).collection('binders').onSnapshot(s => this.cloudBinders = s.docs.map(d => ({id: d.id, ...d.data()})));
-                
-                // NEW: Added updateMarketPrices call inside the snapshot logic
                 db.collection('users').doc(this.user.uid).collection('cards').onSnapshot(s => {
                     this.cloudCards = s.docs.map(d => ({uid: d.id, ...d.data()}));
-                    // Trigger the background price refresher once cards are loaded
                     this.updateMarketPrices();
                 });
             },
-
-            // --- "SMART" BACKGROUND PRICE REFRESHER ---
             async updateMarketPrices() {
-                // 1. Get all cards currently in the user's collection
                 const myCards = this.cards; 
                 if (myCards.length === 0) return;
-
-                // 2. Identify which ones need an update (older than 24 hours)
                 const oneDayAgo = Date.now() - (24 * 60 * 60 * 1000);
-                
-                // Filter cards that are "stale" (older than 24h or missing a timestamp)
                 const staleCards = myCards.filter(c => !c.lastUpdated || c.lastUpdated < oneDayAgo);
-                
-                if (staleCards.length === 0) return; // Everything is fresh!
+                if (staleCards.length === 0) return; 
 
                 console.log(`Auto-refreshing prices for ${staleCards.length} cards...`);
-
-                // 3. The API allows fetching explicitly by ID string (e.g. "id:xy1-1 OR id:xy1-2")
-                // We do this in chunks to not break the URL limit
                 const chunkSize = 10;
-                
                 for (let i = 0; i < staleCards.length; i += chunkSize) {
                     const chunk = staleCards.slice(i, i + chunkSize);
                     const query = chunk.map(c => `id:${c.id}`).join(' OR ');
-                    
                     try {
                         const res = await fetch(`https://api.pokemontcg.io/v2/cards?q=${query}&select=id,tcgplayer`);
                         const data = await res.json();
-                        
-                        // 4. Update Firestore with the new prices
-                        const batch = db.batch(); // Use a batch for efficiency
-                        
+                        const batch = db.batch(); 
                         data.data.forEach(apiCard => {
-                            // Find the matching card in our Firestore list
-                            // Note: A user might have 3 copies of Charizard, we need to update all of them
                             const cardsToUpdate = this.cards.filter(c => c.id === apiCard.id);
-                            
                             cardsToUpdate.forEach(localCard => {
-                                const newMarket = this.getCardPrice(apiCard); // Re-use your pricing logic
-                                
+                                const newMarket = this.getCardPrice(apiCard); 
                                 const ref = db.collection('users').doc(this.user.uid).collection('cards').doc(localCard.uid);
-                                batch.update(ref, { 
-                                    market: newMarket,
-                                    lastUpdated: Date.now() 
-                                });
+                                batch.update(ref, { market: newMarket, lastUpdated: Date.now() });
                             });
                         });
-                        
                         await batch.commit();
-                        console.log('Batch updated successfully');
-                        
-                    } catch (e) {
-                        console.error("Auto-refresh failed", e);
-                    }
+                    } catch (e) { console.error("Auto-refresh failed", e); }
                 }
             },
-
             createBinder() {
                 const name = prompt("Name your new Collection (e.g. Eevee Heroes):");
                 if(!name) return;
@@ -829,7 +765,7 @@
                     market: market, 
                     rawCost: market, fee: 15, targetGrade: 10,
                     binderId: this.targetBinder === 'master' ? null : this.targetBinder,
-                    lastUpdated: Date.now() // Important for cache logic
+                    lastUpdated: Date.now() 
                 };
                 if(this.user) db.collection('users').doc(this.user.uid).collection('cards').add(cardData);
                 else { cardData.uid = Date.now().toString(); this.localCards.push(cardData); this.saveData(); }
@@ -844,12 +780,10 @@
                 this.detailCard = null; 
             },
             updateCardBinder(card) {
-                // If binderId is set to null, ensure it is saved as null (for 'Master Only')
                 const binderUpdate = { binderId: card.binderId === undefined ? null : card.binderId };
                 if(this.user) db.collection('users').doc(this.user.uid).collection('cards').doc(card.uid).update(binderUpdate);
                 else this.saveData();
             },
-
             getEstValue(c) {
                 const raw = c.market || 0;
                 if(c.targetGrade == 10) return raw * 3.2;
@@ -857,43 +791,26 @@
                 return raw * 0.85;
             },
             getProfit(c) { return this.getEstValue(c) - ((c.rawCost || 0) + (c.fee || 0)); },
-
-            // FIX: Unified selectBinder to use the calculator view for displaying the filtered list.
-            selectBinder(b) { 
-                this.currentBinder = b; 
-                this.currentPage = 1; 
-                this.showMobileNav = false; 
-            }, 
+            selectBinder(b) { this.currentBinder = b; this.currentPage = 1; this.showMobileNav = false; }, 
             getBinderCount(id) { return this.cards.filter(c => c.binderId === id).length; },
             openSearch() { 
                 this.showSearch = true; this.searchResults = []; this.searchPage = 1; this.query = '';
-                // Set target binder for new cards based on current view/binder
                 if(this.currentView === 'calculator' && this.currentBinder) this.targetBinder = this.currentBinder.id;
                 else this.targetBinder = 'master';
             },
             openCardDetail(c) { this.detailCard = c; },
             formatNumber(n) { return (n||0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}); },
-            
             getCardPrice(c) { 
                 const prices = c.tcgplayer?.prices;
                 if (!prices) return 0;
-                
-                const marketPrices = Object.values(prices)
-                    .map(priceDetail => priceDetail?.market)
-                    .filter(price => price > 0); 
-
-                if (c.tcgplayer?.market && c.tcgplayer.market > 0) {
-                    marketPrices.push(c.tcgplayer.market);
-                }
-
+                const marketPrices = Object.values(prices).map(p => p?.market).filter(p => p > 0); 
+                if (c.tcgplayer?.market && c.tcgplayer.market > 0) marketPrices.push(c.tcgplayer.market);
                 return marketPrices.length > 0 ? Math.max(...marketPrices) : 0;
             },
-            
             async loadSetsAPI() {
                 this.setsLoading = true;
                 const cacheKeySets = 'gladiator_all_sets_v2';
                 const c = localStorage.getItem(cacheKeySets);
-                
                 if(c) { 
                     try {
                         const data = JSON.parse(c);
@@ -902,57 +819,59 @@
                         this.totalSetData = data.totalSetData; 
                         this.setsLoading = false;
                         return;
-                    } catch (e) {
-                        console.error("Error parsing cached sets:", e);
-                    }
+                    } catch (e) { console.error("Error parsing sets:", e); }
                 }
-                
                 try {
                     const res = await fetch('https://api.pokemontcg.io/v2/sets?select=id,name,series,releaseDate,printedTotal,total&orderBy=-releaseDate');
-                    
-                    if (!res.ok) {
-                        throw new Error(`API fetch failed with status: ${res.status}`);
-                    }
-
+                    if (!res.ok) throw new Error(`API fetch failed: ${res.status}`);
                     const data = await res.json();
-                    
                     const setSizeMap = {};
-                    data.data.forEach(s => {
-                        setSizeMap[s.name] = { total: s.total, printedTotal: s.printedTotal };
-                    });
-
+                    data.data.forEach(s => { setSizeMap[s.name] = { total: s.total, printedTotal: s.printedTotal }; });
                     this.allSets = data.data; 
                     this.eras = [...new Set(data.data.map(s => s.series))];
                     this.totalSetData = setSizeMap; 
+                    localStorage.setItem(cacheKeySets, JSON.stringify({ sets: this.allSets, eras: this.eras, totalSetData: this.totalSetData }));
+                } catch(error) { console.error("CRITICAL: Failed to sync sets.", error); } finally { this.setsLoading = false; }
+            },
+
+            // --- NEW FUNCTION: Fetch just the names of Pokemon in the set ---
+            async fetchSetPokemon(setId) {
+                if(!setId) return;
+                try {
+                    // Fetch ONLY the name field for all cards in the set (very small download)
+                    const res = await fetch(`https://api.pokemontcg.io/v2/cards?q=set.id:${setId}&select=name&pageSize=250`);
+                    const data = await res.json();
                     
-                    localStorage.setItem(cacheKeySets, JSON.stringify({
-                        sets: this.allSets, 
-                        eras: this.eras, 
-                        totalSetData: this.totalSetData
-                    }));
-                    
-                } catch(error) {
-                    console.error("CRITICAL: Failed to synchronize set database.", error);
-                } finally {
-                    this.setsLoading = false;
+                    // Create a unique list of names (remove duplicates like "Charizard" and "Charizard")
+                    const uniqueNames = [...new Set(data.data.map(c => c.name))].sort();
+                    this.setPokemonList = uniqueNames;
+                } catch(e) {
+                    console.error("Failed to load pokemon list", e);
                 }
             },
-            
+
             async fetchCards(page = 1) {
                 if(!this.selectedSet) return;
                 this.isSearching = true; 
                 this.searchPage = page; 
 
-                let nameQuery = this.query ? this.query.trim().toLowerCase() : '';
+                // --- MODIFIED SEARCH LOGIC ---
+                // 1. Base Query: Always filter by the Set ID
                 let q = `set.id:${this.selectedSet}`; 
-                if(nameQuery) {
-                    q += ` name:"${nameQuery}*"`;
-                }
                 
-                const cacheKey = `search_${this.selectedSet}_${nameQuery}`; 
+                // 2. Pokemon Dropdown Logic
+                if (this.selectedPokemon !== 'all') {
+                    // If a specific Pokemon is selected in the dropdown, search EXACTLY for that name
+                    q += ` name:"${this.selectedPokemon}"`;
+                } 
+                else if (this.query) {
+                    // If "Load Full Set" is selected BUT the user typed in the manual box
+                    q += ` name:"${this.query.trim()}*"`;
+                }
+
+                const cacheKey = `search_${this.selectedSet}_${this.selectedPokemon}_${this.query}`; 
                 const now = Date.now();
                 
-                // 1. Try to load from Cache
                 try {
                     const cachedData = sessionStorage.getItem(cacheKey);
                     if (cachedData) {
@@ -964,44 +883,27 @@
                             return;
                         }
                     }
-                } catch (e) {
-                    // If cache reading fails, just ignore and fetch fresh
-                    console.log("Cache read error, fetching fresh.");
-                }
+                } catch (e) { console.log("Cache read error, fetching fresh."); }
 
-                // 2. Fetch from API
                 try {
                     const res = await fetch(`https://api.pokemontcg.io/v2/cards?q=${q}&pageSize=250&select=id,name,number,images,tcgplayer&orderBy=${this.searchSort.replace('-', '')}`);
-                    
-                    if (!res.ok) {
-                        throw new Error(`API fetch failed with status: ${res.status}`);
-                    }
-                    
+                    if (!res.ok) throw new Error(`API fetch failed: ${res.status}`);
                     const data = await res.json();
                     this.searchResults = data.data || [];
                     this.searchPage = page;
 
-                    // 3. Try to Save to Cache (Safety Block)
-                    // If this fails (Quota Exceeded), it won't crash the app anymore
                     if (this.searchResults.length > 0) {
                         try {
                             const cache = { timestamp: now, results: this.searchResults };
                             sessionStorage.setItem(cacheKey, JSON.stringify(cache));
-                        } catch (storageError) {
-                            console.warn("Session storage is full. Search results will not be cached for next time.", storageError);
-                            // Optional: Clear cache to make room for next time
-                            // sessionStorage.clear(); 
-                        }
+                        } catch (storageError) { console.warn("Session storage is full.", storageError); }
                     }
-
                 } catch(e) { 
                     console.error("API Fetch Error:", e);
                     this.searchResults = []; 
                     alert("Search failed. Please try again.");
                 } 
-                finally { 
-                    this.isSearching = false; 
-                }
+                finally { this.isSearching = false; }
             }
         }
     }).mount('#app');
