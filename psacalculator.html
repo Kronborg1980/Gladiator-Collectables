@@ -726,56 +726,76 @@ const { createApp } = Vue;
             },
 
             // POKEPRICE API METHODS
-            async loadSetsAPI() {
-                this.setsLoading = true;
-                const cacheKey = 'gladiator_pokeprice_sets_final_2025';
-                const cached = localStorage.getItem(cacheKey);
-                if (cached) {
-                    try {
-                        const d = JSON.parse(cached);
-                        this.allSets = d.sets;
-                        this.eras = d.eras;
-                        this.totalSetData = d.totalSetData;
-                        this.setsLoading = false;
-                        return;
-                    } catch(e) {}
-                }
+          // In your <script> block, replace the existing loadSetsAPI method:
 
-                try {
-                    const res = await fetch('https://api.pokemonpricetracker.com/v1/sets', {
-                        headers: { 'X-API-Key': POKEPRICE_KEY }
-                    });
-                    const json = await res.json();
+async loadSetsAPI() {
+    this.setsLoading = true;
+    const cacheKey = 'gladiator_pokeprice_sets_final_2025';
+    const cached = localStorage.getItem(cacheKey);
+    
+    // Load from cache if available
+    if (cached) {
+        try {
+            const d = JSON.parse(cached);
+            this.allSets = d.sets;
+            this.eras = d.eras;
+            this.totalSetData = d.totalSetData;
+            this.setsLoading = false;
+            console.log("Loaded sets from local cache.");
+            return;
+        } catch(e) {
+            console.warn("Failed to parse cached sets data. Fetching new data.", e);
+        }
+    }
 
-                    const setMap = {};
-                    json.data.forEach(s => {
-                        setMap[s.name] = { total: s.totalCards || s.printedTotal, printedTotal: s.printedTotal };
-                    });
+    try {
+        const res = await fetch('https://api.pokemonpricetracker.com/v1/sets', {
+            headers: { 'X-API-Key': POKEPRICE_KEY }
+        });
 
-                    this.allSets = json.data.map(s => ({
-                        id: s.id,
-                        name: s.name,
-                        series: s.series,
-                        releaseDate: s.releaseDate,
-                        printedTotal: s.printedTotal,
-                        total: s.totalCards
-                    }));
-                    this.eras = [...new Set(json.data.map(s => s.series))];
-                    this.totalSetData = setMap;
+        // 🛑 NEW: Check if the response was successful (e.g., status 200)
+        if (!res.ok) {
+            const errorText = await res.text();
+            throw new Error(`API Fetch Failed: Status ${res.status} - ${errorText}`);
+        }
 
-                    localStorage.setItem(cacheKey, JSON.stringify({
-                        sets: this.allSets,
-                        eras: this.eras,
-                        totalSetData: this.totalSetData
-                    }));
+        const json = await res.json();
+        
+        // 🛑 NEW: Check if the expected data array exists
+        if (!json.data || !Array.isArray(json.data) || json.data.length === 0) {
+             throw new Error("API returned success, but 'data' array is empty or missing.");
+        }
 
-                } catch(e) {
-                    console.error("Set API Error:", e);
-                    // alert("Check internet – using cached sets"); // Removed aggressive alert to prevent blocking
-                } finally {
-                    this.setsLoading = false;
-                }
-            },
+        const setMap = {};
+        json.data.forEach(s => {
+            setMap[s.name] = { total: s.totalCards || s.printedTotal, printedTotal: s.printedTotal };
+        });
+
+        this.allSets = json.data.map(s => ({
+            id: s.id,
+            name: s.name,
+            series: s.series,
+            releaseDate: s.releaseDate,
+            printedTotal: s.printedTotal,
+            total: s.totalCards
+        }));
+        this.eras = [...new Set(json.data.map(s => s.series))];
+        this.totalSetData = setMap;
+
+        localStorage.setItem(cacheKey, JSON.stringify({
+            sets: this.allSets,
+            eras: this.eras,
+            totalSetData: this.totalSetData
+        }));
+        console.log(`Successfully loaded ${this.eras.length} eras.`);
+
+    } catch(e) {
+        console.error("Critical Set Loading Error:", e);
+        // Fallback or display a persistent error message here if needed
+    } finally {
+        this.setsLoading = false;
+    }
+},
 
             async fetchCards(page = 1) {
                 if (!this.selectedSet) return;
