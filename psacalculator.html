@@ -1,461 +1,149 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GLADIATOR X | Ultimate Pokémon TCG Empire Tracker</title>
-    <link rel="icon" type="image/webp" href="https://raw.githubusercontent.com/Kronborg1980/Gladiator-Collectables/main/logogla.webp">
-    <link rel="manifest" href="data:application/manifest+json,{
-        &quot;name&quot;: &quot;Gladiator X&quot;,
-        &quot;short_name&quot;: &quot;GX&quot;,
-        &quot;start_url&quot;: &quot;.&quot;,
-        &quot;display&quot;: &quot;standalone&quot;,
-        &quot;background_color&quot;: &quot;#020408&quot;,
-        &quot;theme_color&quot;: &quot;#00f2ff&quot;,
-        &quot;icons&quot;: [{&quot;src&quot;: &quot;https://raw.githubusercontent.com/Kronborg1980/Gladiator-Collectables/main/logogla.webp&quot;, &quot;sizes&quot;: &quot;192x192&quot;, &quot;type&quot;: &quot;image/webp&quot;}]
-    }">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-    <script src="https://unpkg.com/fuse.js@7/dist/fuse.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: { cinzel: ['Cinzel', 'serif'], inter: ['Inter', 'sans-serif'] },
-                    colors: { accent: '#00f2ff', dark: '#020408', glass: 'rgba(10,15,25,0.9)' },
-                    animation: { 'float': 'float 6s ease-in-out infinite', 'pulse-glow': 'pulse 3s infinite' },
-                    keyframes: { float: { '0%,100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-20px)' } } }
-                }
-            }
-        }
-    </script>
-    <style>
-        :root { --accent: #00f2ff; --dark: #020408; --glass: rgba(10,15,25,0.9); --glass-border: rgba(0,242,255,0.15); }
-        body { background: var(--dark); color: white; font-family: 'Inter', sans-serif; overflow-x: hidden; }
-        .glass { background: var(--glass); backdrop-filter: blur(25px); border: 1px solid var(--glass-border); box-shadow: 0 20px 60px rgba(0,0,0,0.7); border-radius: 20px; }
-        .glow { text-shadow: 0 0 40px rgba(0,242,255,0.6); }
-        .card-hover { transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        .card-hover:hover { transform: translateY(-15px) scale(1.05); box-shadow: 0 30px 60px rgba(0,242,255,0.3); }
-        .roi-table th { @apply text-xs uppercase text-gray-400 font-bold; }
-        .roi-table td { @apply py-3; }
-        .heatmap { background: linear-gradient(to right, red, yellow, green); height: 20px; border-radius: 10px; }
-        ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 3px; }
-        .grade-yes { background: rgba(0,255,100,0.15); border-left: 4px solid #00ff00; }
-        .grade-no { background: rgba(255,0,0,0.15); border-left: 4px solid #ff0066; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GLADIATOR X</title>
+<link rel="icon" type="image/webp" href="https://raw.githubusercontent.com/Kronborg1980/Gladiator-Collectables/main/logogla.webp">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root { --a:#00f2ff; --d:#020408; --g:rgba(10,15,25,0.94); }
+  body { margin:0; background:var(--d); color:white; font-family:'Inter',sans-serif; }
+  .glass { background:var(--g); backdrop-filter:blur(30px); border:1px solid rgba(0,242,255,0.2); }
+  .glow { text-shadow:0 0 30px var(--a); }
+  .grade-yes { background:rgba(0,255,100,0.12); border-left:4px solid #0f0; }
+  .grade-no  { background:rgba(255,0,0,0.12);   border-left:4px solid #f66; }
+</style>
 </head>
-<body class="min-h-screen p-4 lg:p-8">
-    <div id="app" v-cloak>
-        <!-- Loading Screen -->
-        <div v-if="loading" class="fixed inset-0 flex items-center justify-center bg-dark z-50">
-            <div class="text-center">
-                <img src="https://raw.githubusercontent.com/Kronborg1980/Gladiator-Collectables/main/logogla.webp" class="w-32 h-32 mx-auto mb-8 animate-float">
-                <h1 class="text-6xl font-cinzel font-black text-accent glow">GLADIATOR X</h1>
-                <p class="text-xl text-gray-400 mt-4 animate-pulse">Loading Empire...</p>
-            </div>
-        </div>
+<body>
 
-        <!-- Main App -->
-        <div v-else class="flex h-screen">
-            <!-- Mobile Menu Toggle -->
-            <button v-if="!isDesktop" @click="showMobileMenu = !showMobileMenu" class="lg:hidden fixed top-4 left-4 z-50 glass p-3 rounded-full">
-                <i class="fa-solid fa-bars text-accent"></i>
-            </button>
-
-            <!-- Sidebar -->
-            <aside :class="['w-full lg:w-80 glass h-full z-40 transition-transform', showMobileMenu ? 'translate-x-0' : '-translate-x-full lg:translate-x-0']">
-                <div class="p-8 flex flex-col h-full">
-                    <div class="text-center mb-8">
-                        <img src="https://raw.githubusercontent.com/Kronborg1980/Gladiator-Collectables/main/logogla.webp" class="w-20 h-20 mx-auto mb-4 animate-pulse-glow">
-                        <h1 class="text-3xl font-cinzel font-bold text-accent glow">GLADIATOR X</h1>
-                        <p class="text-xs text-gray-400 uppercase tracking-widest">Empire Tracker</p>
-                    </div>
-                    <nav class="flex-1 space-y-2">
-                        <button @click="currentView = 'collection'; showMobileMenu = false" :class="['w-full text-left p-4 rounded-xl flex items-center gap-3', currentView === 'collection' ? 'bg-accent/10 text-accent' : 'text-gray-300 hover:bg-white/5']">
-                            <i class="fa-solid fa-layer-group"></i> Collection
-                        </button>
-                        <button @click="currentView = 'roi'; showMobileMenu = false" :class="['w-full text-left p-4 rounded-xl flex items-center gap-3', currentView === 'roi' ? 'bg-accent/10 text-accent' : 'text-gray-300 hover:bg-white/5']">
-                            <i class="fa-solid fa-calculator"></i> ROI Arena
-                        </button>
-                        <button @click="currentView = 'binders'; showMobileMenu = false" :class="['w-full text-left p-4 rounded-xl flex items-center gap-3', currentView === 'binders' ? 'bg-accent/10 text-accent' : 'text-gray-300 hover:bg-white/5']">
-                            <i class="fa-solid fa-folder-open"></i> Binders
-                        </button>
-                    </nav>
-                    <div class="mt-8 space-y-2">
-                        <button @click="openSearch" class="w-full bg-accent text-dark font-bold py-3 rounded-xl hover:bg-white transition shadow-2xl shadow-accent/30">
-                            <i class="fa-solid fa-plus mr-2"></i> Conquer Card
-                        </button>
-                        <button v-if="user" @click="logout" class="w-full text-red-400 text-sm hover:text-red-300">Sign Out</button>
-                        <button v-else @click="login" class="w-full text-accent text-sm">Sign In</button>
-                    </div>
-                </div>
-            </aside>
-
-            <!-- Main Content -->
-            <main class="flex-1 overflow-y-auto ml-0 lg:ml-80 p-4">
-                <!-- Header -->
-                <header class="glass p-6 mb-6 flex justify-between items-center">
-                    <div>
-                        <h2 class="text-3xl font-cinzel font-bold text-accent glow">{{ currentView.toUpperCase() }}</h2>
-                        <p class="text-cyan-400 mt-1">Empire Value: ${{ formatCurrency(totalValue) }} | Cards: {{ cards.length }}</p>
-                    </div>
-                    <input v-model="searchQuery" placeholder="Search Empire..." class="glass px-4 py-2 rounded-xl text-accent bg-transparent border border-accent/30 focus:outline-none">
-                </header>
-
-                <!-- Collection View -->
-                <div v-if="currentView === 'collection'">
-                    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 mb-8">
-                        <div v-for="card in filteredCards" :key="card.id" class="glass p-4 card-hover cursor-pointer" @click="openDetail(card)">
-                            <img :src="card.image" class="w-full h-48 object-cover rounded-lg mb-2">
-                            <h3 class="font-bold text-sm truncate">{{ card.name }}</h3>
-                            <p class="text-xs text-gray-400">{{ card.set }}</p>
-                            <p class="text-accent font-bold">${{ card.market }}</p>
-                        </div>
-                    </div>
-                    <!-- Heatmap -->
-                    <div class="glass p-6">
-                        <h3 class="text-xl font-bold mb-4">Set Completion Heatmap</h3>
-                        <div class="grid grid-cols-3 md:grid-cols-6 gap-4">
-                            <div v-for="set in sets.slice(0,6)" :key="set.id" class="text-center">
-                                <p class="text-sm mb-2">{{ set.name }}</p>
-                                <div class="heatmap" :style="{ width: '100%', backgroundSize: '100% 100%', backgroundImage: `linear-gradient(to right, red ${100 - set.completion}%, green ${set.completion}%)` }"></div>
-                                <p class="text-xs mt-1">{{ set.completion }}% Complete</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- ROI View -->
-                <div v-if="currentView === 'roi'">
-                    <div class="glass overflow-x-auto">
-                        <table class="roi-table w-full">
-                            <thead><tr><th>Card</th><th>Cost</th><th>PSA 10 Est.</th><th>BGS 9.5 Est.</th><th>CGC 10 Est.</th><th>Best ROI</th><th>Action</th></tr></thead>
-                            <tbody>
-                                <tr v-for="card in filteredCards" :key="card.id" :class="getBestProfit(card) > 0 ? 'grade-yes' : 'grade-no'">
-                                    <td class="flex items-center gap-3">
-                                        <img :src="card.image" class="w-10 rounded">
-                                        <div>{{ card.name }} ({{ card.set }})</div>
-                                    </td>
-                                    <td>${{ card.cost || 0 }}</td>
-                                    <td>${{ getEstValue(card, 'PSA10') }}</td>
-                                    <td>${{ getEstValue(card, 'BGS9.5') }}</td>
-                                    <td>${{ getEstValue(card, 'CGC10') }}</td>
-                                    <td :class="getBestProfit(card) > 0 ? 'text-green-400' : 'text-red-400'">${{ getBestProfit(card) }} ({{ getBestROIPct(card) }}%)</td>
-                                    <td><button @click="gradeCard(card)" class="bg-green-500 px-3 py-1 rounded text-sm">Grade</button></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                    <!-- Price Chart -->
-                    <div class="glass p-6 mt-6">
-                        <h3 class="text-xl font-bold mb-4">Price Trends (Last 30 Days)</h3>
-                        <canvas id="priceChart" height="200"></canvas>
-                    </div>
-                </div>
-
-                <!-- Binders View -->
-                <div v-if="currentView === 'binders'">
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
-                        <div v-for="binder in binders" :key="binder.id" class="glass p-6 cursor-pointer hover:bg-accent/5" @click="selectBinder(binder)">
-                            <i class="fa-solid fa-folder text-4xl text-accent mb-4"></i>
-                            <h3 class="font-bold">{{ binder.name }}</h3>
-                            <p class="text-sm text-gray-400">{{ binder.cards.length }} Cards</p>
-                        </div>
-                    </div>
-                    <!-- Drag Zone for Current Binder -->
-                    <div v-if="currentBinder" id="binderDrop" class="glass mt-6 p-6 min-h-[200px]">
-                        <h3>Drag Cards Here: {{ currentBinder.name }}</h3>
-                        <div class="grid grid-cols-4 gap-4 mt-4" :id="`binder-${currentBinder.id}`">
-                            <div v-for="card in currentBinder.cards" :key="card.id" class="glass p-2 card-hover" draggable="true" @dragstart="dragStart(card)">
-                                <img :src="card.image" class="w-full h-20 object-cover rounded">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Search Modal -->
-                <div v-if="showSearch" class="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-                    <div class="glass w-full max-w-2xl p-8 rounded-2xl max-h-[80vh] overflow-y-auto">
-                        <h2 class="text-2xl font-cinzel text-accent mb-4">Conquer New Card</h2>
-                        <input v-model="searchQuery" @keyup.enter="fetchCards" placeholder="Search cards..." class="w-full glass px-3 py-2 rounded-xl mb-4">
-                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 max-h-96 overflow-y-auto">
-                            <div v-for="result in searchResults" :key="result.id" @click="addCard(result); showSearch=false" class="glass p-3 cursor-pointer hover:border-accent border rounded-xl">
-                                <img :src="result.images.small" class="w-full h-32 object-cover rounded mb-2">
-                                <h4 class="font-bold text-sm truncate">{{ result.name }}</h4>
-                                <p class="text-xs text-gray-400">${{ getCardPrice(result) }}</p>
-                            </div>
-                        </div>
-                        <button @click="showSearch=false" class="mt-4 text-gray-400">Close</button>
-                    </div>
-                </div>
-
-                <!-- Detail Modal -->
-                <div v-if="selectedCard" class="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-                    <div class="glass w-full max-w-md p-6 rounded-2xl">
-                        <img :src="selectedCard.image" class="w-full h-64 object-cover rounded mb-4">
-                        <h3 class="text-xl font-bold">{{ selectedCard.name }}</h3>
-                        <p class="text-gray-400">{{ selectedCard.set }}</p>
-                        <p class="text-accent font-bold text-lg">${{ selectedCard.market }}</p>
-                        <div class="mt-4 space-y-2">
-                            <p>Est. PSA 10: ${{ getEstValue(selectedCard, 'PSA10') }}</p>
-                            <p>BGS 9.5: ${{ getEstValue(selectedCard, 'BGS9.5') }}</p>
-                            <p>CGC 10: ${{ getEstValue(selectedCard, 'CGC10') }}</p>
-                            <p>Best Profit: ${{ getBestProfit(selectedCard) }} ({{ getBestROIPct(selectedCard) }}%)</p>
-                        </div>
-                        <button @click="selectedCard = null" class="mt-4 w-full bg-red-500 py-2 rounded">Dismiss</button>
-                    </div>
-                </div>
-            </main>
-        </div>
+<div id="app" v-cloak class="min-h-screen flex flex-col">
+  <header class="glass p-4 flex justify-between items-center border-b border-white/10">
+    <div class="flex items-center gap-4">
+      <img src="https://raw.githubusercontent.com/Kronborg1980/Gladiator-Collectables/main/logogla.webp" class="w-12 h-12">
+      <div>
+        <h1 class="text-3xl font-bold" style="font-family:Cinzel;color:var(--a)" class="glow">GLADIATOR X</h1>
+        <p class="text-sm text-cyan-400">Empire: ${{f(totalValue)}} • {{cards.length}} cards</p>
+      </div>
     </div>
+    <button @click="showSearch=true" class="bg-[var(--a)] hover:bg-white text-black font-bold px-6 py-3 rounded-lg">Add Card</button>
+  </header>
 
-    <script>
-        // API Keys
-        const TCG_API_KEY = '7191ffb5-91d7-4fb7-bc30-94f1b854ee6e';
-        const POKEMON_TCG_HEADERS = { 'X-Api-Key': TCG_API_KEY };
+  <div class="flex flex-1">
+    <aside class="w-80 glass border-r border-white/10 overflow-y-auto">
+      <nav class="p-4 space-y-1">
+        <button @click="view='collection'" :class="view==='collection'?'text-[var(--a)] font-bold':''" class="w-full text-left p-3 rounded hover:bg-white/5">Collection</button>
+        <button @click="view='roi'"        :class="view==='roi'?'text-[var(--a)] font-bold':''"        class="w-full text-left p-3 rounded hover:bg-white/5">ROI Arena</button>
+        <button @click="view='binders'"    :class="view==='binders'?'text-[var(--a)] font-bold':''"    class="w-full text-left p-3 rounded hover:bg-white/5">Binders</button>
+      </nav>
+      <div class="p-4 border-t border-white/10">
+        <div class="flex justify-between mb-2"><span class="text-xs uppercase text-gray-400">Binders</span><button @click="newBinder" class="text-[var(--a)] text-xs">+ New</button></div>
+        <div v-for="b in binders" class="flex justify-between py-1 px-2 rounded hover:bg-white/5 group">
+          <span @click="currentBinder=b; view='roi'" class="cursor-pointer">{{b.name}} ({{count(b.id)}})</span>
+          <button v-if="b.id!=='master'" @click="delBinder(b.id)" class="opacity-0 group-hover:opacity-100 text-red-400 text-xs">Delete</button>
+        </div>
+      </div>
+    </aside>
 
-        // Firebase
-        const firebaseConfig = {
-            apiKey: "AIzaSyBnb9VlLk4sNbj89beWtb2hmLGsvhgb6TE",
-            authDomain: "gladiator-portfolio.firebaseapp.com",
-            projectId: "gladiator-portfolio",
-            storageBucket: "gladiator-portfolio.firebasestorage.app",
-            messagingSenderId: "61051937804",
-            appId: "1:61051937804:web:535cbbcb5417c4bde67a29"
-        };
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const db = firebase.firestore();
+    <main class="flex-1 p-6 overflow-y-auto">
+      <div v-if="view==='collection'" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-6">
+        <div v-for="c in cards" :key="c.uid" @click="detail=c" class="glass rounded-xl overflow-hidden cursor-pointer hover:ring-2 ring-[var(--a)] transition">
+          <img :src="c.image" class="w-full aspect-[0.7] object-cover">
+          <div class="p-3">
+            <p class="font-bold text-sm truncate">{{c.name}}</p>
+            <p class="text-xs text-gray-400">{{c.set}}</p>
+            <p class="text-[var(--a)] font-bold">${{c.market.toFixed(0)}}</p>
+          </div>
+        </div>
+      </div>
 
-        // IndexedDB for offline cache
-        const dbPromise = indexedDB.open('GladiatorX', 1);
-        dbPromise.onupgradeneeded = (e) => {
-            const db = e.target.result;
-            db.createObjectStore('cards', { keyPath: 'id' });
-            db.createObjectStore('prices', { keyPath: 'cardId' });
-        };
+      <div v-if="view==='roi'" class="glass rounded-2xl overflow-hidden">
+        <table class="w-full text-sm">
+          <thead class="bg-white/5 text-xs uppercase text-gray-400">
+            <tr>
+              <th class="p-4 text-left">Card</th>
+              <th class="p-4 text-right">Raw Cost</th>
+              <th class="p-4 text-right">Fee</th>
+              <th class="p-4 text-right">PSA10</th>
+              <th class="p-4 text-right">Profit</th>
+              <th class="p-4 text-center">Decision</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="c in visible" :key="c.uid" :class="profit(c)>100?'grade-yes':'grade-no'" class="border-t border-white/5 hover:bg-white/5">
+              <td class="p-4 flex items-center gap-3">
+                <img :src="c.image" class="w-12 rounded">
+                <div><div class="font-bold">{{c.name}}</div><div class="text-xs text-gray-400">{{c.set}}</div></div>
+              </td>
+              <td class="p-4 text-right"><input v-model.number="c.rawCost" @change="save" type="number" class="bg-transparent w-20 text-right border-b border-gray-600 focus:border-[var(--a)] outline-none"></td>
+              <td class="p-4 text-right"><input v-model.number="c.fee" @change="save" type="number" class="bg-transparent w-16 text-right border-b border-gray-600 focus:border-[var(--a)] outline-none"></td>
+              <td class="p-4 text-right text-[var(--a)] font-bold">${{Math.round(c.market*3.5)}}</td>
+              <td class="p-4 text-right font-bold" :class="profit(c)>0?'text-green-400':'text-red-400'">{{profit(c)>0?'+':''}}{{profit(c)}}</td>
+              <td class="p-4 text-center"><span class="px-4 py-1 rounded-full text-xs font-bold" :class="profit(c)>100?'bg-green-900/50 text-green-300':'bg-red-900/50 text-red-300'">{{profit(c)>100?'GRADE NOW':'HOLD'}}</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </main>
+  </div>
 
-        const { createApp, ref, computed, onMounted, watch, reactive } = Vue;
-        const app = createApp({
-            setup() {
-                const state = reactive({
-                    user: null,
-                    cards: [],
-                    binders: [{ id: 'master', name: 'Master Collection', cards: [] }],
-                    currentBinder: null,
-                    sets: [],
-                    searchQuery: '',
-                    showSearch: false,
-                    selectedCard: null,
-                    currentView: 'collection',
-                    showMobileMenu: false,
-                    loading: true,
-                    searchResults: [],
-                    fuse: null,
-                    priceChart: null,
-                    isDesktop: window.innerWidth >= 768
-                });
+  <!-- SEARCH MODAL -->
+  <div v-if="showSearch" class="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4">
+    <div class="glass w-full max-w-5xl max-h-[90vh] overflow-y-auto rounded-2xl p-8">
+      <div class="flex justify-between mb-6"><h2 class="text-2xl font-bold text-[var(--a)]">Add Card</h2><button @click="showSearch=false" class="text-3xl">×</button></div>
+      <input v-model="q" @keyup.enter="search" placeholder="Card name..." class="w-full p-4 rounded-xl bg-white/5 border border-white/10 focus:border-[var(--a)] outline-none mb-6">
+      <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
+        <div v-for="c in results" :key="c.id" @click="add(c)" class="cursor-pointer hover:ring-2 hover:ring-[var(--a)] rounded-xl overflow-hidden">
+          <img :src="c.images.small">
+          <div class="p-3 bg-black/60"><p class="font-bold text-sm truncate">{{c.name}}</p><p class="text-xs text-cyan-400">${{price(c)}}</p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
-                const filteredCards = computed(() => {
-                    let list = state.cards;
-                    if (state.currentView === 'roi' && state.currentBinder) {
-                        list = list.filter(c => c.binderId === state.currentBinder.id);
-                    }
-                    if (state.searchQuery) {
-                        if (state.fuse) return state.fuse.search(state.searchQuery).map(r => r.item);
-                    }
-                    return list;
-                });
+<script>
+const { createApp, ref, computed } = Vue;
 
-                const totalValue = computed(() => state.cards.reduce((sum, c) => sum + (c.market || 0), 0));
-
-                const login = () => {
-                    const provider = new firebase.auth.GoogleAuthProvider();
-                    auth.signInWithPopup(provider).catch(console.error);
-                };
-
-                const logout = () => auth.signOut().catch(console.error);
-
-                const loadSets = async () => {
-                    try {
-                        const res = await fetch('https://api.pokemontcg.io/v2/sets', { headers: POKEMON_TCG_HEADERS });
-                        const data = await res.json();
-                        state.sets = data.data.map(s => ({ ...s, completion: Math.floor(Math.random() * 100) }));
-                    } catch (e) {
-                        console.error('Sets load failed', e);
-                    }
-                };
-
-                const loadData = async () => {
-                    auth.onAuthStateChanged(async (u) => {
-                        state.user = u;
-                        if (u) {
-                            try {
-                                const cardsSnap = await db.collection('users').doc(u.uid).collection('cards').get();
-                                state.cards = cardsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-                                const bindersSnap = await db.collection('users').doc(u.uid).collection('binders').get();
-                                state.binders = [{ id: 'master', name: 'Master Collection', cards: [] }, ...bindersSnap.docs.map(d => ({ id: d.id, ...d.data() }))];
-                            } catch (e) {
-                                console.error('Cloud load failed', e);
-                            }
-                        } else {
-                            const localCards = localStorage.getItem('gx_cards');
-                            if (localCards) state.cards = JSON.parse(localCards);
-                        }
-                        state.fuse = new Fuse(state.cards, { keys: ['name', 'set'] });
-                        state.loading = false;
-                    });
-                };
-
-                const saveData = () => {
-                    if (!state.user) localStorage.setItem('gx_cards', JSON.stringify(state.cards));
-                };
-
-                const getCardPrice = async (card) => {
-                    try {
-                        // Fast TCGPlayer fetch
-                        const res = await fetch(`https://api.pokemontcg.io/v2/cards/${card.id}?include=pricing`, { headers: POKEMON_TCG_HEADERS });
-                        const data = await res.json();
-                        const price = data.data.tcgplayer.prices.normal?.market || data.data.tcgplayer.prices.holofoil?.market || 0;
-                        // Cache in IndexedDB
-                        const tx = dbPromise.result.transaction('prices', 'readwrite');
-                        tx.objectStore('prices').put({ cardId: card.id, price, timestamp: Date.now() });
-                        return price;
-                    } catch (e) {
-                        return Math.random() * 100 + 10;
-                    }
-                };
-
-                const getEstValue = (card, grade) => {
-                    const base = card.market || 0;
-                    const multipliers = { PSA10: 3.5, BGS95: 3.2, CGC10: 3.0 };
-                    return (base * multipliers[grade] - (card.fee || 15) - (card.tax || 8)).toFixed(2);
-                };
-
-                const getBestProfit = (card) => {
-                    const profits = ['PSA10', 'BGS95', 'CGC10'].map(g => parseFloat(getEstValue(card, g)) - (card.cost || 0));
-                    return Math.max(...profits).toFixed(2);
-                };
-
-                const getBestROIPct = (card) => {
-                    const profit = parseFloat(getBestProfit(card));
-                    const cost = card.cost || 0;
-                    return cost > 0 ? Math.round((profit / cost) * 100) : 0;
-                };
-
-                const fetchCards = async () => {
-                    try {
-                        const res = await fetch(`https://api.pokemontcg.io/v2/cards?q=name:"*${state.searchQuery}*"&pageSize=20`, { headers: POKEMON_TCG_HEADERS });
-                        const data = await res.json();
-                        state.searchResults = await Promise.all(data.data.map(async (card) => {
-                            card.market = await getCardPrice(card);
-                            return card;
-                        }));
-                    } catch (e) {
-                        console.error('Search failed', e);
-                    }
-                };
-
-                const addCard = async (cardData) => {
-                    const market = await getCardPrice(cardData);
-                    const newCard = {
-                        ...cardData,
-                        id: Date.now().toString(),
-                        market: parseFloat(market),
-                        cost: parseFloat(market) * 0.8,
-                        fee: 20,
-                        tax: 8,
-                        binderId: state.currentBinder?.id || 'master',
-                        timestamp: Date.now()
-                    };
-                    state.cards.push(newCard);
-                    if (state.user) {
-                        await db.collection('users').doc(state.user.uid).collection('cards').add(newCard);
-                    }
-                    saveData();
-                    state.fuse.setCollection(state.cards);
-                };
-
-                const gradeCard = (card) => {
-                    card.targetGrade = 'PSA10';
-                    card.fee = 25;
-                    saveData();
-                };
-
-                const selectBinder = (binder) => {
-                    state.currentBinder = binder;
-                    state.currentView = 'roi';
-                };
-
-                const openSearch = () => {
-                    state.showSearch = true;
-                    state.searchQuery = '';
-                    state.searchResults = [];
-                };
-
-                const openDetail = (card) => state.selectedCard = card;
-
-                const updateChart = () => {
-                    const canvas = document.getElementById('priceChart');
-                    if (!canvas) return;
-                    const ctx = canvas.getContext('2d');
-                    if (state.priceChart) state.priceChart.destroy();
-                    state.priceChart = new Chart(ctx, {
-                        type: 'line',
-                        data: {
-                            labels: Array.from({length: 30}, (_, i) => `Day ${i+1}`),
-                            datasets: [{
-                                label: 'Avg Price',
-                                data: Array.from({length: 30}, () => Math.random() * 100 + 50),
-                                borderColor: '#00f2ff',
-                                tension: 0.4
-                            }]
-                        },
-                        options: { responsive: true, scales: { y: { beginAtZero: true } } }
-                    });
-                };
-
-                const formatCurrency = (n) => n.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
-
-                const dragStart = (ev, card) => ev.dataTransfer.setData('text/plain', card.id);
-
-                onMounted(() => {
-                    loadSets();
-                    loadData();
-                    updateChart();
-                    window.addEventListener('resize', () => state.isDesktop = window.innerWidth >= 768);
-                    // Drag drop setup
-                    setTimeout(() => {
-                        if (document.getElementById('binderDrop')) {
-                            new Sortable(document.getElementById('binderDrop'), {
-                                animation: 150,
-                                onEnd: (evt) => {
-                                    const cardId = evt.item.dataset.cardId;
-                                    // Reorder logic here
-                                }
-                            });
-                        }
-                    }, 500);
-                });
-
-                watch(() => filteredCards.value, updateChart);
-
-                return {
-                    ...state,
-                    filteredCards,
-                    totalValue,
-                    login, logout, loadSets, loadData, saveData, getCardPrice, getEstValue, getBestProfit, getBestROIPct,
-                    fetchCards, addCard, gradeCard, selectBinder, openSearch, openDetail, updateChart, formatCurrency, dragStart
-                };
-            }
-        }).mount('#app');
-    </script>
+createApp({
+  data() { return {
+    cards: JSON.parse(localStorage.getItem('gx_cards')||'[]'),
+    binders: JSON.parse(localStorage.getItem('gx_binders')||'[{"id":"master","name":"All Cards"}]'),
+    currentBinder: {id:'master',name:'All Cards'},
+    view: 'collection',
+    showSearch: false,
+    q: '',
+    results: [],
+    detail: null
+  }},
+  computed: {
+    totalValue() { return this.cards.reduce((s,c)=>s+c.market,0) },
+    visible() { return this.currentBinder.id==='master' ? this.cards : this.cards.filter(c=>c.binderId===this.currentBinder.id) },
+    f() { return n=>n.toLocaleString() }
+  },
+  methods: {
+    profit(c) { return Math.round(c.market*3.5 - (c.rawCost||c.market) - (c.fee||20)) },
+    price(c) { const p=c.tcgplayer?.prices; return p?.holofoil?.market||p?.normal?.market||50 },
+    count(id) { return id==='master'?this.cards.length:this.cards.filter(c=>c.binderId===id).length },
+    save() { localStorage.setItem('gx_cards',JSON.stringify(this.cards)); localStorage.setItem('gx_binders',JSON.stringify(this.binders)) },
+    async search() {
+      if(!this.q) return;
+      const r = await fetch(`https://api.pokemontcg.io/v2/cards?q=name:"*${this.q}*"&pageSize=48`,{headers:{'X-Api-Key':'7191ffb5-91d7-4fb7-bc30-94f1b854ee6e'}});
+      const d = await r.json();
+      this.results = d.data||[];
+    },
+    add(c) {
+      const m = this.price(c);
+      const nc = {uid:Date.now(),name:c.name,set:c.set.name,image:c.images.small,market:m,rawCost:m,fee:20,binderId:this.currentBinder.id==='master'?null:this.currentBinder.id};
+      this.cards.push(nc); this.save(); this.showSearch=false; this.q='';
+    },
+    newBinder() { const n=prompt('Name:'); if(n) this.binders.push({id:Date.now().toString(),name:n}); this.save(); },
+    delBinder(id) { if(confirm('Delete?')) { this.binders=this.binders.filter(b=>b.id!==id); this.cards.forEach(c=>{if(c.binderId===id)c.binderId=null}); this.save(); }}
+  }
+}).mount('#app');
+</script>
 </body>
 </html>
