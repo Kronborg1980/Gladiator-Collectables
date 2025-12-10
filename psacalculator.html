@@ -441,8 +441,8 @@
                         
                         <div class="flex justify-center gap-4 items-center pt-4 border-t border-white/10 pb-8">
                             <button @click="searchPage > 1 ? fetchCards(searchPage - 1) : null" :disabled="searchPage === 1" class="pagination-btn">Prev</button>
-                            <span class="text-xs font-bold text-[#00f2ff]">Page {{ searchPage }}</span>
-                            <button @click="fetchCards(searchPage + 1)" class="pagination-btn">Next</button>
+                            <span class="text-xs font-bold text-[#00f2ff]">Page {{ searchPage }} / {{ totalSearchPagesFromAPI || 1 }}</span>
+                            <button @click="fetchCards(searchPage + 1)" :disabled="searchPage >= totalSearchPagesFromAPI" class="pagination-btn">Next</button>
                         </div>
                     </div>
                 </div>
@@ -528,6 +528,7 @@
                 
                 // SEARCH PAGINATION
                 searchPage: 1, searchPerPage: 30, addedIds: [], selectedIds: [], searchSort: 'number',
+                totalCount: 0, // NEW: Stores the total count from the API metadata
                 
                 // Caching: 30 minutes TTL for search results
                 cacheTTL: 1000 * 60 * 30 
@@ -599,6 +600,13 @@
                     grouped[c.set].push(c);
                 });
                 return grouped;
+            },
+            
+            // NEW: Calculates total pages from API metadata
+            totalSearchPagesFromAPI() {
+                if (this.totalCount === 0) return 1;
+                // Total pages is Math.ceil(totalCount / pageSize)
+                return Math.ceil(this.totalCount / this.searchPerPage);
             },
 
             // SEARCH PAGINATION AND SORTING LOGIC 
@@ -751,7 +759,6 @@
             openCardDetail(c) { this.detailCard = c; },
             formatNumber(n) { return (n||0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}); },
             
-            // --- FIXED PRICE CHECK METHOD ---
             getCardPrice(c) { 
                 // Checks for multiple common price fields and returns the highest one found, or 0
                 const prices = c.tcgplayer?.prices;
@@ -770,7 +777,6 @@
                 // Return the highest price found, or 0 if none are available
                 return marketPrices.length > 0 ? Math.max(...marketPrices) : 0;
             },
-            // ----------------------------------
             
             async loadSetsAPI() {
                 this.setsLoading = true;
@@ -783,12 +789,10 @@
                         return;
                     } catch (e) {
                         console.error("Error parsing cached sets:", e);
-                        // Force API fetch if cache is corrupted
                     }
                 }
                 
                 try {
-                    // Fetching the 'total' field for Master Set size
                     const res = await fetch('https://api.pokemontcg.io/v2/sets?select=id,name,series,releaseDate,printedTotal,total&orderBy=-releaseDate');
                     
                     if (!res.ok) {
@@ -830,6 +834,7 @@
                         if (now - cache.timestamp < this.cacheTTL) {
                             console.log(`[Cache] Hit for ${cacheKey}. Using cached data.`);
                             this.searchResults = cache.results;
+                            this.totalCount = cache.totalCount; // Load total count from cache
                             this.isSearching = false;
                             return;
                         } else {
@@ -844,15 +849,24 @@
 
                 // 3. Fetch from API
                 try {
-                    // pageSize is 30 for the API call. Also requesting the tcgplayer object, which contains all prices.
-                    const res = await fetch(`https://api.pokemontcg.io/v2/cards?q=${q}&pageSize=30&page=${page}&select=id,name,number,images,tcgplayer`);
+                    // API request includes page and pageSize
+                    const res = await fetch(`https://api.pokemontcg.io/v2/cards?q=${q}&pageSize=${this.searchPerPage}&page=${page}&select=id,name,number,images,tcgplayer`);
+                    
+                    if (!res.ok) {
+                        throw new Error(`API fetch failed with status: ${res.status}`);
+                    }
+                    
                     const data = await res.json();
                     this.searchResults = data.data || [];
+                    
+                    // NEW: Update totalCount from API metadata
+                    this.totalCount = data.totalCount || 0; 
                     
                     // 4. Cache Result
                     const cache = {
                         timestamp: now,
-                        results: this.searchResults
+                        results: this.searchResults,
+                        totalCount: this.totalCount // Store total count in cache
                     };
                     sessionStorage.setItem(cacheKey, JSON.stringify(cache));
                     console.log(`[Cache] Stored new results for ${cacheKey}.`);
@@ -860,6 +874,7 @@
                 } catch(e) { 
                     console.error("API Fetch Error:", e);
                     this.searchResults = []; 
+                    this.totalCount = 0; // Reset count on failure
                 } 
                 finally { 
                     this.isSearching = false; 
