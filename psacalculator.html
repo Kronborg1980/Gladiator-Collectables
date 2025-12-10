@@ -31,8 +31,7 @@
                 radial-gradient(circle at 15% 50%, rgba(0, 242, 255, 0.05) 0%, transparent 25%),
                 radial-gradient(circle at 85% 30%, rgba(40, 100, 255, 0.08) 0%, transparent 25%);
             color: #fff; 
-            height: 100vh; 
-            overflow: hidden; 
+            /* FIX 1: Removed height: 100vh; and overflow: hidden; to enable mobile scrolling */
         }
         .font-brand { font-family: 'Cinzel', serif; }
         [v-cloak] { display: none; }
@@ -111,11 +110,20 @@
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
         ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+        /* FIX 2: Ensure the app container itself can stretch and manage flow */
+        @media (max-width: 767px) {
+            .app-mobile-flow {
+                display: block !important; /* Override flex */
+                height: auto !important;
+                min-height: 100vh;
+            }
+        }
     </style>
 </head>
 <body class="flex flex-col h-screen">
 
-<div id="app" v-cloak class="flex h-full w-full max-w-[1920px] mx-auto relative md:p-4 md:gap-4">
+<div id="app" v-cloak class="flex h-full w-full max-w-[1920px] mx-auto relative md:p-4 md:gap-4 app-mobile-flow">
 
     <div class="md:hidden flex items-center justify-between px-4 py-3 bg-[#020408] border-b border-white/10 shrink-0 z-50">
         <button @click="mobileMenuOpen = true" class="text-white text-xl p-2"><i class="fa-solid fa-bars"></i></button>
@@ -403,6 +411,7 @@
                         </select>
                     </div>
                 </div>
+                
                 <div class="px-6 py-3 bg-[#050505] flex justify-between items-center border-b border-white/5 shrink-0">
                     <div class="text-[10px] text-gray-500 uppercase font-bold hidden md:block">
                         Adding to: <span class="text-white">{{ targetBinder === 'master' ? 'Master Collection' : getBinderName(targetBinder) }}</span>
@@ -512,14 +521,14 @@
                 localBinders: [], localCards: [], cloudBinders: [], cloudCards: [],
                 showSearch: false, detailCard: null, setsLoading: false, isSearching: false,
                 allSets: [], eras: [], selectedEra: "", selectedSet: "", query: "", targetBinder: 'master', searchResults: [],
-                cacheKey: 'gladiator_sets_v9', // <<< NEW KEY: v9 - Please check console for network errors if it still hangs.
+                cacheKey: 'gladiator_sets_v9',
                 collectionFilter: '',
                 
                 // MAIN PAGINATION
                 sortBy: 'profit', sortDesc: true, currentPage: 1, itemsPerPage: 30,
                 
                 // SEARCH PAGINATION
-                searchPage: 1, searchPerPage: 30, addedIds: [], selectedIds: [], searchSort: 'number' // Default sort is by card number
+                searchPage: 1, searchPerPage: 30, addedIds: [], selectedIds: [], searchSort: 'number' 
             }
         },
         mounted() {
@@ -590,7 +599,7 @@
                 return grouped;
             },
 
-            // SEARCH PAGINATION AND SORTING LOGIC (UPDATED)
+            // SEARCH PAGINATION AND SORTING LOGIC 
             filteredSearchList() {
                 let list = [...this.searchResults];
                 if(this.query) { list = list.filter(c => c.name.toLowerCase().includes(this.query.toLowerCase())); }
@@ -738,7 +747,6 @@
             formatNumber(n) { return (n||0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}); },
             getCardPrice(c) { return c.tcgplayer?.prices?.holofoil?.market || c.tcgplayer?.prices?.normal?.market || 0; },
             
-            // --- FIXED API LOAD METHOD ---
             async loadSetsAPI() {
                 this.setsLoading = true;
                 const c = localStorage.getItem(this.cacheKey);
@@ -777,7 +785,6 @@
                     this.setsLoading = false;
                 }
             },
-            // -----------------------------
             
             async fetchCards(page = 1) {
                 if(!this.selectedSet) return;
@@ -785,7 +792,7 @@
                 this.searchPage = page; 
                 let q = `set.id:${this.selectedSet}`; if(this.query) q += ` name:"${this.query}*"`;
                 try {
-                    // Ensure pageSize is 30 for the API call
+                    // pageSize is 30 for the API call
                     const res = await fetch(`https://api.pokemontcg.io/v2/cards?q=${q}&pageSize=30&page=${page}&select=id,name,number,images,tcgplayer`);
                     const data = await res.json();
                     this.searchResults = data.data || [];
