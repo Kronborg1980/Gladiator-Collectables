@@ -48,11 +48,9 @@
         }
 
         /* --- ROI CALCULATOR TABLE --- */
-        /* Forces desktop-like table columns and a minimum width to enable scrolling */
         .roi-grid {
             display: grid;
             grid-template-columns: 30px 50px 2fr 1.2fr 0.8fr 0.8fr 0.8fr 1fr 0.8fr 1fr 40px;
-            min-width: 1000px; 
             gap: 16px;
             align-items: center;
             padding: 8px 24px;
@@ -117,57 +115,14 @@
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
         ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
-
-        /* --- MOBILE OPTIMIZATION --- */
-        @media (max-width: 768px) {
-            body { overflow-y: auto; }
-            .h-screen { height: auto; min-height: 100vh; }
-            
-            /* Remove desktop max-width and padding from app container */
-            .mobile-full { max-width: 100%; margin: 0; padding: 0; }
-            .mobile-flex-col { flex-direction: column; }
-            
-            /* Hide the sidebar on small screens */
-            .md-block-only { display: none; }
-            
-            /* Make main content take full width */
-            .flex-1 { width: 100%; }
-            
-            /* Adjust header for mobile */
-            header { padding: 1rem; flex-direction: column; align-items: flex-start; }
-            header > div:last-child { margin-top: 10px; width: 100%; justify-content: space-between; display: flex; }
-            .mobile-header-title { font-size: 1.25rem; }
-            
-            /* Adjust stat cards for mobile */
-            .md\:grid-cols-3 { grid-template-columns: 1fr; }
-            
-            /* Adjust collection card grid for mobile */
-            .md\:grid-cols-5 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-            .lg\:grid-cols-6 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-
-            /* Adjust search modal inputs */
-            .md\:grid-cols-4 { grid-template-columns: 1fr; }
-            
-            /* Detail View */
-            .h-\[85vh\] { height: 90vh; }
-            .md\:w-2\/3 { width: 100%; }
-            .md\:p-10 { padding: 1rem; }
-        }
     </style>
 </head>
-<body class="flex flex-col h-screen p-4 mobile-full">
+<body class="flex flex-col h-screen p-4">
 
-<div id="app" v-cloak class="flex h-full w-full max-w-[1920px] mx-auto relative gap-4 mobile-flex-col mobile-full">
+<div id="app" v-cloak class="flex h-full w-full max-w-[1920px] mx-auto relative gap-4">
 
-    <button v-if="!showSidebar" @click="showSidebar = true" class="fixed top-4 left-4 z-50 p-3 bg-[#00f2ff]/20 text-[#00f2ff] rounded-lg md-block-only-inverse">
-        <i class="fa-solid fa-bars"></i>
-    </button>
-    
-    <Transition name="slide-fade">
-    <aside v-if="showSidebar" class="fixed inset-0 w-72 glass-panel flex flex-col shrink-0 z-50 md:relative md:w-72 md:z-20 md:block">
-        
-        <div class="p-8 flex flex-col items-center border-b border-white/5 relative">
-            <button @click="showSidebar=false" class="absolute top-4 right-4 text-gray-500 hover:text-white md:hidden"><i class="fa-solid fa-xmark text-xl"></i></button>
+    <aside class="w-72 glass-panel flex flex-col shrink-0 z-20">
+        <div class="p-8 flex flex-col items-center border-b border-white/5">
             <img src="https://raw.githubusercontent.com/Kronborg1980/Gladiator-Collectables/main/logogla.webp" class="w-12 h-12 object-contain mb-3 drop-shadow-[0_0_10px_rgba(0,242,255,0.4)]">
             <h1 class="text-xl font-brand font-bold text-white tracking-[0.2em]">GLADIATOR</h1>
             <div class="text-[10px] text-gray-400 uppercase tracking-widest mt-1">Portfolio Tracker</div>
@@ -176,20 +131,20 @@
         <div class="flex-1 overflow-y-auto py-6 px-4 space-y-1">
             <div class="px-4 pb-2 text-[10px] text-gray-500 font-bold uppercase tracking-widest">Main Menu</div>
             
-            <button @click="currentView='collection'; currentBinder=null; showSidebar=false;" class="nav-btn w-full text-left px-4 py-3 text-sm text-gray-400 flex items-center gap-3" :class="{active: currentView==='collection'}">
+            <button @click="currentView='collection'; currentBinder=null" class="nav-btn w-full text-left px-4 py-3 text-sm text-gray-400 flex items-center gap-3" :class="{active: currentView==='collection'}">
                 <i class="fa-solid fa-layer-group w-5 text-center"></i> Collection
             </button>
             
-            <button @click="currentView='calculator'; currentBinder=null; showSidebar=false;" class="nav-btn w-full text-left px-4 py-3 text-sm text-gray-400 flex items-center gap-3" :class="{active: currentView==='calculator'}">
+            <button @click="currentView='calculator'; currentBinder=null" class="nav-btn w-full text-left px-4 py-3 text-sm text-gray-400 flex items-center gap-3" :class="{active: currentView==='calculator'}">
                 <i class="fa-solid fa-calculator w-5 text-center"></i> ROI Calculator
             </button>
             
-            <button @click="currentView='binders'; currentBinder=null; showSidebar=false;" class="nav-btn w-full text-left px-4 py-3 text-sm text-gray-400 flex items-center gap-3" :class="{active: currentView==='binders'}">
+            <button @click="currentView='binders'; currentBinder=null" class="nav-btn w-full text-left px-4 py-3 text-sm text-gray-400 flex items-center gap-3" :class="{active: currentView==='binders'}">
                 <i class="fa-solid fa-folder-open w-5 text-center"></i> My Binders
             </button>
 
             <div v-for="binder in binders" :key="binder.id">
-                <button @click="selectBinder(binder); showSidebar=false;" class="nav-btn w-full text-left px-4 py-2 text-sm text-gray-400 flex items-center justify-between group" :class="{active: currentView === 'single_binder' && currentBinder?.id === binder.id}">
+                <button @click="selectBinder(binder)" class="nav-btn w-full text-left px-4 py-2 text-sm text-gray-400 flex items-center justify-between group" :class="{active: currentView === 'single_binder' && currentBinder?.id === binder.id}">
                     <span class="truncate flex items-center gap-3"><i class="fa-regular fa-folder w-4 text-center"></i> {{ binder.name }}</span>
                     <i @click.stop="deleteBinder(binder.id)" class="fa-solid fa-trash text-[10px] opacity-0 group-hover:opacity-100 hover:text-red-500 transition px-2"></i>
                 </button>
@@ -211,14 +166,13 @@
             <button v-else @click="logout" class="w-full text-xs text-red-500 hover:text-white text-center py-2 transition opacity-60 hover:opacity-100">Sign Out</button>
         </div>
     </aside>
-    </Transition>
 
     <main class="flex-1 flex flex-col relative overflow-hidden rounded-2xl gap-4">
         
         <header class="glass-panel px-8 py-5 flex justify-between items-center z-10 relative overflow-hidden">
             <div class="absolute top-0 left-0 w-1 h-full bg-[#00f2ff] shadow-[0_0_20px_#00f2ff]"></div>
             <div>
-                <h2 class="text-2xl font-brand font-bold text-white tracking-widest uppercase mobile-header-title">{{ headerTitle }}</h2>
+                <h2 class="text-2xl font-brand font-bold text-white tracking-widest uppercase">{{ headerTitle }}</h2>
                 <div class="text-xs text-cyan-400 font-bold tracking-wider uppercase flex items-center gap-2 mt-1">
                     <i class="fa-solid fa-coins"></i> Net Value: ${{ formatNumber(totalValue) }}
                 </div>
@@ -228,7 +182,7 @@
             </button>
         </header>
 
-        <div v-if="currentView === 'collection'" class="flex-1 glass-panel overflow-y-auto p-8 md:p-8">
+        <div v-if="currentView === 'collection'" class="flex-1 glass-panel overflow-y-auto p-8">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                 <div class="bg-[#0a0f18] p-6 rounded-xl border border-white/5 relative overflow-hidden group">
                     <div class="text-[10px] text-gray-500 uppercase tracking-widest font-bold mb-2">Total Value</div>
@@ -287,39 +241,37 @@
 
 
         <div v-else-if="currentView === 'calculator'" class="flex-1 flex flex-col overflow-hidden glass-panel">
-            <div class="overflow-x-auto">
-                <div class="roi-grid roi-header shrink-0">
-                    <div class="flex items-center justify-center"><input type="checkbox" :checked="isAllSelected" @click="toggleSelectAll" class="custom-checkbox"></div>
-                    <div class="text-center">IMG</div>
-                    <div class="sortable" @click="setSort('name')" :class="{active: sortBy==='name'}">DETAILS <i class="fa-solid" :class="getSortIcon('name')"></i></div>
-                    <div>Binder</div>
-                    <div class="text-right sortable justify-end" @click="setSort('rawCost')" :class="{active: sortBy==='rawCost'}">RAW $ <i class="fa-solid" :class="getSortIcon('rawCost')"></i></div>
-                    <div class="text-right">FEE $</div>
-                    <div class="text-center">TARGET</div>
-                    <div class="text-right sortable justify-end" @click="setSort('market')" :class="{active: sortBy==='market'}">VALUE <i class="fa-solid" :class="getSortIcon('market')"></i></div>
-                    <div class="text-center">DECISION</div>
-                    <div class="text-right sortable justify-end" @click="setSort('profit')" :class="{active: sortBy==='profit'}">PROFIT <i class="fa-solid" :class="getSortIcon('profit')"></i></div>
-                    <div class="flex justify-end"><button v-if="selectedIds.length > 0" @click="deleteSelected" class="bg-red-500 text-white text-[9px] font-bold px-2 py-1 rounded">DEL {{ selectedIds.length }}</button></div>
-                </div>
+            <div class="roi-grid roi-header shrink-0">
+                <div class="flex items-center justify-center"><input type="checkbox" :checked="isAllSelected" @click="toggleSelectAll" class="custom-checkbox"></div>
+                <div class="text-center">IMG</div>
+                <div class="sortable" @click="setSort('name')" :class="{active: sortBy==='name'}">DETAILS <i class="fa-solid" :class="getSortIcon('name')"></i></div>
+                <div>Binder</div>
+                <div class="text-right sortable justify-end" @click="setSort('rawCost')" :class="{active: sortBy==='rawCost'}">RAW $ <i class="fa-solid" :class="getSortIcon('rawCost')"></i></div>
+                <div class="text-right">FEE $</div>
+                <div class="text-center">TARGET</div>
+                <div class="text-right sortable justify-end" @click="setSort('market')" :class="{active: sortBy==='market'}">VALUE <i class="fa-solid" :class="getSortIcon('market')"></i></div>
+                <div class="text-center">DECISION</div>
+                <div class="text-right sortable justify-end" @click="setSort('profit')" :class="{active: sortBy==='profit'}">PROFIT <i class="fa-solid" :class="getSortIcon('profit')"></i></div>
+                <div class="flex justify-end"><button v-if="selectedIds.length > 0" @click="deleteSelected" class="bg-red-500 text-white text-[9px] font-bold px-2 py-1 rounded">DEL {{ selectedIds.length }}</button></div>
+            </div>
 
-                <div class="flex-1 overflow-y-auto p-0">
-                    <div v-if="paginatedCards.length === 0" class="flex flex-col items-center justify-center h-full opacity-30">
-                        <p class="uppercase tracking-widest font-bold text-sm">List Empty</p>
-                    </div>
-                    <div v-else>
-                        <div v-for="(c, i) in paginatedCards" :key="c.uid || i" class="roi-grid hover:bg-white/5 transition" :class="{'bg-white/5': selectedIds.includes(c.uid)}">
-                            <div class="flex justify-center"><input type="checkbox" :value="c.uid" v-model="selectedIds" class="custom-checkbox"></div>
-                            <div class="flex justify-center"><div class="w-10 h-14 bg-black rounded border border-white/10 overflow-hidden cursor-pointer hover:border-[#00f2ff]" @click="openCardDetail(c)"><img :src="c.image" class="w-full h-full object-cover"></div></div>
-                            <div class="min-w-0"><div class="font-bold text-white text-sm truncate cursor-pointer" @click="openCardDetail(c)">{{ c.name }}</div><div class="text-[9px] text-gray-500 font-bold uppercase tracking-wider">{{ c.set }}</div></div>
-                            <div><select v-model="c.binderId" @change="updateCardBinder(c)" class="table-select"><option :value="null">Master Only</option><option v-for="b in binders" :value="b.id">{{ b.name }}</option></select></div>
-                            <div class="text-right"><input v-model.number="c.rawCost" @change="saveData()" type="number" class="table-input"></div>
-                            <div class="text-right"><input v-model.number="c.fee" @change="saveData()" type="number" class="table-input"></div>
-                            <div class="flex justify-center"><select v-model="c.targetGrade" @change="saveData()" class="table-select text-center" style="width: 80px;"><option value="10">PSA 10</option><option value="9">PSA 9</option><option value="8">PSA 8</option></select></div>
-                            <div class="text-right font-mono text-white text-xs font-bold">${{ formatNumber(getEstValue(c)) }}</div>
-                            <div class="text-center"><span v-if="getProfit(c) > 0" class="text-[9px] font-bold text-green-400 bg-green-900/30 border border-green-500/30 px-3 py-1 rounded-full uppercase tracking-wider">Grade</span><span v-else class="text-[9px] font-bold text-red-400 bg-red-900/30 border border-red-500/30 px-3 py-1 rounded-full uppercase tracking-wider">Hold</span></div>
-                            <div class="text-right font-mono font-bold text-xs" :class="getProfit(c) >= 0 ? 'text-green-400' : 'text-red-500'">{{ Math.round(getProfit(c)) }}</div>
-                            <div class="text-center"><button @click="deleteCard(c.uid)" class="text-gray-600 hover:text-red-500"><i class="fa-solid fa-trash-can text-sm"></i></button></div>
-                        </div>
+            <div class="flex-1 overflow-y-auto p-0">
+                <div v-if="paginatedCards.length === 0" class="flex flex-col items-center justify-center h-full opacity-30">
+                    <p class="uppercase tracking-widest font-bold text-sm">List Empty</p>
+                </div>
+                <div v-else>
+                    <div v-for="(c, i) in paginatedCards" :key="c.uid || i" class="roi-grid hover:bg-white/5 transition" :class="{'bg-white/5': selectedIds.includes(c.uid)}">
+                        <div class="flex justify-center"><input type="checkbox" :value="c.uid" v-model="selectedIds" class="custom-checkbox"></div>
+                        <div class="flex justify-center"><div class="w-10 h-14 bg-black rounded border border-white/10 overflow-hidden cursor-pointer hover:border-[#00f2ff]" @click="openCardDetail(c)"><img :src="c.image" class="w-full h-full object-cover"></div></div>
+                        <div class="min-w-0"><div class="font-bold text-white text-sm truncate cursor-pointer" @click="openCardDetail(c)">{{ c.name }}</div><div class="text-[9px] text-gray-500 font-bold uppercase tracking-wider">{{ c.set }}</div></div>
+                        <div><select v-model="c.binderId" @change="updateCardBinder(c)" class="table-select"><option :value="null">Master Only</option><option v-for="b in binders" :value="b.id">{{ b.name }}</option></select></div>
+                        <div class="text-right"><input v-model.number="c.rawCost" @change="saveData()" type="number" class="table-input"></div>
+                        <div class="text-right"><input v-model.number="c.fee" @change="saveData()" type="number" class="table-input"></div>
+                        <div class="flex justify-center"><select v-model="c.targetGrade" @change="saveData()" class="table-select text-center" style="width: 80px;"><option value="10">PSA 10</option><option value="9">PSA 9</option><option value="8">PSA 8</option></select></div>
+                        <div class="text-right font-mono text-white text-xs font-bold">${{ formatNumber(getEstValue(c)) }}</div>
+                        <div class="text-center"><span v-if="getProfit(c) > 0" class="text-[9px] font-bold text-green-400 bg-green-900/30 border border-green-500/30 px-3 py-1 rounded-full uppercase tracking-wider">Grade</span><span v-else class="text-[9px] font-bold text-red-400 bg-red-900/30 border border-red-500/30 px-3 py-1 rounded-full uppercase tracking-wider">Hold</span></div>
+                        <div class="text-right font-mono font-bold text-xs" :class="getProfit(c) >= 0 ? 'text-green-400' : 'text-red-500'">{{ Math.round(getProfit(c)) }}</div>
+                        <div class="text-center"><button @click="deleteCard(c.uid)" class="text-gray-600 hover:text-red-500"><i class="fa-solid fa-trash-can text-sm"></i></button></div>
                     </div>
                 </div>
             </div>
@@ -352,7 +304,7 @@
     </main>
 
     <Transition enter-active-class="transition duration-300 ease-out" enter-from-class="opacity-0 scale-95" enter-to-class="opacity-100 scale-100" leave-active-class="transition duration-200 ease-in" leave-from-class="opacity-100 scale-100" leave-to-class="opacity-0 scale-95">
-    <div v-if="showSearch" class="fixed inset-0 bg-black/90 backdrop-blur-md z-[100] flex items-center justify-center p-6 mobile-full">
+    <div v-if="showSearch" class="fixed inset-0 bg-black/90 backdrop-blur-md z-[100] flex items-center justify-center p-6">
         <div class="bg-[#0a0f18] w-full max-w-5xl rounded-xl shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden flex flex-col h-[85vh] border border-[#333]">
             <div class="px-8 py-6 border-b border-white/10 flex justify-between items-center bg-[#050505]">
                 <h2 class="text-xl font-brand font-bold text-white tracking-[0.2em] uppercase">Card Search</h2>
@@ -423,17 +375,16 @@
     </Transition>
 
     <Transition name="fade">
-        <div v-if="detailCard" class="fixed inset-0 bg-black/95 backdrop-blur-md z-[200] flex items-center justify-center p-6 mobile-full">
-            <div class="bg-[#0a0f18] w-full max-w-6xl h-[85vh] rounded-2xl border border-white/10 shadow-2xl flex overflow-hidden mobile-flex-col">
-                <div class="w-full md:w-1/3 bg-[#050505] p-6 md:p-10 flex items-center justify-center border-r border-white/5 relative shrink-0 overflow-hidden">
-                     <div class="absolute top-4 left-4 text-[#00f2ff] font-bold tracking-widest uppercase text-[10px] cursor-pointer hover:text-white transition" @click="detailCard=null"><i class="fa-solid fa-arrow-left mr-2"></i> Back</div>
-                    <img :src="detailCard.image.replace('small','large')" class="w-full max-w-[200px] md:max-w-sm rounded-lg shadow-2xl card-hover mt-8 md:mt-0">
+        <div v-if="detailCard" class="fixed inset-0 bg-black/95 backdrop-blur-md z-[200] flex items-center justify-center p-6">
+            <div class="bg-[#0a0f18] w-full max-w-6xl h-[85vh] rounded-2xl border border-white/10 shadow-2xl flex overflow-hidden">
+                <div class="w-1/3 bg-[#050505] p-10 flex items-center justify-center border-r border-white/5 relative">
+                    <div class="absolute top-8 left-8 text-[#00f2ff] font-bold tracking-widest uppercase text-[10px] cursor-pointer hover:text-white transition" @click="detailCard=null"><i class="fa-solid fa-arrow-left mr-2"></i> Back</div>
+                    <img :src="detailCard.image.replace('small','large')" class="w-full max-w-sm rounded-lg shadow-2xl card-hover">
                 </div>
-                
-                <div class="w-full md:w-2/3 flex flex-col bg-[#080a10] flex-1 min-h-0">
-                    <div class="p-6 md:p-10 border-b border-white/5 flex justify-between items-start bg-black/20 shrink-0">
+                <div class="w-2/3 flex flex-col bg-[#080a10]">
+                    <div class="p-10 border-b border-white/5 flex justify-between items-start bg-black/20">
                         <div>
-                            <h2 class="text-2xl md:text-4xl font-brand font-bold text-white mb-2 tracking-wide">{{ detailCard.name }}</h2>
+                            <h2 class="text-4xl font-brand font-bold text-white mb-2 tracking-wide">{{ detailCard.name }}</h2>
                             <div class="flex items-center gap-4 text-xs text-gray-400 font-bold uppercase tracking-widest">
                                 <span class="bg-[#151515] px-3 py-1 rounded border border-[#333]">{{ detailCard.set }}</span>
                                 <span>#{{ detailCard.number }}</span>
@@ -441,10 +392,10 @@
                         </div>
                         <div class="text-right">
                             <div class="text-[10px] text-gray-500 uppercase tracking-widest font-bold mb-1">Market Price</div>
-                            <div class="text-4xl md:text-5xl font-brand font-bold text-[#00f2ff]">${{ formatNumber(detailCard.market) }}</div>
+                            <div class="text-5xl font-brand font-bold text-[#00f2ff]">${{ formatNumber(detailCard.market) }}</div>
                         </div>
                     </div>
-                    <div class="flex-1 p-6 md:p-10 relative hidden md:block overflow-y-auto">
+                    <div class="flex-1 p-10 relative">
                         <div class="w-full h-full border-l border-b border-[#333] relative opacity-50">
                             <svg viewBox="0 0 100 50" class="w-full h-full overflow-visible">
                                 <path d="M0,40 Q20,10 40,30 T80,20 T100,5" fill="none" stroke="#00f2ff" stroke-width="0.5" class="chart-line" />
@@ -453,7 +404,7 @@
                             </svg>
                         </div>
                     </div>
-                    <div class="p-6 md:p-10 bg-[#050505] border-t border-white/5 flex justify-between items-center shrink-0">
+                    <div class="p-10 bg-[#050505] border-t border-white/5 flex justify-between items-center">
                         <button @click="deleteCard(detailCard.uid); detailCard=null" class="text-red-500 hover:text-white text-[10px] font-bold uppercase tracking-widest flex items-center gap-3 transition">
                             <i class="fa-solid fa-trash"></i> Remove Card
                         </button>
@@ -490,7 +441,6 @@
         data() {
             return {
                 user: null, currentView: 'collection', currentBinder: null, 
-                showSidebar: false, // New state for mobile sidebar visibility
                 localBinders: [], localCards: [], cloudBinders: [], cloudCards: [],
                 showSearch: false, detailCard: null, setsLoading: false, isSearching: false,
                 allSets: [], eras: [], selectedEra: "", selectedSet: "", query: "", targetBinder: 'master', searchResults: [],
@@ -507,7 +457,7 @@
         },
         watch: {
             selectedEra(newEra, oldEra) {
-                // FIX: Reset search state when Era changes
+                // FIX 1: Reset search state when Era changes
                 if (newEra !== oldEra) {
                     this.selectedSet = ""; 
                     this.searchResults = [];
@@ -516,7 +466,7 @@
                 }
             },
             selectedSet(newSet, oldSet) {
-                // FIX: Reset search state when Set changes (to prevent loop)
+                // FIX 1: Reset search state when Set changes
                 if (newSet !== oldSet) {
                     this.searchResults = []; 
                     this.searchPage = 1;
@@ -526,7 +476,7 @@
         },
         mounted() {
             this.loadLocalData();
-            this.loadSetsAPI(); 
+            this.loadSetsAPI(); // Load set metadata (including size) on mount
             if(auth) {
                 auth.onAuthStateChanged(u => {
                     if(u) { this.user = u; this.initCloudData(); } 
@@ -540,14 +490,18 @@
             headerTitle() {
                 if(this.currentView === 'collection') return 'Collection';
                 if(this.currentView === 'binders') return 'My Binders';
+                // Handle currentBinder display for single_binder view
                 return this.currentBinder ? this.currentBinder.name : 'ROI Calculator';
             },
             
             displayCards() { 
                 let list = this.cards; 
+                
+                // Filter cards based on currentBinder ID for single_binder/calculator view
                 if (this.currentBinder) {
                     list = this.cards.filter(c => c.binderId === this.currentBinder.id);
                 }
+                
                 return list;
             },
             
@@ -580,22 +534,27 @@
             },
 
             // --- GROUP BY SET (COLLECTION VIEW) ---
+            // FIX 3: Count unique cards by set (using `c.id` which is the card's TCG ID)
             cardsBySet() {
                 const grouped = {};
                 
                 this.cards.forEach(c => {
                     if(!grouped[c.set]) {
+                        // Store cards, a set of unique IDs, and an object for quantity counts
                         grouped[c.set] = { cards: [], uniqueCardIds: new Set(), cardCounts: {}, uniqueCount: 0 };
                     }
                     
                     grouped[c.set].cards.push(c);
-                    grouped[c.set].uniqueCardIds.add(c.id); 
+                    grouped[c.set].uniqueCardIds.add(c.id); // Track unique IDs
                     grouped[c.set].cardCounts[c.id] = (grouped[c.set].cardCounts[c.id] || 0) + 1;
                 });
 
+                // Finalize unique count and sort cards in the list by number
                 for (const setName in grouped) {
                     grouped[setName].uniqueCount = grouped[setName].uniqueCardIds.size;
+                    // Sort cards within the set grouping by their card number
                     grouped[setName].cards.sort((a,b) => a.number.localeCompare(b.number, undefined, {numeric: true}));
+                    // Remove duplicate card objects for display (keep only one instance per card ID)
                     const uniqueCards = [];
                     const seenIds = new Set();
                     grouped[setName].cards.forEach(card => {
@@ -654,9 +613,11 @@
                 return b ? b.name : 'Unknown';
             },
             
+            // Get total set size for Collection view
             getSetTotal(setName) {
                 const set = this.totalSetData[setName];
                 if (!set) return '?';
+                // Prioritize 'total' (Master Set size), then 'printedTotal'
                 return (set.total && set.total > 0) ? set.total : set.printedTotal;
             },
             
@@ -746,11 +707,12 @@
                 this.addedIds.push(c.id);
                 setTimeout(() => { this.addedIds = this.addedIds.filter(id => id !== c.id); }, 1500);
             },
+            // FIX 2: Delete card implementation (used in collection, calculator, and detail view)
             deleteCard(uid) {
                 if(!confirm("Remove this card permanently?")) return;
                 if(this.user) db.collection('users').doc(this.user.uid).collection('cards').doc(uid).delete();
                 else { this.localCards = this.localCards.filter(c => c.uid !== uid); this.saveData(); }
-                this.detailCard = null; 
+                this.detailCard = null; // Close detail view if open
             },
             updateCardBinder(card) {
                 if(this.user) db.collection('users').doc(this.user.uid).collection('cards').doc(card.uid).update({ binderId: card.binderId });
@@ -800,7 +762,7 @@
                         const data = JSON.parse(c);
                         this.allSets = data.sets; 
                         this.eras = data.eras;
-                        this.totalSetData = data.totalSetData; 
+                        this.totalSetData = data.totalSetData; // Load cached size data
                         this.setsLoading = false;
                         return;
                     } catch (e) {
@@ -809,6 +771,7 @@
                 }
                 
                 try {
+                    // Fetch id, name, series, and the size parameters
                     const res = await fetch('https://api.pokemontcg.io/v2/sets?select=id,name,series,releaseDate,printedTotal,total&orderBy=-releaseDate');
                     
                     if (!res.ok) {
@@ -824,7 +787,7 @@
 
                     this.allSets = data.data; 
                     this.eras = [...new Set(data.data.map(s => s.series))];
-                    this.totalSetData = setSizeMap; 
+                    this.totalSetData = setSizeMap; // Store the set size map
                     
                     localStorage.setItem(cacheKeySets, JSON.stringify({
                         sets: this.allSets, 
@@ -844,6 +807,7 @@
                 this.isSearching = true; 
                 this.searchPage = page; 
 
+                // 1. Prepare Query and Cache Key
                 let nameQuery = this.query ? this.query.trim().toLowerCase() : '';
                 
                 let q = `set.id:${this.selectedSet}`; 
@@ -851,17 +815,19 @@
                     q += ` name:"${nameQuery}*"`;
                 }
                 
+                // Cache key includes set and name query, but not page (we cache all 250 results)
                 const cacheKey = `search_${this.selectedSet}_${nameQuery}`; 
                 const now = Date.now();
                 
+                // 2. Check Session Cache 
                 const cachedData = sessionStorage.getItem(cacheKey);
                 if (cachedData) {
                     try {
                         const cache = JSON.parse(cachedData);
-                        if (now - cache.timestamp < 1000 * 60 * 30) { 
+                        if (now - cache.timestamp < 1000 * 60 * 30) { // 30 minutes TTL
                             this.searchResults = cache.results;
                             this.searchPage = page;
-                            this.isSearching = false; 
+                            this.isSearching = false; // Important: Exit search state immediately on cache hit
                             return;
                         } else {
                             sessionStorage.removeItem(cacheKey);
@@ -871,7 +837,10 @@
                     }
                 }
 
+                // 3. Fetch from API (New or Expired Cache)
                 try {
+                    // Fetch up to 250 cards to maximize client-side filtering speed
+                    // Use the user's selected sort directly in the API call for better results on large sets
                     const res = await fetch(`https://api.pokemontcg.io/v2/cards?q=${q}&pageSize=250&select=id,name,number,images,tcgplayer&orderBy=${this.searchSort.replace('-', '')}`);
                     
                     if (!res.ok) {
@@ -882,6 +851,7 @@
                     this.searchResults = data.data || [];
                     this.searchPage = page;
 
+                    // 4. Cache Result
                     if (this.searchResults.length > 0) {
                         const cache = { timestamp: now, results: this.searchResults };
                         sessionStorage.setItem(cacheKey, JSON.stringify(cache));
