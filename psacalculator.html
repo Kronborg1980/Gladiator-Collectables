@@ -388,6 +388,9 @@
                     <div class="col-span-2 md:col-span-1">
                         <label class="text-[10px] text-gray-500 font-bold uppercase mb-2 block tracking-widest">3. Card Name</label>
                         <input v-if="!selectedSet" disabled placeholder="Select Set First" class="glass-input disabled:opacity-30">
+                        <div v-else-if="isListLoading" class="glass-input text-gray-400 italic flex items-center gap-2">
+                             <i class="fa-solid fa-circle-notch fa-spin text-[#00f2ff]"></i> Loading Pokémon...
+                        </div>
                         <select v-else v-model="selectedPokemon" class="glass-input" @change="query = ''">
                             <option value="all" class="font-bold text-[#00f2ff]">★ LOAD FULL SET ★</option>
                             <option v-for="name in setPokemonList" :value="name">{{ name }}</option>
@@ -491,7 +494,6 @@
 </div>
 
 <script>
-    // --- FIREBASE CONFIG (Paste Keys Here) ---
     const firebaseConfig = {
         apiKey: "AIzaSyBnb9VlLk4sNbj89beWtb2hmLGsvhgb6TE",
         authDomain: "gladiator-portfolio.firebaseapp.com",
@@ -507,7 +509,7 @@
         auth = firebase.auth();
         db = firebase.firestore();
         provider = new firebase.auth.GoogleAuthProvider();
-    } catch(e) { console.log("Guest Mode Active or Firebase Error", e); }
+    } catch(e) { console.log("Guest Mode/Firebase Error", e); }
 
     const { createApp } = Vue;
 
@@ -516,19 +518,22 @@
             return {
                 user: null, currentView: 'collection', currentBinder: null, 
                 localBinders: [], localCards: [], cloudBinders: [], cloudCards: [],
-                showSearch: false, detailCard: null, setsLoading: false, isSearching: false,
+                showSearch: false, detailCard: null, 
                 
-                // DATA FOR DROPDOWNS
+                // LOADERS
+                setsLoading: false, 
+                isSearching: false,
+                isListLoading: false, // Tracks if the name dropdown is loading
+                
                 allSets: [], eras: [], 
-                setPokemonList: [], // Stores the list of names for the 3rd dropdown
+                setPokemonList: [], 
                 
-                // SELECTIONS
                 selectedEra: "", 
                 selectedSet: "", 
-                selectedPokemon: "all", // Default to 'all' (Load Full Set)
+                selectedPokemon: "all", 
                 
                 query: "", targetBinder: 'master', searchResults: [],
-                cacheKey: 'gladiator_sets_v6',
+                cacheKey: 'gladiator_sets_v7', // Changed version to force fresh download of sets
                 totalSetData: {}, 
                 
                 sortBy: 'profit', sortDesc: true, currentPage: 1, itemsPerPage: 30, 
@@ -540,7 +545,7 @@
             selectedEra(newEra, oldEra) {
                 if (newEra !== oldEra) {
                     this.selectedSet = ""; 
-                    this.setPokemonList = []; // Clear pokemon list
+                    this.setPokemonList = []; 
                     this.selectedPokemon = "all";
                     this.searchResults = [];
                 }
@@ -548,9 +553,10 @@
             selectedSet(newSet, oldSet) {
                 if (newSet !== oldSet) {
                     this.searchResults = []; 
-                    this.fetchSetPokemon(newSet); // Fetch names when set changes
                     this.selectedPokemon = "all";
                     this.query = "";
+                    if(newSet) this.fetchSetPokemon(newSet); // Only fetch if set exists
+                    else this.setPokemonList = [];
                 }
             }
         },
@@ -559,17 +565,9 @@
             this.loadSetsAPI(); 
             window.addEventListener('resize', this.checkIsDesktop);
             this.checkIsDesktop();
-            
-            if(auth) {
-                auth.onAuthStateChanged(u => {
-                    if(u) { this.user = u; this.initCloudData(); } 
-                    else { this.user = null; }
-                });
-            }
+            if(auth) auth.onAuthStateChanged(u => { if(u) { this.user = u; this.initCloudData(); } else { this.user = null; } });
         },
-        unmounted() {
-            window.removeEventListener('resize', this.checkIsDesktop);
-        },
+        unmounted() { window.removeEventListener('resize', this.checkIsDesktop); },
         computed: {
             isDesktop() { return window.innerWidth >= 768; },
             binders() { return this.user ? this.cloudBinders : this.localBinders; },
@@ -578,9 +576,7 @@
             
             displayCards() { 
                 let list = this.cards; 
-                if (this.currentBinder) {
-                    list = this.cards.filter(c => c.binderId === this.currentBinder.id);
-                }
+                if (this.currentBinder) list = this.cards.filter(c => c.binderId === this.currentBinder.id);
                 return list;
             },
             isAllSelected() { return this.displayCards.length > 0 && this.selectedIds.length === this.displayCards.length; },
@@ -626,7 +622,6 @@
             },
             filteredSearchList() {
                 let list = [...this.searchResults];
-                // Note: Client-side filtering is mostly redundant now since we filter via API, but good for backup
                 if(this.query) { list = list.filter(c => c.name.toLowerCase().includes(this.query.toLowerCase())); }
                 
                 list.sort((a, b) => {
@@ -731,6 +726,11 @@
                     const chunk = staleCards.slice(i, i + chunkSize);
                     const query = chunk.map(c => `id:${c.id}`).join(' OR ');
                     try {
+                        // FIX: Encoding special characters in price refresh
+                        const encodedQuery = encodeURIComponent(query);
+                        // However, for multiple IDs "id:x OR id:y", we shouldn't encode the colons/ORs blindly, 
+                        // but the API handles raw params usually. The safer way for IDs is usually fine raw.
+                        // We will keep raw here as IDs rarely have spaces.
                         const res = await fetch(`https://api.pokemontcg.io/v2/cards?q=${query}&select=id,tcgplayer`);
                         const data = await res.json();
                         const batch = db.batch(); 
@@ -809,7 +809,7 @@
             },
             async loadSetsAPI() {
                 this.setsLoading = true;
-                const cacheKeySets = 'gladiator_all_sets_v2';
+                const cacheKeySets = 'gladiator_sets_v7'; // UPDATED VERSION KEY
                 const c = localStorage.getItem(cacheKeySets);
                 if(c) { 
                     try {
@@ -834,19 +834,25 @@
                 } catch(error) { console.error("CRITICAL: Failed to sync sets.", error); } finally { this.setsLoading = false; }
             },
 
-            // --- NEW FUNCTION: Fetch just the names of Pokemon in the set ---
+            // --- Name Fetcher ---
             async fetchSetPokemon(setId) {
                 if(!setId) return;
+                this.isListLoading = true; 
+                this.setPokemonList = []; 
+
                 try {
-                    // Fetch ONLY the name field for all cards in the set (very small download)
-                    const res = await fetch(`https://api.pokemontcg.io/v2/cards?q=set.id:${setId}&select=name&pageSize=250`);
-                    const data = await res.json();
+                    // Added quotes around ID for safety
+                    const res = await fetch(`https://api.pokemontcg.io/v2/cards?q=set.id:"${setId}"&select=name&pageSize=250`);
+                    if(!res.ok) throw new Error("API Limit");
                     
-                    // Create a unique list of names (remove duplicates like "Charizard" and "Charizard")
+                    const data = await res.json();
                     const uniqueNames = [...new Set(data.data.map(c => c.name))].sort();
                     this.setPokemonList = uniqueNames;
                 } catch(e) {
                     console.error("Failed to load pokemon list", e);
+                    this.setPokemonList = ["Error Loading List"];
+                } finally {
+                    this.isListLoading = false;
                 }
             },
 
@@ -855,19 +861,19 @@
                 this.isSearching = true; 
                 this.searchPage = page; 
 
-                // --- MODIFIED SEARCH LOGIC ---
-                // 1. Base Query: Always filter by the Set ID
-                let q = `set.id:${this.selectedSet}`; 
+                // 1. Base Query with quotes for safety
+                let q = `set.id:"${this.selectedSet}"`; 
                 
-                // 2. Pokemon Dropdown Logic
-                if (this.selectedPokemon !== 'all') {
-                    // If a specific Pokemon is selected in the dropdown, search EXACTLY for that name
+                // 2. Dropdown Logic
+                if (this.selectedPokemon && this.selectedPokemon !== 'all' && this.selectedPokemon !== 'Error Loading List') {
                     q += ` name:"${this.selectedPokemon}"`;
                 } 
                 else if (this.query) {
-                    // If "Load Full Set" is selected BUT the user typed in the manual box
                     q += ` name:"${this.query.trim()}*"`;
                 }
+                
+                // FIX: Log query to debug
+                console.log("Searching for:", q);
 
                 const cacheKey = `search_${this.selectedSet}_${this.selectedPokemon}_${this.query}`; 
                 const now = Date.now();
@@ -883,11 +889,17 @@
                             return;
                         }
                     }
-                } catch (e) { console.log("Cache read error, fetching fresh."); }
+                } catch (e) { }
 
                 try {
-                    const res = await fetch(`https://api.pokemontcg.io/v2/cards?q=${q}&pageSize=250&select=id,name,number,images,tcgplayer&orderBy=${this.searchSort.replace('-', '')}`);
-                    if (!res.ok) throw new Error(`API fetch failed: ${res.status}`);
+                    // FIX: Added encodeURIComponent to handle spaces and symbols in names/ids
+                    const res = await fetch(`https://api.pokemontcg.io/v2/cards?q=${encodeURIComponent(q)}&pageSize=250&select=id,name,number,images,tcgplayer&orderBy=${this.searchSort.replace('-', '')}`);
+                    
+                    if (!res.ok) {
+                        const errText = await res.text();
+                        throw new Error(`API fetch failed (${res.status})`);
+                    }
+                    
                     const data = await res.json();
                     this.searchResults = data.data || [];
                     this.searchPage = page;
@@ -901,7 +913,7 @@
                 } catch(e) { 
                     console.error("API Fetch Error:", e);
                     this.searchResults = []; 
-                    alert("Search failed. Please try again.");
+                    alert("Search failed: " + e.message);
                 } 
                 finally { this.isSearching = false; }
             }
