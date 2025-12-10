@@ -379,9 +379,9 @@
                     <div>
                         <label class="text-[10px] text-[#00f2ff] font-bold uppercase mb-2 block tracking-widest">4. Sort</label>
                         <select v-model="searchSort" class="glass-input border-[#00f2ff] text-[#00f2ff]">
-                            <option value="number">Number</option>
                             <option value="price-desc">Price: High</option>
                             <option value="price-asc">Price: Low</option>
+                            <option value="number">Number</option>
                             <option value="name">Name</option>
                         </select>
                     </div>
@@ -511,12 +511,13 @@
                 sortBy: 'profit', sortDesc: true, currentPage: 1, itemsPerPage: 30, 
                 
                 // SEARCH PAGINATION
-                searchPage: 1, searchPerPage: 18, // REDUCED TO 18
-                addedIds: [], selectedIds: [], searchSort: 'number',
-                totalSearchPagesCount: 1, // Track total pages from API
+                searchPage: 1, searchPerPage: 18, 
+                addedIds: [], selectedIds: [], 
+                searchSort: 'price-desc', // CHANGED DEFAULT TO PRICE-DESC
+                totalSearchPagesCount: 1, 
 
                 // SMART CACHING
-                searchCache: {}, // Stores results: 'query_sort_page' -> { data, total }
+                searchCache: {}, 
 
                 // MOBILE NAV
                 showMobileNav: false,
@@ -533,7 +534,7 @@
                     this.searchResults = [];
                     this.searchPage = 1;
                     this.query = "";
-                    this.searchCache = {}; // Clear cache on era change
+                    this.searchCache = {}; 
                 }
             },
             selectedSet(newSet, oldSet) {
@@ -541,7 +542,7 @@
                     this.searchResults = []; 
                     this.searchPage = 1;
                     this.query = "";
-                    this.searchCache = {}; // Clear cache on set change
+                    this.searchCache = {}; 
                 }
             },
             // AUTO-SORT: Trigger search when sort changes
@@ -848,8 +849,7 @@
                 
                 let nameQuery = this.query ? this.query.trim().toLowerCase() : '';
 
-                // CACHE CHECK: Do we already have this exact query+page in memory?
-                // Unique key includes: Set ID, Query Name, Sort Order, Page Number
+                // CACHE CHECK: Unique key includes: Set ID, Query Name, Sort Order, Page Number
                 const cacheKey = `search_${this.selectedSet}_${nameQuery}_${this.searchSort}_${page}`;
                 
                 if (this.searchCache[cacheKey]) {
