@@ -528,7 +528,10 @@
                 sortBy: 'profit', sortDesc: true, currentPage: 1, itemsPerPage: 30,
                 
                 // SEARCH PAGINATION
-                searchPage: 1, searchPerPage: 30, addedIds: [], selectedIds: [], searchSort: 'number' 
+                searchPage: 1, searchPerPage: 30, addedIds: [], selectedIds: [], searchSort: 'number',
+                
+                // Caching: 30 minutes TTL for search results
+                cacheTTL: 1000 * 60 * 30 
             }
         },
         mounted() {
@@ -790,14 +793,57 @@
                 if(!this.selectedSet) return;
                 this.isSearching = true; 
                 this.searchPage = page; 
-                let q = `set.id:${this.selectedSet}`; if(this.query) q += ` name:"${this.query}*"`;
+
+                // 1. Prepare Query and Cache Key
+                let nameQuery = this.query ? this.query.trim().toLowerCase() : '';
+                let q = `set.id:${this.selectedSet}`; 
+                if(nameQuery) q += ` name:"${nameQuery}*"`;
+                
+                const cacheKey = `search_${this.selectedSet}_${nameQuery}_${page}`;
+                const now = Date.now();
+                
+                // 2. Check Session Cache for fast retrieval
+                const cachedData = sessionStorage.getItem(cacheKey);
+                if (cachedData) {
+                    try {
+                        const cache = JSON.parse(cachedData);
+                        // Check if the cache is still valid (less than 30 minutes old)
+                        if (now - cache.timestamp < this.cacheTTL) {
+                            console.log(`[Cache] Hit for ${cacheKey}. Using cached data.`);
+                            this.searchResults = cache.results;
+                            this.isSearching = false;
+                            return;
+                        } else {
+                            console.log(`[Cache] Expired for ${cacheKey}. Re-fetching.`);
+                            sessionStorage.removeItem(cacheKey); // Clear expired cache
+                        }
+                    } catch (e) {
+                        console.error("Error parsing cached data:", e);
+                        sessionStorage.removeItem(cacheKey); // Clear corrupted cache
+                    }
+                }
+
+                // 3. Fetch from API
                 try {
-                    // pageSize is 30 for the API call
                     const res = await fetch(`https://api.pokemontcg.io/v2/cards?q=${q}&pageSize=30&page=${page}&select=id,name,number,images,tcgplayer`);
                     const data = await res.json();
                     this.searchResults = data.data || [];
-                } catch(e) { console.error(e); } 
-                finally { this.isSearching = false; }
+                    
+                    // 4. Cache Result
+                    const cache = {
+                        timestamp: now,
+                        results: this.searchResults
+                    };
+                    sessionStorage.setItem(cacheKey, JSON.stringify(cache));
+                    console.log(`[Cache] Stored new results for ${cacheKey}.`);
+
+                } catch(e) { 
+                    console.error("API Fetch Error:", e);
+                    this.searchResults = []; 
+                } 
+                finally { 
+                    this.isSearching = false; 
+                }
             }
         }
     }).mount('#app');
