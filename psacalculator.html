@@ -504,6 +504,10 @@
         appId: "1:61051937804:web:535cbbcb5417c4bde67a29"
     };
 
+    // --- API KEY CONFIG ---
+    // PASTE YOUR KEY HERE:
+    const API_KEY = "7191ffb5-91d7-4fb7-bc30-94f1b854ee6e"; 
+
     let auth, db, provider;
     try {
         if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
@@ -514,18 +518,6 @@
 
     const { createApp } = Vue;
     
-    // --- DEBOUNCE UTILITY FUNCTION (NO LONGER USED) ---
-    function debounce(fn, delay = 500) {
-        let timeout;
-        return function(...args) {
-            clearTimeout(timeout);
-            timeout = setTimeout(() => {
-                fn.apply(this, args);
-            }, delay);
-        };
-    }
-    // ------------------------------------------------------------------------
-
     createApp({
         data() {
             return {
@@ -871,6 +863,9 @@
                 const cacheKeySets = this.cacheKey;
                 const cachedData = localStorage.getItem(cacheKeySets);
                 
+                // Headers object for all authenticated API requests
+                const headers = { 'X-Api-Key': API_KEY };
+
                 // 1. Try to load from cache
                 if(cachedData) { 
                     try {
@@ -892,7 +887,7 @@
                 // 2. Try fetching from API with retry logic
                 try {
                     console.log(`Fetching set data from API. Attempt ${attempt}...`);
-                    const res = await fetch('https://api.pokemontcg.io/v2/sets?select=id,name,series,releaseDate,printedTotal,total&orderBy=-releaseDate');
+                    const res = await fetch('https://api.pokemontcg.io/v2/sets?select=id,name,series,releaseDate,printedTotal,total&orderBy=-releaseDate', { headers });
                     
                     if (!res.ok) {
                         if (attempt < MAX_ATTEMPTS) {
@@ -946,12 +941,16 @@
                 this.isSearching = true; 
                 this.searchPage = page; 
 
+                // Headers object for all authenticated API requests
+                const headers = { 'X-Api-Key': API_KEY };
+
                 // 1. Construct API Query: Filter by set ID and name pattern
                 let q = `set.id:"${this.selectedSet}"`; 
                 
                 if(nameQuery) {
-                    // FINAL FIX: Use generic, flexible wildcard search with case insensitivity
-                    q += ` name:*${nameQuery}*`; 
+                    // FINAL FIX: Use flexible wildcard search (omitting the "name:" field specifier for general text search)
+                    // and use *query* to match anywhere in the name.
+                    q += ` *${nameQuery.toLowerCase()}*`; 
                 }
                 
                 // 2. Cache Key and Check (Session Storage - 30 min cache)
@@ -983,7 +982,7 @@
                 
                 try {
                     console.log("Running API Query:", url);
-                    const res = await fetch(url);
+                    const res = await fetch(url, { headers });
                     
                     if (!res.ok) {
                         console.error(`Card search failed. Status: ${res.status}. Query: ${url}`); 
