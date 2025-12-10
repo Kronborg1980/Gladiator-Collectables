@@ -44,6 +44,7 @@
             -webkit-backdrop-filter: blur(25px);
             border: 1px solid var(--glass-edge);
             box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+            /* Border radius handled by Tailwind classes for responsiveness */
         }
 
         /* --- DESKTOP ROI GRID (Hidden on Mobile) --- */
@@ -57,17 +58,14 @@
 
         /* --- MOBILE ROI CARD (Visible on Mobile) --- */
         .roi-card-mobile {
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.15);
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.1);
             border-radius: 12px;
             padding: 16px;
             margin-bottom: 12px;
             display: flex;
             flex-direction: column;
-            gap: 14px;
-        }
-        @media (min-width: 768px) {
-            .mobile-only { display: none !important; }
+            gap: 12px;
         }
 
         /* INPUTS */
@@ -252,10 +250,10 @@
             </div>
             
             <div class="md:hidden px-4 py-3 border-b border-white/10 flex justify-between items-center bg-[#050508]">
-                <div class="text-xs font-bold text-gray-400 uppercase tracking-widest">ROI Assets ({{ sortedCards.length }})</div>
+                <div class="text-xs font-bold text-gray-400 uppercase tracking-widest">ROI Assets</div>
                 <div class="flex gap-2">
-                    <button v-if="selectedIds.length > 0" @click="deleteSelected" class="text-[10px] bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded transition">Delete {{ selectedIds.length }}</button>
-                    <button @click="toggleSelectAll" class="text-[10px] bg-white/10 hover:bg-white/20 text-white px-2 py-1 rounded transition">{{ isAllSelected ? 'Unselect' : 'Select All' }}</button>
+                    <button v-if="selectedIds.length > 0" @click="deleteSelected" class="text-[10px] bg-red-500 text-white px-2 py-1 rounded">Delete {{ selectedIds.length }}</button>
+                    <button @click="toggleSelectAll" class="text-[10px] bg-white/10 text-white px-2 py-1 rounded">{{ isAllSelected ? 'Unselect' : 'Select All' }}</button>
                 </div>
             </div>
 
@@ -281,52 +279,37 @@
                         </div>
 
                         <div class="md:hidden roi-card-mobile">
-                            <div class="flex justify-between items-start border-b border-white/10 pb-3">
-                                <div class="flex gap-3 items-start">
-                                    <input type="checkbox" :value="c.uid" v-model="selectedIds" class="custom-checkbox mt-2">
-                                    <div class="w-16 h-24 bg-black rounded border border-white/10 shrink-0 overflow-hidden" @click="openCardDetail(c)">
-                                        <img :src="c.image" class="w-full h-full object-cover">
-                                    </div>
-                                    <div class="min-w-0">
-                                        <div class="font-bold text-white text-sm truncate">{{ c.name }}</div>
-                                        <div class="text-[10px] text-gray-500 uppercase font-bold">{{ c.set }}</div>
-                                        <div class="mt-2">
-                                            <select v-model="c.binderId" @change="updateCardBinder(c)" class="bg-black text-[10px] text-white border border-white/20 rounded px-1 max-w-[120px]"><option :value="null">Master</option><option v-for="b in binders" :value="b.id">{{ b.name }}</option></select>
-                                        </div>
+                            <div class="flex gap-3 border-b border-white/10 pb-3">
+                                <input type="checkbox" :value="c.uid" v-model="selectedIds" class="custom-checkbox mt-1">
+                                <div class="w-16 h-24 bg-black rounded border border-white/10 shrink-0" @click="openCardDetail(c)"><img :src="c.image" class="w-full h-full object-cover"></div>
+                                <div class="min-w-0 flex-1">
+                                    <div class="font-bold text-white text-sm truncate">{{ c.name }}</div>
+                                    <div class="text-[10px] text-gray-500 uppercase font-bold">{{ c.set }}</div>
+                                    <div class="mt-2 flex items-center justify-between">
+                                        <div class="text-[10px] text-gray-400">Binder:</div>
+                                        <select v-model="c.binderId" @change="updateCardBinder(c)" class="bg-black text-[10px] text-white border border-white/20 rounded px-1 max-w-[100px]"><option :value="null">Master</option><option v-for="b in binders" :value="b.id">{{ b.name }}</option></select>
                                     </div>
                                 </div>
-                                <button @click="deleteCard(c.uid)" class="text-gray-600 hover:text-red-500 p-1"><i class="fa-solid fa-trash-can text-sm"></i></button>
                             </div>
                             
-                            <div class="grid grid-cols-3 gap-3">
+                            <div class="grid grid-cols-2 gap-3">
                                 <div>
-                                    <label class="text-[9px] text-gray-500 uppercase block mb-1">Raw Cost</label>
-                                    <input v-model.number="c.rawCost" @change="saveData()" type="number" placeholder="0" class="mobile-input">
+                                    <label class="text-[9px] text-gray-500 uppercase block">Raw Cost</label>
+                                    <input v-model.number="c.rawCost" @change="saveData()" type="number" class="mobile-input">
                                 </div>
                                 <div>
-                                    <label class="text-[9px] text-gray-500 uppercase block mb-1">Fee</label>
-                                    <input v-model.number="c.fee" @change="saveData()" type="number" placeholder="15" class="mobile-input">
-                                </div>
-                                <div>
-                                    <label class="text-[9px] text-gray-500 uppercase block mb-1">Grade</label>
-                                    <select v-model="c.targetGrade" @change="saveData()" class="mobile-input text-white text-xs">
-                                        <option value="10">PSA 10</option>
-                                        <option value="9">PSA 9</option>
-                                        <option value="8">PSA 8</option>
-                                    </select>
+                                    <label class="text-[9px] text-gray-500 uppercase block">Fee</label>
+                                    <input v-model.number="c.fee" @change="saveData()" type="number" class="mobile-input">
                                 </div>
                             </div>
 
-                            <div class="flex justify-between items-center bg-black/20 p-3 rounded">
-                                <div class="flex flex-col">
-                                    <span class="text-[9px] text-gray-400 uppercase font-bold">Est. Value ({{ c.targetGrade }})</span>
-                                    <span class="text-sm font-bold text-white">${{ formatNumber(getEstValue(c)) }}</span>
+                            <div class="flex justify-between items-center bg-black/20 p-2 rounded">
+                                <div class="flex items-center gap-2">
+                                     <select v-model="c.targetGrade" @change="saveData()" class="bg-black text-[#00f2ff] font-bold text-xs border border-white/20 rounded px-1"><option value="10">PSA 10</option><option value="9">PSA 9</option></select>
+                                     <span class="text-xs font-bold text-white">${{ formatNumber(getEstValue(c)) }}</span>
                                 </div>
                                 <div class="text-right">
-                                    <span class="text-[9px] text-gray-400 uppercase font-bold block">Net Profit</span>
-                                    <div class="text-sm font-bold font-mono" :class="getProfit(c) >= 0 ? 'text-green-400' : 'text-red-500'">
-                                        {{ getProfit(c) >= 0 ? '+' : '' }}{{ Math.round(getProfit(c)) }}
-                                    </div>
+                                     <div class="text-sm font-bold font-mono" :class="getProfit(c) >= 0 ? 'text-green-400' : 'text-red-500'">{{ getProfit(c) >= 0 ? '+' : '' }}{{ Math.round(getProfit(c)) }}</div>
                                 </div>
                             </div>
                         </div>
@@ -495,7 +478,7 @@
                 localBinders: [], localCards: [], cloudBinders: [], cloudCards: [],
                 showSearch: false, detailCard: null, setsLoading: false, isSearching: false,
                 allSets: [], eras: [], selectedEra: "", selectedSet: "", query: "", targetBinder: 'master', searchResults: [],
-                cacheKey: 'gladiator_sets_v9', // <<< NEW KEY: v9 - Please check console for network errors if it still hangs.
+                cacheKey: 'gladiator_sets_v7', // <<< CHANGED KEY TO FORCE REFRESH AFTER API UPDATE
                 collectionFilter: '',
                 
                 // MAIN PAGINATION
@@ -610,14 +593,14 @@
                 const b = this.binders.find(x => x.id === id);
                 return b ? b.name : 'Unknown';
             },
-            
+            // --- UPDATED METHOD ---
             getSetTotal(setName) {
                 const s = this.allSets.find(x => x.name === setName);
-                if (!s) return '?';
-                // Prioritize 'total' (Master Set size), only fall back to 'printedTotal' if 'total' is missing or 0
-                return (s.total && s.total > 0) ? s.total : s.printedTotal;
+                // Prioritize 'total' (Master Set size), otherwise use 'printedTotal', otherwise '?'
+                return s ? (s.total || s.printedTotal) : '?';
             },
-            
+            // ------------------------
+
             toggleSelectAll() {
                 if (this.isAllSelected) this.selectedIds = [];
                 else this.selectedIds = this.displayCards.map(c => c.uid);
@@ -717,48 +700,26 @@
             formatNumber(n) { return (n||0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}); },
             getCardPrice(c) { return c.tcgplayer?.prices?.holofoil?.market || c.tcgplayer?.prices?.normal?.market || 0; },
             
-            // --- FIXED API LOAD METHOD ---
+            // --- UPDATED METHOD ---
             async loadSetsAPI() {
                 this.setsLoading = true;
                 const c = localStorage.getItem(this.cacheKey);
-                
                 if(c) { 
-                    try {
-                        const d = JSON.parse(c); this.allSets = d.sets; this.eras = d.eras; 
-                        this.setsLoading = false;
-                        return;
-                    } catch (e) {
-                        console.error("Error parsing cached sets:", e);
-                        // Force API fetch if cache is corrupted
-                    }
+                    const d = JSON.parse(c); this.allSets = d.sets; this.eras = d.eras; 
+                    this.setsLoading = false;
+                    return; 
                 }
                 
-                try {
-                    // Fetching the 'total' field for Master Set size
-                    const res = await fetch('https://api.pokemontcg.io/v2/sets?select=id,name,series,releaseDate,printedTotal,total&orderBy=-releaseDate');
-                    
-                    if (!res.ok) {
-                        // Throw an error if HTTP status is not 200-299
-                        throw new Error(`API fetch failed with status: ${res.status}`);
-                    }
-
-                    const data = await res.json();
-                    this.allSets = data.data; 
-                    this.eras = [...new Set(data.data.map(s => s.series))];
-                    
-                    localStorage.setItem(this.cacheKey, JSON.stringify({sets: this.allSets, eras: this.eras}));
-                    
-                } catch(error) {
-                    // This catches network errors and failed HTTP responses.
-                    console.error("CRITICAL: Failed to synchronize set database. Check network connection.", error);
-                    // This keeps setsLoading=true, so the user sees the error message until they refresh.
-                    // If you want to force the modal closed on failure, you can set an alert here.
-                } finally {
-                    // GUARANTEED TO RUN: Ends the loading spinner state.
-                    this.setsLoading = false;
-                }
+                // Fetching the 'total' field as well to get the Master Set size
+                const res = await fetch('https://api.pokemontcg.io/v2/sets?select=id,name,series,releaseDate,printedTotal,total&orderBy=-releaseDate');
+                const data = await res.json();
+                this.allSets = data.data; 
+                this.eras = [...new Set(data.data.map(s => s.series))];
+                
+                localStorage.setItem(this.cacheKey, JSON.stringify({sets: this.allSets, eras: this.eras}));
+                this.setsLoading = false;
             },
-            // -----------------------------
+            // ------------------------
             
             async fetchCards(page = 1) {
                 if(!this.selectedSet) return;
