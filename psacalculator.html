@@ -31,11 +31,9 @@
                 radial-gradient(circle at 15% 50%, rgba(0, 242, 255, 0.05) 0%, transparent 25%),
                 radial-gradient(circle at 85% 30%, rgba(40, 100, 255, 0.08) 0%, transparent 25%);
             color: #fff; 
-            /* MOD: Change h-screen and overflow for mobile scrolling */
             min-height: 100vh;
             overflow-y: auto;
         }
-        /* MOD: Restore desktop overflow on medium screens and up */
         @media (min-width: 768px) {
             body { 
                 height: 100vh;
@@ -57,10 +55,8 @@
         }
 
         /* --- ROI CALCULATOR TABLE --- */
-        /* MOD: Create a mobile-specific grid (for screens < 768px) */
         .roi-grid {
             display: grid;
-            /* Mobile Grid: Checkbox, Image, Name/Set, Value, Profit/Decision, Delete */
             grid-template-columns: 30px 40px 1fr 0.8fr 40px; 
             gap: 10px;
             align-items: center;
@@ -68,7 +64,6 @@
             border-bottom: 1px solid rgba(255,255,255,0.05);
             transition: all 0.2s;
         }
-        /* MOD: Restore desktop grid on medium screens and up */
         @media (min-width: 768px) {
             .roi-grid {
                 grid-template-columns: 30px 50px 2fr 1.2fr 0.8fr 0.8fr 0.8fr 1fr 0.8fr 1fr 40px;
@@ -83,30 +78,25 @@
             text-transform: uppercase; letter-spacing: 1px;
             background: rgba(0,0,0,0.3); border-bottom: 1px solid rgba(255,255,255,0.1);
             user-select: none; 
-            /* MOD: Mobile padding */
             padding: 12px 16px;
         }
-        /* MOD: Restore desktop padding on medium screens and up */
         @media (min-width: 768px) {
             .roi-header {
                 padding: 12px 24px;
             }
         }
 
-        /* MOD: Hide desktop-only columns on mobile */
         .roi-header .desktop-only, .roi-grid .desktop-only {
             display: none;
         }
-        /* MOD: Show desktop-only columns on medium screens and up */
         @media (min-width: 768px) {
             .roi-header .desktop-only, .roi-grid .desktop-only {
-                display: block; /* block or flex depending on content */
+                display: block;
             }
             .roi-header .desktop-only.justify-end {
                  display: flex;
             }
         }
-        /* MOD: Adjust mobile display of Binder/Decision/Profit/Value columns */
         .roi-grid .mobile-value {
              text-align: right;
         }
@@ -115,7 +105,7 @@
         }
         @media (min-width: 768px) {
             .roi-grid .mobile-value, .roi-grid .mobile-action {
-                 display: none; /* Hide mobile-only columns on desktop */
+                 display: none;
             }
         }
 
@@ -151,7 +141,6 @@
 
         .nav-btn { transition: all 0.2s; border-radius: 8px; font-weight: 600; letter-spacing: 0.5px; border-left: 3px solid transparent; }
         .nav-btn:hover { background: rgba(255,255,255,0.05); color: white; }
-        /* MOD: Updated active class check for binders */
         .nav-btn.active { background: linear-gradient(90deg, var(--accent-dim) 0%, transparent 100%); border-left-color: var(--accent); color: var(--accent); }
 
         .glass-input { background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 12px; width: 100%; border-radius: 8px; font-size: 12px; transition: 0.2s; }
@@ -181,12 +170,12 @@
     </button>
 
     <aside class="w-72 glass-panel flex-col shrink-0 z-30 transition-all duration-300 md:flex"
-           :class="{ 
-               'fixed inset-0 w-full h-full bg-black/90 backdrop-blur-md': showMobileNav, 
-               'hidden': !showMobileNav && !isDesktop, 
-               'flex': isDesktop, 
-               'w-72': isDesktop 
-           }">
+               :class="{ 
+                'fixed inset-0 w-full h-full bg-black/90 backdrop-blur-md': showMobileNav, 
+                'hidden': !showMobileNav && !isDesktop, 
+                'flex': isDesktop, 
+                'w-72': isDesktop 
+               }">
         
         <div :class="{'w-72 h-full mx-auto glass-panel flex flex-col': showMobileNav}">
 
@@ -279,7 +268,7 @@
                     <div class="flex items-center gap-4 mb-4 border-b border-white/10 pb-2">
                         <h3 class="text-white font-bold text-lg font-brand uppercase tracking-widest truncate">{{ setName }}</h3>
                         <span class="text-[10px] text-[#00f2ff] font-bold bg-[#00f2ff]/10 px-2 py-0.5 rounded border border-[#00f2ff]/30 shrink-0">
-                             {{ setGroup.uniqueCount }} / {{ getSetTotal(setName) }} Unique Collected
+                            {{ setGroup.uniqueCount }} / {{ getSetTotal(setName) }} Unique Collected
                         </span>
                         
                     </div>
@@ -389,6 +378,11 @@
             <div v-if="setsLoading" class="flex-1 flex flex-col items-center justify-center p-12 text-[#00f2ff]">
                 <i class="fa-solid fa-circle-notch fa-spin text-4xl mb-4"></i>
                 <p class="text-xs font-bold uppercase tracking-widest animate-pulse">Syncing Database...</p>
+            </div>
+            <div v-else-if="setsError" class="flex-1 flex flex-col items-center justify-center p-12 text-red-500">
+                <i class="fa-solid fa-cloud-bolt-xmark text-4xl mb-4"></i>
+                <p class="text-xs font-bold uppercase tracking-widest">CRITICAL ERROR: Failed to load Set Data.</p>
+                <p class="text-xs text-gray-400 mt-2">Please check your network connection and refresh the page.</p>
             </div>
 
             <template v-else>
@@ -518,9 +512,13 @@
             return {
                 user: null, currentView: 'collection', currentBinder: null, 
                 localBinders: [], localCards: [], cloudBinders: [], cloudCards: [],
-                showSearch: false, detailCard: null, setsLoading: false, isSearching: false,
+                showSearch: false, detailCard: null, 
+                setsLoading: false, 
+                setsError: false, // New state for set loading error
+                isSearching: false,
+                
                 allSets: [], eras: [], selectedEra: "", selectedSet: "", query: "", targetBinder: 'master', searchResults: [],
-                cacheKey: 'gladiator_sets_v6',
+                cacheKey: 'gladiator_sets_v7_reliable', // UPDATED CACHE KEY for set data cache
                 
                 totalSetData: {}, 
                 
@@ -556,7 +554,6 @@
             this.loadLocalData();
             this.loadSetsAPI(); 
             
-            // MOD: Listen for resize events to update isDesktop
             window.addEventListener('resize', this.checkIsDesktop);
             this.checkIsDesktop();
             
@@ -571,8 +568,6 @@
             window.removeEventListener('resize', this.checkIsDesktop);
         },
         computed: {
-            // MOD: Helper to determine if we are on a desktop-sized screen (md breakpoint: 768px)
-            // Used to toggle mobile-specific UI elements.
             isDesktop() {
                 return window.innerWidth >= 768;
             },
@@ -581,20 +576,15 @@
             headerTitle() {
                 if(this.currentView === 'collection') return 'Collection';
                 if(this.currentView === 'binders') return 'My Binders';
-                // MODIFIED: Display the current binder's name if set, otherwise "ROI Calculator"
                 return this.currentBinder ? this.currentBinder.name : 'ROI Calculator';
             },
             
-            // FIX: This filter logic is updated to correctly filter cards
             displayCards() { 
                 let list = this.cards; 
                 
-                // If a specific binder object is selected, filter the list
                 if (this.currentBinder) {
-                    // Filter: only show cards where the binderId matches the currentBinder's ID.
                     list = this.cards.filter(c => c.binderId === this.currentBinder.id);
                 }
-                // If currentBinder is null (ROI Calculator/All Cards), list remains the full this.cards array.
                 
                 return list;
             },
@@ -685,7 +675,6 @@
             topCard() { return [...this.cards].sort((a,b) => b.market - a.market)[0]; }
         },
         methods: {
-            // MOD: Method to force close mobile nav on resize/interaction
             checkIsDesktop() {
                 this.isDesktop = window.innerWidth >= 768;
                 if (this.isDesktop) {
@@ -805,7 +794,6 @@
                 this.detailCard = null; 
             },
             updateCardBinder(card) {
-                // If binderId is set to null, ensure it is saved as null (for 'Master Only')
                 const binderUpdate = { binderId: card.binderId === undefined ? null : card.binderId };
                 if(this.user) db.collection('users').doc(this.user.uid).collection('cards').doc(card.uid).update(binderUpdate);
                 else this.saveData();
@@ -819,7 +807,6 @@
             },
             getProfit(c) { return this.getEstValue(c) - ((c.rawCost || 0) + (c.fee || 0)); },
 
-            // FIX: Unified selectBinder to use the calculator view for displaying the filtered list.
             selectBinder(b) { 
                 this.currentBinder = b; 
                 this.currentPage = 1; 
@@ -828,7 +815,6 @@
             getBinderCount(id) { return this.cards.filter(c => c.binderId === id).length; },
             openSearch() { 
                 this.showSearch = true; this.searchResults = []; this.searchPage = 1; this.query = '';
-                // Set target binder for new cards based on current view/binder
                 if(this.currentView === 'calculator' && this.currentBinder) this.targetBinder = this.currentBinder.id;
                 else this.targetBinder = 'master';
             },
@@ -850,28 +836,47 @@
                 return marketPrices.length > 0 ? Math.max(...marketPrices) : 0;
             },
             
-            async loadSetsAPI() {
+            /**
+             * HIGH RELIABILITY SETS/ERAS FETCH with Retry and Caching
+             */
+            async loadSetsAPI(attempt = 1) {
+                const MAX_ATTEMPTS = 3;
                 this.setsLoading = true;
-                const cacheKeySets = 'gladiator_all_sets_v2';
-                const c = localStorage.getItem(cacheKeySets);
+                this.setsError = false; 
+                const cacheKeySets = this.cacheKey;
+                const cachedData = localStorage.getItem(cacheKeySets);
                 
-                if(c) { 
+                // 1. Try to load from cache
+                if(cachedData) { 
                     try {
-                        const data = JSON.parse(c);
-                        this.allSets = data.sets; 
-                        this.eras = data.eras;
-                        this.totalSetData = data.totalSetData; 
-                        this.setsLoading = false;
-                        return;
+                        const data = JSON.parse(cachedData);
+                        if (data.sets && data.eras && data.sets.length > 0) {
+                            this.allSets = data.sets; 
+                            this.eras = data.eras;
+                            this.totalSetData = data.totalSetData; 
+                            this.setsLoading = false;
+                            console.log("Sets loaded from cache.");
+                            return; 
+                        }
                     } catch (e) {
-                        console.error("Error parsing cached sets:", e);
+                        console.warn("Error parsing cached sets. Attempting fresh fetch.", e);
+                        localStorage.removeItem(cacheKeySets); 
                     }
                 }
                 
+                // 2. Try fetching from API with retry logic
                 try {
+                    console.log(`Fetching set data from API. Attempt ${attempt}...`);
                     const res = await fetch('https://api.pokemontcg.io/v2/sets?select=id,name,series,releaseDate,printedTotal,total&orderBy=-releaseDate');
                     
                     if (!res.ok) {
+                        if (attempt < MAX_ATTEMPTS) {
+                            // Exponential back-off: 2s, 4s, 8s delay before retrying
+                            const delay = 2000 * attempt;
+                            console.warn(`API error (${res.status}). Retrying in ${delay / 1000}s...`);
+                            await new Promise(resolve => setTimeout(resolve, delay));
+                            return this.loadSetsAPI(attempt + 1);
+                        }
                         throw new Error(`API fetch failed with status: ${res.status}`);
                     }
 
@@ -886,31 +891,41 @@
                     this.eras = [...new Set(data.data.map(s => s.series))];
                     this.totalSetData = setSizeMap; 
                     
+                    // Cache the fresh, valid data
                     localStorage.setItem(cacheKeySets, JSON.stringify({
                         sets: this.allSets, 
                         eras: this.eras, 
                         totalSetData: this.totalSetData
                     }));
                     
+                    console.log("Sets successfully fetched and cached.");
+
                 } catch(error) {
-                    console.error("CRITICAL: Failed to synchronize set database.", error);
+                    console.error(`CRITICAL: Failed to synchronize set database after ${MAX_ATTEMPTS} attempts.`, error);
+                    this.setsError = true; 
                 } finally {
                     this.setsLoading = false;
                 }
             },
             
+            /**
+             * HIGH RELIABILITY CARD SEARCH FETCH with URL Encoding and Session Caching
+             */
             async fetchCards(page = 1) {
                 if(!this.selectedSet) return;
                 this.isSearching = true; 
                 this.searchPage = page; 
 
-                let nameQuery = this.query ? this.query.trim().toLowerCase() : '';
+                let nameQuery = this.query ? this.query.trim() : '';
+                // 1. Construct API Query: Filter by set ID and name pattern
                 let q = `set.id:${this.selectedSet}`; 
                 if(nameQuery) {
-                    q += ` name:"${nameQuery}*"`;
+                    // Use a specific query pattern for name
+                    q += ` name:"${nameQuery}*"`; 
                 }
                 
-                const cacheKey = `search_${this.selectedSet}_${nameQuery}`; 
+                // 2. Cache Key and Check (Session Storage - 30 min cache)
+                const cacheKey = `search_${this.selectedSet}_${nameQuery.toLowerCase()}`; 
                 const now = Date.now();
                 
                 const cachedData = sessionStorage.getItem(cacheKey);
@@ -921,6 +936,7 @@
                             this.searchResults = cache.results;
                             this.searchPage = page;
                             this.isSearching = false; 
+                            console.log("Card search results loaded from session cache.");
                             return;
                         } else {
                             sessionStorage.removeItem(cacheKey);
@@ -930,10 +946,18 @@
                     }
                 }
 
+                // 3. API Fetch with proper URL Encoding
+                // Use a stable order like 'number' and let computed property handle price sort.
+                const orderByParam = 'number';
+                const encodedQuery = encodeURIComponent(q); 
+                const url = `https://api.pokemontcg.io/v2/cards?q=${encodedQuery}&pageSize=250&select=id,name,number,images,tcgplayer&orderBy=${orderByParam}`;
+                
                 try {
-                    const res = await fetch(`https://api.pokemontcg.io/v2/cards?q=${q}&pageSize=250&select=id,name,number,images,tcgplayer&orderBy=${this.searchSort.replace('-', '')}`);
+                    const res = await fetch(url);
                     
                     if (!res.ok) {
+                        console.error(`Card search failed. Status: ${res.status}. Query: ${url}`); 
+                        alert(`Card search failed (Error: ${res.status}). Please try again.`);
                         throw new Error(`API fetch failed with status: ${res.status}`);
                     }
                     
@@ -941,13 +965,15 @@
                     this.searchResults = data.data || [];
                     this.searchPage = page;
 
+                    // Cache results if successful
                     if (this.searchResults.length > 0) {
                         const cache = { timestamp: now, results: this.searchResults };
                         sessionStorage.setItem(cacheKey, JSON.stringify(cache));
+                        console.log("Card search results saved to session cache.");
                     }
 
                 } catch(e) { 
-                    console.error("API Fetch Error:", e);
+                    console.error("API Card Search Error:", e);
                     this.searchResults = []; 
                 } 
                 finally { 
