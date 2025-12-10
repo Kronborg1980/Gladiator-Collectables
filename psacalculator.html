@@ -381,11 +381,28 @@
 
             <template v-else>
                 <div class="p-4 md:p-8 bg-[#080a10] grid grid-cols-2 md:grid-cols-4 gap-4 border-b border-white/5 shrink-0">
-                    <div class="col-span-1"><label class="text-[9px] text-gray-500 font-bold uppercase mb-1 block">1. Era</label><select v-model="selectedEra" class="glass-input"><option value="">Select Era</option><option v-for="era in eras" :value="era">{{ era }}</option></select></div>
-                    <div class="col-span-1"><label class="text-[9px] text-gray-500 font-bold uppercase mb-1 block">2. Set</label><select v-model="selectedSet" :disabled="!selectedEra" class="glass-input disabled:opacity-30"><option value="">Select Set</option><option v-for="s in filteredSets" :value="s.id">{{ s.name }}</option></select></div>
-                    <div class="col-span-2"><label class="text-[9px] text-gray-500 font-bold uppercase mb-1 block">3. Name</label><input v-model="query" @keyup.enter="fetchCards(1)" :disabled="!selectedSet" placeholder="e.g. Charizard" class="glass-input disabled:opacity-30 lowercase placeholder:uppercase"></div>
+                    <div class="col-span-1">
+                        <label class="text-[9px] text-gray-500 font-bold uppercase mb-1 block">1. Era</label>
+                        <select v-model="selectedEra" class="glass-input"><option value="">Select Era</option><option v-for="era in eras" :value="era">{{ era }}</option></select>
+                    </div>
+                    <div class="col-span-1">
+                        <label class="text-[9px] text-gray-500 font-bold uppercase mb-1 block">2. Set</label>
+                        <select v-model="selectedSet" :disabled="!selectedEra" class="glass-input disabled:opacity-30"><option value="">Select Set</option><option v-for="s in filteredSets" :value="s.id">{{ s.name }}</option></select>
+                    </div>
+                    <div class="col-span-2 md:col-span-1">
+                        <label class="text-[9px] text-gray-500 font-bold uppercase mb-1 block">3. Search Name</label>
+                        <input v-model="query" @keyup.enter="fetchCards(1)" :disabled="!selectedSet" placeholder="e.g. Charizard" class="glass-input disabled:opacity-30 lowercase placeholder:uppercase">
+                    </div>
+                    <div class="col-span-2 md:col-span-1">
+                        <label class="text-[9px] text-gray-500 font-bold uppercase mb-1 block">4. Sort By</label>
+                        <select v-model="searchSort" @change="sortSearchResults" class="glass-input">
+                            <option value="number">Card Number</option>
+                            <option value="name">Alphabetical</option>
+                            <option value="price-desc">Price (Highest)</option>
+                            <option value="price-asc">Price (Lowest)</option>
+                        </select>
+                    </div>
                 </div>
-                
                 <div class="px-6 py-3 bg-[#050505] flex justify-between items-center border-b border-white/5 shrink-0">
                     <div class="text-[10px] text-gray-500 uppercase font-bold hidden md:block">
                         Adding to: <span class="text-white">{{ targetBinder === 'master' ? 'Master Collection' : getBinderName(targetBinder) }}</span>
@@ -502,7 +519,7 @@
                 sortBy: 'profit', sortDesc: true, currentPage: 1, itemsPerPage: 30,
                 
                 // SEARCH PAGINATION
-                searchPage: 1, searchPerPage: 30, addedIds: [], selectedIds: [], searchSort: 'number'
+                searchPage: 1, searchPerPage: 30, addedIds: [], selectedIds: [], searchSort: 'number' // Default sort is by card number
             }
         },
         mounted() {
@@ -573,15 +590,19 @@
                 return grouped;
             },
 
-            // SEARCH PAGINATION
+            // SEARCH PAGINATION AND SORTING LOGIC (UPDATED)
             filteredSearchList() {
                 let list = [...this.searchResults];
                 if(this.query) { list = list.filter(c => c.name.toLowerCase().includes(this.query.toLowerCase())); }
                 
                 list.sort((a, b) => {
+                    // Sort by Price (Descending)
                     if (this.searchSort === 'price-desc') return this.getCardPrice(b) - this.getCardPrice(a);
+                    // Sort by Price (Ascending)
                     if (this.searchSort === 'price-asc') return this.getCardPrice(a) - this.getCardPrice(b);
+                    // Sort by Name (Alphabetical)
                     if (this.searchSort === 'name') return a.name.localeCompare(b.name);
+                    // Default/Fallback: Sort by Card Number (using localeCompare for numeric strings)
                     return a.number.localeCompare(b.number, undefined, {numeric: true});
                 });
                 return list;
@@ -751,8 +772,6 @@
                 } catch(error) {
                     // This catches network errors and failed HTTP responses.
                     console.error("CRITICAL: Failed to synchronize set database. Check network connection.", error);
-                    // This keeps setsLoading=true, so the user sees the error message until they refresh.
-                    // If you want to force the modal closed on failure, you can set an alert here.
                 } finally {
                     // GUARANTEED TO RUN: Ends the loading spinner state.
                     this.setsLoading = false;
@@ -766,6 +785,7 @@
                 this.searchPage = page; 
                 let q = `set.id:${this.selectedSet}`; if(this.query) q += ` name:"${this.query}*"`;
                 try {
+                    // Ensure pageSize is 30 for the API call
                     const res = await fetch(`https://api.pokemontcg.io/v2/cards?q=${q}&pageSize=30&page=${page}&select=id,name,number,images,tcgplayer`);
                     const data = await res.json();
                     this.searchResults = data.data || [];
