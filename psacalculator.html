@@ -406,9 +406,15 @@
                 
                 <div class="px-4 md:px-8 py-4 bg-[#050505] flex justify-between items-center border-b border-white/5 shrink-0">
                     <div class="text-[10px] text-gray-500 font-bold uppercase">Adding to: <span class="text-white">{{ targetBinder === 'master' ? 'Master Collection' : getBinderName(targetBinder) }}</span></div>
-                    <button @click="fetchCards(1)" :disabled="isSearching || !selectedSet" class="bg-[#00f2ff] hover:bg-white text-black text-xs font-bold px-4 py-2 md:px-10 md:py-3 rounded shadow-lg uppercase tracking-widest transition transform active:scale-95 disabled:opacity-50 disabled:scale-100 flex items-center gap-2">
-                        <i v-if="isSearching" class="fa-solid fa-circle-notch fa-spin"></i> {{ isSearching ? 'Scanning...' : 'Search' }}
-                    </button>
+                    
+                    <div class="flex items-center gap-4">
+                        <button @click="clearSearchCache" class="bg-red-600 hover:bg-red-700 text-white text-xs font-bold px-3 py-2 rounded shadow transition active:scale-95 flex items-center gap-2">
+                             <i class="fa-solid fa-eraser"></i> Clear Search Cache
+                        </button>
+                        <button @click="fetchCards(1)" :disabled="isSearching || !selectedSet" class="bg-[#00f2ff] hover:bg-white text-black text-xs font-bold px-4 py-2 md:px-10 md:py-3 rounded shadow-lg uppercase tracking-widest transition transform active:scale-95 disabled:opacity-50 disabled:scale-100 flex items-center gap-2">
+                            <i v-if="isSearching" class="fa-solid fa-circle-notch fa-spin"></i> {{ isSearching ? 'Scanning...' : 'Search' }}
+                        </button>
+                    </div>
                 </div>
                 
                 <div class="flex-1 overflow-y-auto p-4 md:p-8 bg-[#050508] relative">
@@ -860,6 +866,21 @@
 
                 return marketPrices.length > 0 ? Math.max(...marketPrices) : 0;
             },
+
+            // NEW: Clear search results and sessionStorage cache
+            clearSearchCache() {
+                if (confirm("Are you sure you want to clear the local search cache? You will need to re-sync set data.")) {
+                    this.searchResults = [];
+                    this.query = "";
+                    this.selectedEra = "";
+                    this.selectedSet = "";
+                    sessionStorage.clear(); // Clear card search cache
+                    localStorage.removeItem(this.cacheKey); // Clear sets data cache
+                    this.loadSetsAPI(); // Re-sync sets immediately
+                    console.log("Search cache and current results cleared.");
+                    alert("Search cache successfully cleared. Please select a Series and Set to begin a fresh search.");
+                }
+            },
             
             /**
              * HIGH RELIABILITY SETS/ERAS FETCH with Retry and Caching
@@ -953,17 +974,15 @@
                 // Headers object for all authenticated API requests
                 const headers = { 'X-Api-Key': API_KEY };
 
-                // 1. Construct API Query
+                // 1. Construct API Query: Filter by set ID and name pattern
                 let q = `set.id:"${this.selectedSet}"`; 
                 
                 if(nameQuery) {
                     const cleanedQuery = nameQuery.toLowerCase().replace(/"/g, '\\"');
-                    // Use name:*query* for reliable partial matching
                     q += ` name:*${cleanedQuery}*`; 
                 }
                 
-                // 2. Cache Check (Bypass HTTP Cache using unique URL parameter)
-                const cacheBuster = Date.now(); // Unique value for every request
+                // 2. Cache Check (Local Session Cache)
                 const sessionStorageKey = `search_${encodeURIComponent(q).toLowerCase()}`; 
                 const now = Date.now();
                 
@@ -989,7 +1008,8 @@
                 // 3. API Fetch with Cache Buster in URL
                 const orderByParam = 'number';
                 const encodedQuery = encodeURIComponent(q); 
-                // CRITICAL: Add the cacheBuster to the URL
+                // CRITICAL: Add the cacheBuster to the URL to bypass the browser's HTTP cache
+                const cacheBuster = Date.now(); 
                 const url = `https://api.pokemontcg.io/v2/cards?q=${encodedQuery}&pageSize=250&select=id,name,number,images,tcgplayer&orderBy=${orderByParam}&_=${cacheBuster}`;
                 
                 try {
