@@ -245,7 +245,12 @@
                 </div>
             </div>
 
-            <div v-if="cards.length === 0" class="flex flex-col items-center justify-center py-20 opacity-30">
+            <div v-if="isLoadingCards" class="flex flex-col items-center justify-center py-20">
+                <i class="fa-solid fa-circle-notch fa-spin text-4xl mb-4 text-[#00f2ff]"></i>
+                <p class="uppercase tracking-widest font-bold text-sm">Loading Your Collection...</p>
+            </div>
+
+            <div v-else-if="cards.length === 0" class="flex flex-col items-center justify-center py-20 opacity-30">
                 <i class="fa-solid fa-box-open text-6xl mb-4 text-[#00f2ff]"></i>
                 <p class="uppercase tracking-widest font-bold text-sm">No cards collected</p>
                 <button @click="openSearch" class="mt-4 bg-white/10 hover:bg-white/20 px-4 py-2 rounded text-xs uppercase tracking-widest">Add your first card</button>
@@ -370,19 +375,25 @@
 
             <template v-else>
                 <div class="px-4 md:px-8 py-4 md:py-8 bg-[#080a10] grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 border-b border-white/5 shrink-0">
-                    <div><label class="text-[10px] text-gray-500 font-bold uppercase mb-2 block tracking-widest">1. Era</label><select v-model="selectedEra" class="glass-input"><option value="">Select Era</option><option v-for="era in eras" :value="era">{{ era }}</option></select></div>
-                    <div><label class="text-[10px] text-gray-500 font-bold uppercase mb-2 block tracking-widest">2. Set</label><select v-model="selectedSet" :disabled="!selectedEra" class="glass-input disabled:opacity-30"><option value="">Select Set</option><option v-for="s in filteredSets" :value="s.id">{{ s.name }}</option></select></div>
-                    
-                    <div class="col-span-2 md:col-span-1">
-                        <label class="text-[10px] text-gray-500 font-bold uppercase mb-2 block tracking-widest">3. Card Name</label>
-                        <input v-if="!selectedSet" disabled placeholder="Select Set First" class="glass-input disabled:opacity-30">
-                        <div v-else-if="isListLoading" class="glass-input text-gray-400 italic flex items-center gap-2">
-                             <i class="fa-solid fa-circle-notch fa-spin text-[#00f2ff]"></i> Loading...
-                        </div>
-                        <select v-else v-model="selectedPokemon" class="glass-input" @change="query = ''">
-                            <option value="all" class="font-bold text-[#00f2ff]">★ LOAD FULL SET ★</option>
-                            <option v-for="name in setPokemonList" :value="name">{{ name }}</option>
+                    <div>
+                        <label class="text-[10px] text-gray-500 font-bold uppercase mb-2 block tracking-widest">1. Era</label>
+                        <select v-model="selectedEra" class="glass-input">
+                            <option value="">Select Era</option>
+                            <option v-for="era in eras" :value="era">{{ era }}</option>
                         </select>
+                    </div>
+                    
+                    <div>
+                        <label class="text-[10px] text-gray-500 font-bold uppercase mb-2 block tracking-widest">2. Set</label>
+                        <select v-model="selectedSet" :disabled="!selectedEra" class="glass-input disabled:opacity-30">
+                            <option value="">Select Set</option>
+                            <option v-for="s in filteredSets" :value="s.id">{{ s.name }}</option>
+                        </select>
+                    </div>
+
+                    <div class="col-span-2 md:col-span-1">
+                        <label class="text-[10px] text-gray-500 font-bold uppercase mb-2 block tracking-widest">3. Card Name (Optional)</label>
+                        <input v-model="query" :disabled="!selectedSet" @keyup.enter="fetchCards(1)" placeholder="e.g. Charizard (Leave empty for all)" class="glass-input disabled:opacity-30 lowercase placeholder:uppercase">
                     </div>
 
                     <div>
@@ -552,11 +563,8 @@
                     { id: "neo1", name: "Neo Genesis", series: "Classic" }
                 ],
                 
-                setPokemonList: [], 
-                
                 selectedEra: "", 
                 selectedSet: "", 
-                selectedPokemon: "all", 
                 
                 query: "", targetBinder: 'master', searchResults: [],
                 totalSetData: {}, 
@@ -570,18 +578,13 @@
             selectedEra(newEra, oldEra) {
                 if (newEra !== oldEra) {
                     this.selectedSet = ""; 
-                    this.setPokemonList = []; 
-                    this.selectedPokemon = "all";
                     this.searchResults = [];
                 }
             },
             selectedSet(newSet, oldSet) {
                 if (newSet !== oldSet) {
                     this.searchResults = []; 
-                    this.selectedPokemon = "all";
                     this.query = "";
-                    if(newSet) this.fetchSetPokemon(newSet); 
-                    else this.setPokemonList = [];
                 }
             }
         },
@@ -854,27 +857,6 @@
                 return marketPrices.length > 0 ? Math.max(...marketPrices) : 0;
             },
 
-            async fetchSetPokemon(setId) {
-                if(!setId) return;
-                this.isListLoading = true; 
-                this.setPokemonList = []; 
-
-                try {
-                    // Safety check for ID
-                    const res = await fetch(`https://api.pokemontcg.io/v2/cards?q=set.id:"${setId}"&select=name&pageSize=250`);
-                    if(!res.ok) throw new Error("API Limit");
-                    
-                    const data = await res.json();
-                    const uniqueNames = [...new Set(data.data.map(c => c.name))].sort();
-                    this.setPokemonList = uniqueNames;
-                } catch(e) {
-                    console.error("Failed to load pokemon list", e);
-                    this.setPokemonList = ["Error Loading List"];
-                } finally {
-                    this.isListLoading = false;
-                }
-            },
-
             async fetchCards(page = 1) {
                 if(!this.selectedSet) return;
                 this.isSearching = true; 
@@ -884,17 +866,14 @@
                 let q = `set.id:"${this.selectedSet}"`; 
                 
                 // 2. Dropdown Logic
-                if (this.selectedPokemon && this.selectedPokemon !== 'all' && this.selectedPokemon !== 'Error Loading List') {
-                    q += ` name:"${this.selectedPokemon}"`;
-                } 
-                else if (this.query) {
+                if (this.query) {
                     q += ` name:"${this.query.trim()}*"`;
                 }
                 
                 console.log("Searching for:", q);
 
                 // Use a simple version key to prevent old cache issues
-                const cacheKey = `search_v3_${this.selectedSet}_${this.selectedPokemon}_${this.query}`; 
+                const cacheKey = `search_v3_${this.selectedSet}_${this.query}`; 
                 const now = Date.now();
                 
                 try {
