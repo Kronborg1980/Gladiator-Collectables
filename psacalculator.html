@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>📚 Flexible Pokémon TCG Card Search</title>
+    <title>📚 Pokémon TCG Set and Card Search</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -37,11 +37,12 @@
             font-weight: bold;
             margin-bottom: 5px;
         }
-        input[type="text"] {
+        select, input[type="text"] {
             padding: 10px;
             border: 1px solid #ccc;
             border-radius: 4px;
             font-size: 1em;
+            background-color: white; /* Ensure select background is white */
         }
         button {
             padding: 10px 20px;
@@ -51,7 +52,7 @@
             border-radius: 4px;
             cursor: pointer;
             transition: background-color 0.2s;
-            white-space: nowrap; /* Keep the button text on one line */
+            white-space: nowrap;
         }
         button:hover {
             background-color: #a80000;
@@ -64,7 +65,7 @@
             min-height: 50px;
         }
         .card-result {
-            width: calc(33.333% - 14px); /* Three cards per row, accounting for gap */
+            width: calc(33.333% - 14px);
             text-align: center;
             padding: 10px;
             border: 1px solid #ddd;
@@ -97,12 +98,14 @@
 <body>
 
     <div class="container">
-        <h1>📚 Flexible Pokémon TCG Card Search</h1>
+        <h1>📚 Pokémon TCG Set and Card Search</h1>
 
         <div class="input-group">
             <div class="input-item" style="flex-grow: 1;">
-                <label for="setIdInput">Set ID (Required)</label>
-                <input type="text" id="setIdInput" placeholder="e.g., base1, swsh1, sv3pt5" value="base1">
+                <label for="setIdDropdown">Select Set</label>
+                <select id="setIdDropdown">
+                    <option value="">Loading Sets...</option>
+                </select>
             </div>
             <div class="input-item" style="flex-grow: 2;">
                 <label for="cardNameInput">Card Name (Optional)</label>
@@ -112,54 +115,95 @@
         </div>
 
         <div id="results">
-            <p class="message">Enter a **Set ID** (e.g., `base1`) and an optional **Card Name** above to search!</p>
+            <p class="message">Select a Set and click "Search." If the Card Name is left empty, you will see a list of cards from that set.</p>
         </div>
     </div>
 
     <script>
-        // NOTE: Replace 'YOUR_API_KEY_HERE' with your actual key.
         const apiKey = '7191ffb5-91d7-4fb7-bc30-94f1b854ee6e';
-        const baseUrl = 'https://api.pokemontcg.io/v2/cards';
+        const cardApiUrl = 'https://api.pokemontcg.io/v2/cards';
+        const setApiUrl = 'https://api.pokemontcg.io/v2/sets';
+        const setIdDropdown = document.getElementById('setIdDropdown');
         const resultsDiv = document.getElementById('results');
 
+        // --- Core Functions ---
+
         /**
-         * Fetches and displays card data based on the set and name.
+         * 1. Fetches all sets from the API and populates the dropdown.
          */
-        async function lookupCards() {
-            const setId = document.getElementById('setIdInput').value.trim();
-            const cardName = document.getElementById('cardNameInput').value.trim();
-
-            if (!setId) {
-                resultsDiv.innerHTML = '<p class="message error">Please enter a valid **Set ID** to search.</p>';
-                return;
-            }
-
-            // --- Build the Query ---
-            // Base query filters by set ID
-            let query = `set.id:${setId}`;
-
-            // If a card name is provided, add it to the query
-            if (cardName) {
-                // Use a wildcard (*) for partial matching, which is more forgiving
-                query += ` name:"*${cardName}*"`;
-            }
-
-            // Clear previous results and show loading state
-            resultsDiv.innerHTML = '<p class="message">Searching for cards... This may take a moment if the set is large.</p>';
-
-            // We must add 'q=' to the URL parameter to pass the query string
-            const url = `${baseUrl}?q=${encodeURIComponent(query)}&orderBy=number&pageSize=50`; // Limit to 50 results
-
+        async function fetchSets() {
             try {
-                const response = await fetch(url, {
-                    headers: {
-                        'X-Api-Key': apiKey, 
-                        'Content-Type': 'application/json'
-                    }
+                const response = await fetch(`${setApiUrl}?orderBy=releaseDate`, {
+                    headers: { 'X-Api-Key': apiKey }
                 });
 
                 if (!response.ok) {
-                    resultsDiv.innerHTML = `<p class="message error">HTTP Error! Status: ${response.status}. Check if the Set ID is valid.</p>`;
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                const sets = data.data;
+
+                if (sets && sets.length > 0) {
+                    // Sort sets by release date descending (newest first)
+                    sets.sort((a, b) => new Date(b.releaseDate) - new Date(a.releaseDate));
+                    
+                    // Clear the "Loading" message
+                    setIdDropdown.innerHTML = '<option value="">-- Select a Set --</option>';
+
+                    sets.forEach(set => {
+                        const option = document.createElement('option');
+                        option.value = set.id;
+                        // Display the set name and the year for clarity
+                        option.textContent = `${set.name} (${new Date(set.releaseDate).getFullYear()})`;
+                        setIdDropdown.appendChild(option);
+                    });
+
+                    // Set a default value (e.g., the newest set)
+                    if (sets.length > 0) {
+                         setIdDropdown.value = sets[0].id; // Select the newest set by default
+                    }
+
+                } else {
+                    setIdDropdown.innerHTML = '<option value="">Error loading sets.</option>';
+                }
+
+            } catch (error) {
+                console.error('Error loading set list:', error);
+                setIdDropdown.innerHTML = '<option value="">Failed to load sets.</option>';
+            }
+        }
+
+        /**
+         * 2. Fetches and displays card data based on the selected set and optional name.
+         */
+        async function lookupCards() {
+            const setId = setIdDropdown.value.trim();
+            const cardName = document.getElementById('cardNameInput').value.trim();
+
+            if (!setId) {
+                resultsDiv.innerHTML = '<p class="message error">Please select a **Set** from the dropdown.</p>';
+                return;
+            }
+
+            // Build the Query
+            let query = `set.id:${setId}`;
+            if (cardName) {
+                query += ` name:"*${cardName}*"`;
+            }
+
+            resultsDiv.innerHTML = '<p class="message">Searching for cards...</p>';
+            
+            // Limit to 50 results and order by card number
+            const url = `${cardApiUrl}?q=${encodeURIComponent(query)}&orderBy=number&pageSize=50`;
+
+            try {
+                const response = await fetch(url, {
+                    headers: { 'X-Api-Key': apiKey }
+                });
+
+                if (!response.ok) {
+                    resultsDiv.innerHTML = `<p class="message error">HTTP Error! Status: ${response.status}.</p>`;
                     return;
                 }
 
@@ -171,7 +215,7 @@
                 } else {
                     let message = `No cards found for Set ID **${setId}**.`;
                     if (cardName) {
-                        message = `No cards found named **"${cardName}"** in Set ID **${setId}**.`;
+                        message = `No cards found named **"${cardName}"** in the selected set.`;
                     }
                     resultsDiv.innerHTML = `<p class="message error">${message}</p>`;
                 }
@@ -184,14 +228,14 @@
 
         /**
          * Renders the list of cards found into the results div.
-         * @param {Array} cards - An array of card objects.
-         * @param {string} searchName - The name searched, if any.
          */
         function displayCards(cards, searchName) {
             let html = '';
             
             if (!searchName) {
-                html += `<p class="message" style="width:100%; font-style:italic;">Showing the first ${cards.length} cards in the set.</p>`;
+                html += `<p class="message" style="width:100%; font-style:italic;">Showing the first ${cards.length} cards from the set. Enter a name to narrow your search.</p>`;
+            } else {
+                html += `<p class="message" style="width:100%; font-style:italic;">Found ${cards.length} results matching "${searchName}".</p>`;
             }
 
             cards.forEach(card => {
@@ -208,13 +252,13 @@
             resultsDiv.innerHTML = html;
         }
 
-        // Add a listener to allow searching with the Enter key
+        // --- Initialization ---
+
+        // 1. Load the sets as soon as the page loads
+        document.addEventListener('DOMContentLoaded', fetchSets);
+
+        // 2. Add listeners to allow searching with the Enter key
         document.getElementById('cardNameInput').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                lookupCards();
-            }
-        });
-        document.getElementById('setIdInput').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 lookupCards();
             }
