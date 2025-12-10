@@ -563,6 +563,7 @@
                 }
             },
             selectedSet(newSet, oldSet) {
+                // Aggressively reset search results when set changes to avoid stale data display
                 if (newSet !== oldSet) {
                     this.searchResults = []; 
                     this.searchPage = 1;
@@ -936,7 +937,7 @@
             
 
             /**
-             * HIGH RELIABILITY CARD SEARCH FETCH (Strictly Manual)
+             * HIGH RELIABILITY CARD SEARCH FETCH (Strictly Manual with Cache Buster)
              */
             async fetchCards(page = 1) {
                 if(!this.selectedSet) {
@@ -952,21 +953,20 @@
                 // Headers object for all authenticated API requests
                 const headers = { 'X-Api-Key': API_KEY };
 
-                // 1. Construct API Query: Filter by set ID and name pattern
+                // 1. Construct API Query
                 let q = `set.id:"${this.selectedSet}"`; 
                 
                 if(nameQuery) {
-                    // FIX: Use the reliable name search syntax: name:*query*
                     const cleanedQuery = nameQuery.toLowerCase().replace(/"/g, '\\"');
                     q += ` name:*${cleanedQuery}*`; 
                 }
                 
-                // 2. Cache Key and Check (Session Storage - 30 min cache)
-                // Use the full query string (q) for a unique cache key
-                const cacheKey = `search_${encodeURIComponent(q).toLowerCase()}`; 
+                // 2. Cache Busting Check
+                // This is the cache key for our custom sessionStorage cache
+                const sessionStorageKey = `search_${encodeURIComponent(q).toLowerCase()}`; 
                 const now = Date.now();
                 
-                const cachedData = sessionStorage.getItem(cacheKey);
+                const cachedData = sessionStorage.getItem(sessionStorageKey);
                 if (cachedData) {
                     try {
                         const cache = JSON.parse(cachedData);
@@ -978,22 +978,25 @@
                             return;
                         } else {
                             // Invalidate old cache aggressively
-                            sessionStorage.removeItem(cacheKey); 
+                            sessionStorage.removeItem(sessionStorageKey); 
                         }
                     } catch (e) {
-                        sessionStorage.removeItem(cacheKey);
+                        sessionStorage.removeItem(sessionStorageKey);
                     }
                 }
 
-                // 3. API Fetch with proper URL Encoding
+                // 3. API Fetch with Cache Buster in URL
                 const orderByParam = 'number';
                 const encodedQuery = encodeURIComponent(q); 
-                // We fetch max 250 cards (API max) and then client-side paginate to 30.
-                const url = `https://api.pokemontcg.io/v2/cards?q=${encodedQuery}&pageSize=250&select=id,name,number,images,tcgplayer&orderBy=${orderByParam}`;
+                
+                // CRITICAL: Add a random number to the URL to bypass the browser's HTTP cache on every search
+                const cacheBuster = Date.now();
+                const url = `https://api.pokemontcg.io/v2/cards?q=${encodedQuery}&pageSize=250&select=id,name,number,images,tcgplayer&orderBy=${orderByParam}&_=${cacheBuster}`;
                 
                 try {
                     console.log("Running API Query:", url);
-                    const res = await fetch(url, { headers });
+                    // Use 'no-cache' to tell the browser not to rely on HTTP cache, even with the cache buster
+                    const res = await fetch(url, { headers, cache: 'no-store' }); 
                     
                     if (!res.ok) {
                         console.error(`Card search failed. Status: ${res.status}. Query: ${url}`); 
@@ -1005,10 +1008,10 @@
                     this.searchResults = data.data || [];
                     this.searchPage = 1; // Always reset to page 1 on new search results
 
-                    // Cache results if successful
+                    // Cache results to sessionStorage if successful (for repeated use in this session)
                     if (this.searchResults.length > 0) {
                         const cache = { timestamp: now, results: this.searchResults };
-                        sessionStorage.setItem(cacheKey, JSON.stringify(cache));
+                        sessionStorage.setItem(sessionStorageKey, JSON.stringify(cache));
                         console.log("Card search results saved to session cache.");
                     }
 
