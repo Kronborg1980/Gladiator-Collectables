@@ -35,10 +35,7 @@
             overflow-y: auto;
         }
         @media (min-width: 768px) {
-            body { 
-                height: 100vh;
-                overflow: hidden; 
-            }
+            body { height: 100vh; overflow: hidden; }
         }
 
         .font-brand { font-family: 'Cinzel', serif; }
@@ -54,7 +51,7 @@
             border-radius: 16px;
         }
 
-        /* --- ROI CALCULATOR TABLE --- */
+        /* ROI TABLE GRID */
         .roi-grid {
             display: grid;
             grid-template-columns: 30px 40px 1fr 0.8fr 40px; 
@@ -80,11 +77,7 @@
             user-select: none; 
             padding: 12px 16px;
         }
-        @media (min-width: 768px) {
-            .roi-header {
-                padding: 12px 24px;
-            }
-        }
+        @media (min-width: 768px) { .roi-header { padding: 12px 24px; } }
 
         .roi-header .desktop-only, .roi-grid .desktop-only { display: none; }
         @media (min-width: 768px) {
@@ -101,7 +94,7 @@
         .sortable:hover { color: var(--accent); }
         .sortable.active { color: var(--accent); text-shadow: 0 0 10px rgba(0, 242, 255, 0.3); }
 
-        /* --- INPUTS & CONTROLS --- */
+        /* INPUTS */
         .table-input {
             background: transparent; border-bottom: 1px solid rgba(255,255,255,0.15);
             color: #fff; text-align: right; width: 100%; outline: none; font-family: 'Inter', sans-serif; font-size: 12px;
@@ -157,15 +150,9 @@
     </button>
 
     <aside class="w-72 glass-panel flex-col shrink-0 z-30 transition-all duration-300 md:flex"
-           :class="{ 
-               'fixed inset-0 w-full h-full bg-black/90 backdrop-blur-md': showMobileNav, 
-               'hidden': !showMobileNav && !isDesktop, 
-               'flex': isDesktop, 
-               'w-72': isDesktop 
-           }">
+           :class="{ 'fixed inset-0 w-full h-full bg-black/90 backdrop-blur-md': showMobileNav, 'hidden': !showMobileNav && !isDesktop, 'flex': isDesktop, 'w-72': isDesktop }">
         
         <div :class="{'w-72 h-full mx-auto glass-panel flex flex-col': showMobileNav}">
-
             <div class="p-8 flex flex-col items-center border-b border-white/5 shrink-0">
                 <img src="https://raw.githubusercontent.com/Kronborg1980/Gladiator-Collectables/main/logogla.webp" class="w-12 h-12 object-contain mb-3 drop-shadow-[0_0_10px_rgba(0,242,255,0.4)]">
                 <h1 class="text-xl font-brand font-bold text-white tracking-[0.2em]">GLADIATOR</h1>
@@ -195,7 +182,6 @@
                         <i @click.stop="deleteBinder(binder.id)" class="fa-solid fa-trash text-[10px] opacity-0 group-hover:opacity-100 hover:text-red-500 transition px-2"></i>
                     </button>
                 </div>
-                
             </div>
 
             <div class="p-6 border-t border-white/5 bg-black/20 shrink-0">
@@ -247,13 +233,12 @@
 
             <div v-if="isLoadingCards" class="flex flex-col items-center justify-center py-20">
                 <i class="fa-solid fa-circle-notch fa-spin text-4xl mb-4 text-[#00f2ff]"></i>
-                <p class="uppercase tracking-widest font-bold text-sm">Loading Your Collection...</p>
+                <p class="uppercase tracking-widest font-bold text-sm">Loading Collection...</p>
             </div>
 
             <div v-else-if="cards.length === 0" class="flex flex-col items-center justify-center py-20 opacity-30">
                 <i class="fa-solid fa-box-open text-6xl mb-4 text-[#00f2ff]"></i>
                 <p class="uppercase tracking-widest font-bold text-sm">No cards collected</p>
-                <button @click="openSearch" class="mt-4 bg-white/10 hover:bg-white/20 px-4 py-2 rounded text-xs uppercase tracking-widest">Add your first card</button>
             </div>
             
             <div v-else class="space-y-10">
@@ -263,7 +248,6 @@
                         <span class="text-[10px] text-[#00f2ff] font-bold bg-[#00f2ff]/10 px-2 py-0.5 rounded border border-[#00f2ff]/30 shrink-0">
                              {{ setGroup.uniqueCount }} / {{ getSetTotal(setName) }} Unique Collected
                         </span>
-                        
                     </div>
                     <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-4 md:gap-6">
                         <div v-for="card in setGroup.cards" :key="card.uid" class="bg-[#0a0f18] p-3 rounded-xl hover:border-[#00f2ff] border border-white/5 group relative transition duration-200">
@@ -368,83 +352,76 @@
                 <button @click="showSearch=false" class="text-gray-500 hover:text-white transition"><i class="fa-solid fa-xmark text-xl"></i></button>
             </div>
             
-            <div v-if="setsLoading" class="flex-1 flex flex-col items-center justify-center p-12 text-[#00f2ff]">
-                <i class="fa-solid fa-circle-notch fa-spin text-4xl mb-4"></i>
-                <p class="text-xs font-bold uppercase tracking-widest animate-pulse">Syncing Database...</p>
+            <div class="px-4 md:px-8 py-4 md:py-8 bg-[#080a10] grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 border-b border-white/5 shrink-0">
+                <div>
+                    <label class="text-[10px] text-gray-500 font-bold uppercase mb-2 block tracking-widest">1. Era</label>
+                    <select v-model="selectedEra" class="glass-input">
+                        <option value="">Select Era</option>
+                        <option v-for="era in eras" :value="era">{{ era }}</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="text-[10px] text-gray-500 font-bold uppercase mb-2 block tracking-widest">2. Set</label>
+                    <select v-model="selectedSet" :disabled="!selectedEra" class="glass-input disabled:opacity-30">
+                        <option value="">Select Set</option>
+                        <option v-for="s in filteredSets" :value="s.id">{{ s.name }}</option>
+                    </select>
+                </div>
+
+                <div class="col-span-2 md:col-span-1">
+                    <label class="text-[10px] text-gray-500 font-bold uppercase mb-2 block tracking-widest">3. Card Name (Optional)</label>
+                    <input v-model="query" :disabled="!selectedSet" @keyup.enter="fetchCards(1)" placeholder="e.g. Charizard (Blank = All)" class="glass-input disabled:opacity-30 lowercase placeholder:uppercase">
+                </div>
+
+                <div>
+                    <label class="text-[10px] text-[#00f2ff] font-bold uppercase mb-2 block tracking-widest">4. Sort</label>
+                    <select v-model="searchSort" class="glass-input border-[#00f2ff] text-[#00f2ff]">
+                        <option value="number">Number</option>
+                        <option value="price-desc">Price: High</option>
+                        <option value="price-asc">Price: Low</option>
+                        <option value="name">Name</option>
+                    </select>
+                </div>
             </div>
+            
+            <div class="px-4 md:px-8 py-4 bg-[#050505] flex justify-between items-center border-b border-white/5 shrink-0">
+                <div class="text-[10px] text-gray-500 font-bold uppercase">Adding to: <span class="text-white">{{ targetBinder === 'master' ? 'Master Collection' : getBinderName(targetBinder) }}</span></div>
+                <button @click="fetchCards(1)" :disabled="isSearching || !selectedSet" class="bg-[#00f2ff] hover:bg-white text-black text-xs font-bold px-4 py-2 md:px-10 md:py-3 rounded shadow-lg uppercase tracking-widest transition transform active:scale-95 disabled:opacity-50 disabled:scale-100 flex items-center gap-2">
+                    <i v-if="isSearching" class="fa-solid fa-circle-notch fa-spin"></i> {{ isSearching ? 'Scanning...' : 'Search' }}
+                </button>
+            </div>
+            
+            <div class="flex-1 overflow-y-auto p-4 md:p-8 bg-[#050508] relative">
+                <div v-if="paginatedSearchResults.length > 0" class="flex justify-center gap-4 mb-4">
+                    <button @click="searchPage > 1 ? searchPage-- : null" :disabled="searchPage === 1" class="pagination-btn">< Prev</button>
+                    <span class="text-xs font-bold text-[#00f2ff] px-2">Page {{ searchPage }} of {{ totalSearchPages || 1 }}</span>
+                    <button @click="searchPage < totalSearchPages ? searchPage++ : null" :disabled="searchPage === totalSearchPages" class="pagination-btn">Next ></button>
+                </div>
 
-            <template v-else>
-                <div class="px-4 md:px-8 py-4 md:py-8 bg-[#080a10] grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 border-b border-white/5 shrink-0">
-                    <div>
-                        <label class="text-[10px] text-gray-500 font-bold uppercase mb-2 block tracking-widest">1. Era</label>
-                        <select v-model="selectedEra" class="glass-input">
-                            <option value="">Select Era</option>
-                            <option v-for="era in eras" :value="era">{{ era }}</option>
-                        </select>
-                    </div>
-                    
-                    <div>
-                        <label class="text-[10px] text-gray-500 font-bold uppercase mb-2 block tracking-widest">2. Set</label>
-                        <select v-model="selectedSet" :disabled="!selectedEra" class="glass-input disabled:opacity-30">
-                            <option value="">Select Set</option>
-                            <option v-for="s in filteredSets" :value="s.id">{{ s.name }}</option>
-                        </select>
-                    </div>
+                <div v-if="isSearching" class="absolute inset-0 flex flex-col items-center justify-center bg-black/80 z-20 backdrop-blur-sm">
+                    <i class="fa-solid fa-satellite-dish text-6xl text-[#00f2ff] mb-4 animate-pulse"></i>
+                    <p class="uppercase font-bold tracking-[0.3em] text-xs text-[#00f2ff]">Acquiring Data...</p>
+                </div>
 
-                    <div class="col-span-2 md:col-span-1">
-                        <label class="text-[10px] text-gray-500 font-bold uppercase mb-2 block tracking-widest">3. Card Name (Optional)</label>
-                        <input v-model="query" :disabled="!selectedSet" @keyup.enter="fetchCards(1)" placeholder="e.g. Charizard (Leave empty for all)" class="glass-input disabled:opacity-30 lowercase placeholder:uppercase">
-                    </div>
-
-                    <div>
-                        <label class="text-[10px] text-[#00f2ff] font-bold uppercase mb-2 block tracking-widest">4. Sort</label>
-                        <select v-model="searchSort" class="glass-input border-[#00f2ff] text-[#00f2ff]">
-                            <option value="number">Number</option>
-                            <option value="price-desc">Price: High</option>
-                            <option value="price-asc">Price: Low</option>
-                            <option value="name">Name</option>
-                        </select>
-                    </div>
+                <div v-if="!isSearching && searchResults.length === 0" class="h-full flex flex-col items-center justify-center opacity-30">
+                    <i class="fa-solid fa-magnifying-glass text-6xl mb-4 text-white"></i>
+                    <p class="uppercase font-bold tracking-widest text-xs">Ready to Search</p>
                 </div>
                 
-                <div class="px-4 md:px-8 py-4 bg-[#050505] flex justify-between items-center border-b border-white/5 shrink-0">
-                    <div class="text-[10px] text-gray-500 font-bold uppercase">Adding to: <span class="text-white">{{ targetBinder === 'master' ? 'Master Collection' : getBinderName(targetBinder) }}</span></div>
-                    <button @click="fetchCards(1)" :disabled="isSearching || !selectedSet" class="bg-[#00f2ff] hover:bg-white text-black text-xs font-bold px-4 py-2 md:px-10 md:py-3 rounded shadow-lg uppercase tracking-widest transition transform active:scale-95 disabled:opacity-50 disabled:scale-100 flex items-center gap-2">
-                        <i v-if="isSearching" class="fa-solid fa-circle-notch fa-spin"></i> {{ isSearching ? 'Scanning...' : 'Search' }}
-                    </button>
-                </div>
-                
-                <div class="flex-1 overflow-y-auto p-4 md:p-8 bg-[#050508] relative">
-                    <div v-if="paginatedSearchResults.length > 0" class="flex justify-center gap-4 mb-4">
-                        <button @click="searchPage > 1 ? searchPage-- : null" :disabled="searchPage === 1" class="pagination-btn">< Prev</button>
-                        <span class="text-xs font-bold text-[#00f2ff] px-2">Page {{ searchPage }} of {{ totalSearchPages || 1 }}</span>
-                        <button @click="searchPage < totalSearchPages ? searchPage++ : null" :disabled="searchPage === totalSearchPages" class="pagination-btn">Next ></button>
-                    </div>
-
-                    <div v-if="isSearching" class="absolute inset-0 flex flex-col items-center justify-center bg-black/80 z-20 backdrop-blur-sm">
-                        <i class="fa-solid fa-satellite-dish text-6xl text-[#00f2ff] mb-4 animate-pulse"></i>
-                        <p class="uppercase font-bold tracking-[0.3em] text-xs text-[#00f2ff]">Acquiring Data...</p>
-                    </div>
-
-                    <div v-if="!isSearching && searchResults.length === 0" class="h-full flex flex-col items-center justify-center opacity-30">
-                        <i class="fa-solid fa-magnifying-glass text-6xl mb-4 text-white"></i>
-                        <p class="uppercase font-bold tracking-widest text-xs">Ready to Search</p>
-                    </div>
-                    
-                    <div v-else>
-                        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 md:gap-6 mb-6">
-                            <div v-for="card in paginatedSearchResults" :key="card.id" @click="addCard(card)" class="bg-[#0a0f18] p-3 rounded-xl cursor-pointer hover:border-[#00f2ff] border border-white/5 group relative transition duration-200">
-                                <img :src="card.images.small" loading="lazy" class="w-full rounded-lg mb-3 shadow-lg">
-                                <div class="text-center text-xs font-bold text-white truncate">{{ card.name }}</div>
-                                <div class="absolute top-2 right-2 bg-black/90 backdrop-blur text-[#00f2ff] text-[9px] font-bold px-2 py-1 rounded border border-[#00f2ff] shadow-lg">${{ formatNumber(getCardPrice(card)) }}</div>
-                                <div v-if="addedIds.includes(card.id)" class="absolute inset-0 bg-green-500/90 flex items-center justify-center rounded-xl font-bold text-black uppercase tracking-widest text-xs animate-pulse">
-                                    ACQUIRED <i class="fa-solid fa-check ml-2"></i>
-                                </div>
+                <div v-else>
+                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 md:gap-6 mb-6">
+                        <div v-for="card in paginatedSearchResults" :key="card.id" @click="addCard(card)" class="bg-[#0a0f18] p-3 rounded-xl cursor-pointer hover:border-[#00f2ff] border border-white/5 group relative transition duration-200">
+                            <img :src="card.images.small" loading="lazy" class="w-full rounded-lg mb-3 shadow-lg">
+                            <div class="text-center text-xs font-bold text-white truncate">{{ card.name }}</div>
+                            <div class="absolute top-2 right-2 bg-black/90 backdrop-blur text-[#00f2ff] text-[9px] font-bold px-2 py-1 rounded border border-[#00f2ff] shadow-lg">${{ formatNumber(getCardPrice(card)) }}</div>
+                            <div v-if="addedIds.includes(card.id)" class="absolute inset-0 bg-green-500/90 flex items-center justify-center rounded-xl font-bold text-black uppercase tracking-widest text-xs animate-pulse">
+                                ACQUIRED <i class="fa-solid fa-check ml-2"></i>
                             </div>
                         </div>
                     </div>
                 </div>
-            </template>
+            </div>
         </div>
     </div>
     </Transition>
@@ -493,7 +470,7 @@
 </div>
 
 <script>
-    // --- FIREBASE KEYS ---
+    // --- CONFIGURATION ---
     const firebaseConfig = {
         apiKey: "AIzaSyBnb9VlLk4sNbj89beWtb2hmLGsvhgb6TE",
         authDomain: "gladiator-portfolio.firebaseapp.com",
@@ -509,7 +486,7 @@
         auth = firebase.auth();
         db = firebase.firestore();
         provider = new firebase.auth.GoogleAuthProvider();
-    } catch(e) { console.log("Firebase Error", e); }
+    } catch(e) { console.log("Init Error", e); }
 
     const { createApp } = Vue;
 
@@ -518,24 +495,19 @@
             return {
                 user: null, currentView: 'collection', currentBinder: null, 
                 localBinders: [], localCards: [], cloudBinders: [], cloudCards: [],
-                showSearch: false, detailCard: null, 
+                showSearch: false, detailCard: null, setsLoading: false, isSearching: false,
+                isLoadingCards: false, // New loader for main screen
                 
-                // LOADERS
-                setsLoading: false, 
-                isSearching: false,
-                isListLoading: false, 
-                isLoadingCards: false, 
-                
-                // --- HARDCODED SETS (Instant Load) ---
+                // --- HARDCODED SET LIST (FASTEST) ---
                 eras: ["Scarlet & Violet", "Sword & Shield", "Sun & Moon", "XY", "Black & White", "Classic"],
                 allSets: [
-                    // Scarlet & Violet
+                    // S&V
                     { id: "sv3pt5", name: "151", series: "Scarlet & Violet" },
                     { id: "sv4", name: "Paradox Rift", series: "Scarlet & Violet" },
                     { id: "sv3", name: "Obsidian Flames", series: "Scarlet & Violet" },
                     { id: "sv2", name: "Paldea Evolved", series: "Scarlet & Violet" },
                     { id: "sv1", name: "Scarlet & Violet Base", series: "Scarlet & Violet" },
-                    // Sword & Shield
+                    // SwSh
                     { id: "swsh12pt5", name: "Crown Zenith", series: "Sword & Shield" },
                     { id: "swsh11", name: "Lost Origin", series: "Sword & Shield" },
                     { id: "swsh10", name: "Astral Radiance", series: "Sword & Shield" },
@@ -546,13 +518,9 @@
                     { id: "swsh5", name: "Battle Styles", series: "Sword & Shield" },
                     { id: "swsh45", name: "Shining Fates", series: "Sword & Shield" },
                     { id: "swsh4", name: "Vivid Voltage", series: "Sword & Shield" },
-                    { id: "swsh35", name: "Champion's Path", series: "Sword & Shield" },
-                    { id: "swsh3", name: "Darkness Ablaze", series: "Sword & Shield" },
-                    // Sun & Moon
+                    // S&M
                     { id: "sm12", name: "Cosmic Eclipse", series: "Sun & Moon" },
                     { id: "sm115", name: "Hidden Fates", series: "Sun & Moon" },
-                    { id: "sm11", name: "Unified Minds", series: "Sun & Moon" },
-                    { id: "sm10", name: "Unbroken Bonds", series: "Sun & Moon" },
                     { id: "sm9", name: "Team Up", series: "Sun & Moon" },
                     // Classic
                     { id: "base1", name: "Base Set", series: "Classic" },
@@ -565,7 +533,6 @@
                 
                 selectedEra: "", 
                 selectedSet: "", 
-                
                 query: "", targetBinder: 'master', searchResults: [],
                 totalSetData: {}, 
                 
@@ -579,18 +546,21 @@
                 if (newEra !== oldEra) {
                     this.selectedSet = ""; 
                     this.searchResults = [];
+                    this.searchPage = 1;
+                    this.query = "";
                 }
             },
             selectedSet(newSet, oldSet) {
                 if (newSet !== oldSet) {
                     this.searchResults = []; 
+                    this.searchPage = 1;
                     this.query = "";
                 }
             }
         },
         mounted() {
             this.loadLocalData();
-            // Removed loadSetsAPI() because we are using hardcoded sets for speed
+            // Removed loadSetsAPI to use fast hardcoded list
             window.addEventListener('resize', this.checkIsDesktop);
             this.checkIsDesktop();
             if(auth) auth.onAuthStateChanged(u => { if(u) { this.user = u; this.initCloudData(); } else { this.user = null; } });
@@ -688,8 +658,9 @@
                 return b ? b.name : 'Unknown';
             },
             getSetTotal(setName) {
-                // Simplified total logic for hardcoded sets
-                return '∞'; 
+                const set = this.totalSetData[setName];
+                if (!set) return '?';
+                return (set.total && set.total > 0) ? set.total : set.printedTotal;
             },
             toggleSelectAll() {
                 if (this.isAllSelected) this.selectedIds = [];
@@ -733,40 +704,39 @@
                     localStorage.setItem('glad_cards', JSON.stringify(this.localCards));
                 }
             },
+            
+            // --- FIREBASE INIT WITH AUTO-REFRESH ---
             initCloudData() {
-                this.isLoadingCards = true;
+                this.isLoadingCards = true; // Start loading
+                db.collection('users').doc(this.user.uid).collection('binders').onSnapshot(s => this.cloudBinders = s.docs.map(d => ({id: d.id, ...d.data()})));
                 
-                // Binder Listener
-                db.collection('users').doc(this.user.uid).collection('binders').onSnapshot(s => {
-                    this.cloudBinders = s.docs.map(d => ({id: d.id, ...d.data()}));
-                });
-
-                // Card Listener with ERROR HANDLING
                 db.collection('users').doc(this.user.uid).collection('cards').onSnapshot(s => {
                     this.cloudCards = s.docs.map(d => ({uid: d.id, ...d.data()}));
-                    this.isLoadingCards = false;
+                    this.isLoadingCards = false; // Stop loading
                     this.updateMarketPrices(); // Trigger background update
                 }, error => {
+                    console.error("Firestore Error", error);
+                    alert("Database Error: Check your Firebase Rules.");
                     this.isLoadingCards = false;
-                    if(error.code === 'permission-denied') {
-                        alert("DATABASE ERROR: Permission Denied. Check Rules.");
-                    } else {
-                        console.error("Firestore Error:", error);
-                    }
                 });
             },
+
+            // --- SMART PRICE REFRESHER ---
             async updateMarketPrices() {
                 const myCards = this.cards; 
                 if (myCards.length === 0) return;
                 const oneDayAgo = Date.now() - (24 * 60 * 60 * 1000);
+                // Refresh prices if older than 24h
                 const staleCards = myCards.filter(c => !c.lastUpdated || c.lastUpdated < oneDayAgo);
                 if (staleCards.length === 0) return; 
 
-                console.log(`Auto-refreshing prices for ${staleCards.length} cards...`);
+                console.log(`Auto-refreshing ${staleCards.length} cards...`);
                 const chunkSize = 10;
                 for (let i = 0; i < staleCards.length; i += chunkSize) {
                     const chunk = staleCards.slice(i, i + chunkSize);
+                    // Use encodeURIComponent to handle spaces/symbols correctly
                     const query = chunk.map(c => `id:${c.id}`).join(' OR ');
+                    
                     try {
                         const res = await fetch(`https://api.pokemontcg.io/v2/cards?q=${encodeURIComponent(query)}&select=id,tcgplayer`);
                         const data = await res.json();
@@ -780,9 +750,11 @@
                             });
                         });
                         await batch.commit();
+                        console.log("Price batch updated.");
                     } catch (e) { console.error("Auto-refresh failed", e); }
                 }
             },
+
             createBinder() {
                 const name = prompt("Name your new Collection (e.g. Eevee Heroes):");
                 if(!name) return;
@@ -794,7 +766,6 @@
                 if(this.user) db.collection('users').doc(this.user.uid).collection('binders').doc(id).delete();
                 else { this.localBinders = this.localBinders.filter(b => b.id !== id); this.saveData(); }
             },
-            
             addCard(c) {
                 const market = this.getCardPrice(c);
                 const cardData = {
@@ -809,19 +780,9 @@
                 this.addedIds.push(c.id);
                 setTimeout(() => { this.addedIds = this.addedIds.filter(id => id !== c.id); }, 1500);
 
-                if(this.user) {
-                    db.collection('users').doc(this.user.uid).collection('cards').add(cardData)
-                    .catch(error => {
-                        this.addedIds = this.addedIds.filter(id => id !== c.id); 
-                        alert("ERROR SAVING CARD: " + error.message);
-                    });
-                } else { 
-                    cardData.uid = Date.now().toString(); 
-                    this.localCards.push(cardData); 
-                    this.saveData(); 
-                }
+                if(this.user) db.collection('users').doc(this.user.uid).collection('cards').add(cardData);
+                else { cardData.uid = Date.now().toString(); this.localCards.push(cardData); this.saveData(); }
             },
-            
             deleteCard(uid) {
                 if(!confirm("Remove this card permanently?")) return;
                 if(this.user) db.collection('users').doc(this.user.uid).collection('cards').doc(uid).delete();
@@ -849,6 +810,7 @@
             },
             openCardDetail(c) { this.detailCard = c; },
             formatNumber(n) { return (n||0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}); },
+            
             getCardPrice(c) { 
                 const prices = c.tcgplayer?.prices;
                 if (!prices) return 0;
@@ -856,26 +818,23 @@
                 if (c.tcgplayer?.market && c.tcgplayer.market > 0) marketPrices.push(c.tcgplayer.market);
                 return marketPrices.length > 0 ? Math.max(...marketPrices) : 0;
             },
-
+            
             async fetchCards(page = 1) {
                 if(!this.selectedSet) return;
                 this.isSearching = true; 
                 this.searchPage = page; 
 
-                // 1. Base Query with quotes for safety
-                let q = `set.id:"${this.selectedSet}"`; 
-                
-                // 2. Dropdown Logic
-                if (this.query) {
+                // --- SEARCH LOGIC (FIXED) ---
+                let q = `set.id:${this.selectedSet}`; 
+                if(this.query) {
                     q += ` name:"${this.query.trim()}*"`;
                 }
                 
-                console.log("Searching for:", q);
-
-                // Use a simple version key to prevent old cache issues
+                // Cache Key (Versioned for Safety)
                 const cacheKey = `search_v3_${this.selectedSet}_${this.query}`; 
                 const now = Date.now();
                 
+                // 1. Try Cache
                 try {
                     const cachedData = sessionStorage.getItem(cacheKey);
                     if (cachedData) {
@@ -889,30 +848,31 @@
                     }
                 } catch (e) { }
 
+                // 2. Fetch API
                 try {
-                    // CRITICAL FIX: encodeURIComponent handles spaces and special chars
+                    // Use encodeURIComponent to handle special characters in set IDs or names
                     const res = await fetch(`https://api.pokemontcg.io/v2/cards?q=${encodeURIComponent(q)}&pageSize=250&select=id,name,number,images,tcgplayer&orderBy=${this.searchSort.replace('-', '')}`);
                     
                     if (!res.ok) {
-                        const errText = await res.text();
-                        throw new Error(`API fetch failed (${res.status})`);
+                        throw new Error(`API fetch failed with status: ${res.status}`);
                     }
                     
                     const data = await res.json();
                     this.searchResults = data.data || [];
                     this.searchPage = page;
 
-                    // Try to cache, but don't crash if memory is full
+                    // 3. Save Cache (Fail-Safe)
                     if (this.searchResults.length > 0) {
                         try {
                             const cache = { timestamp: now, results: this.searchResults };
                             sessionStorage.setItem(cacheKey, JSON.stringify(cache));
-                        } catch (storageError) { console.warn("Session storage full - skipping cache."); }
+                        } catch (storageError) { console.warn("Cache full, skipping."); }
                     }
+
                 } catch(e) { 
                     console.error("API Fetch Error:", e);
                     this.searchResults = []; 
-                    alert("Search failed: " + e.message);
+                    alert("Search error. Try refreshing or typing a simpler name.");
                 } 
                 finally { this.isSearching = false; }
             }
