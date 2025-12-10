@@ -396,9 +396,9 @@
                 
                 <div class="flex-1 overflow-y-auto p-4 md:p-8 bg-[#050508] relative">
                     <div v-if="paginatedSearchResults.length > 0" class="flex justify-center gap-4 mb-4">
-                        <button @click="searchPage > 1 ? searchPage-- : null" :disabled="searchPage === 1" class="pagination-btn">< Prev</button>
+                        <button @click="prevPage" :disabled="searchPage === 1" class="pagination-btn">< Prev</button>
                         <span class="text-xs font-bold text-[#00f2ff] px-2">Page {{ searchPage }} of {{ totalSearchPages || 1 }}</span>
-                        <button @click="searchPage < totalSearchPages ? searchPage++ : null" :disabled="searchPage === totalSearchPages" class="pagination-btn">Next ></button>
+                        <button @click="nextPage" :disabled="searchPage === totalSearchPages" class="pagination-btn">Next ></button>
                     </div>
 
                     <div v-if="isSearching" class="absolute inset-0 flex flex-col items-center justify-center bg-black/80 z-20 backdrop-blur-sm">
@@ -509,6 +509,7 @@
                 
                 // SEARCH PAGINATION
                 searchPage: 1, searchPerPage: 30, addedIds: [], selectedIds: [], searchSort: 'number',
+                totalSearchPagesCount: 1, // Track total pages from API
 
                 // MOBILE NAV
                 showMobileNav: false,
@@ -616,28 +617,16 @@
                 }
                 return grouped;
             },
-            filteredSearchList() {
-                let list = [...this.searchResults];
-                // Note: Query filtering is now mostly handled by API, but this keeps local snappy
-                if(this.query) { list = list.filter(c => c.name.toLowerCase().includes(this.query.toLowerCase())); }
-                
-                list.sort((a, b) => {
-                    const priceA = this.getCardPrice(a);
-                    const priceB = this.getCardPrice(b);
-                    if (this.searchSort === 'price-desc') return priceB - priceA;
-                    if (this.searchSort === 'price-asc') return priceA - priceB;
-                    if (this.searchSort === 'name') return a.name.localeCompare(b.name);
-                    return a.number.localeCompare(b.number, undefined, {numeric: true});
-                });
-                return list;
-            },
-            totalSearchPages() { return Math.ceil(this.filteredSearchList.length / this.searchPerPage); },
+            
+            // SERVER SIDE PAGINATION: We no longer slice locally
             paginatedSearchResults() {
-                const start = (this.searchPage - 1) * this.searchPerPage;
-                return this.filteredSearchList.slice(start, start + this.searchPerPage);
+                return this.searchResults;
             },
-            totalValue() { return this.displayCards.reduce((sum, c) => sum + (c.market || 0), 0); },
+            totalSearchPages() { 
+                return this.totalSearchPagesCount; 
+            },
             filteredSets() { return this.allSets.filter(s => s.series === this.selectedEra); },
+            totalValue() { return this.displayCards.reduce((sum, c) => sum + (c.market || 0), 0); },
         },
         methods: {
             checkIsDesktop() {
@@ -685,14 +674,14 @@
                 if(this.currentView === 'collection' || this.currentView === 'calculator') {
                     if(this.currentPage < this.totalPages) this.currentPage++; 
                 } else if (this.showSearch) {
-                    if(this.searchPage < this.totalSearchPages) this.searchPage++;
+                    if(this.searchPage < this.totalSearchPagesCount) this.fetchCards(this.searchPage + 1);
                 }
             },
             prevPage() { 
                 if(this.currentView === 'collection' || this.currentView === 'calculator') {
                     if(this.currentPage > 1) this.currentPage--; 
                 } else if (this.showSearch) {
-                    if(this.searchPage > 1) this.searchPage--;
+                    if(this.searchPage > 1) this.fetchCards(this.searchPage - 1);
                 }
             },
 
@@ -791,7 +780,6 @@
             async loadSetsAPI(forceRefresh = false) {
                 this.setsLoading = true;
                 const cacheKeySets = 'gladiator_all_sets_v3';
-                // YOUR KEY INJECTED BELOW
                 const apiKey = '6aa37587-f78b-4bc9-a3ce-3b9eeb6bf149'; 
 
                 if (!forceRefresh) {
@@ -841,29 +829,44 @@
                 }
             },
             
-            // --- SEARCH API (UPDATED WITH KEY) ---
+            // --- SEARCH API: SERVER-SIDE PAGINATION ---
             async fetchCards(page = 1) {
                 if(!this.selectedSet) return;
+                if(this.isSearching) return; // Prevent double taps
+                
                 this.isSearching = true; 
                 this.searchPage = page; 
 
-                // YOUR KEY INJECTED BELOW
                 const apiKey = '6aa37587-f78b-4bc9-a3ce-3b9eeb6bf149'; 
-                let nameQuery = this.query ? this.query.trim().toLowerCase() : '';
                 
+                let nameQuery = this.query ? this.query.trim().toLowerCase() : '';
                 let q = `set.id:${this.selectedSet}`; 
                 if(nameQuery) q += ` name:"${nameQuery}*"`; 
                 
+                // ORDERING LOGIC for API
+                let orderBy = 'number';
+                if (this.searchSort === 'name') orderBy = 'name';
+                if (this.searchSort === 'price-desc') orderBy = '-tcgplayer.prices.holofoil.market';
+                if (this.searchSort === 'price-asc') orderBy = 'tcgplayer.prices.holofoil.market';
+
                 try {
-                    const res = await fetch(`https://api.pokemontcg.io/v2/cards?q=${q}&pageSize=250&select=id,name,number,images,tcgplayer&orderBy=${this.searchSort.replace('-', '')}`, {
+                    // SERVER-SIDE PAGINATION: Only fetch 30 items
+                    const url = `https://api.pokemontcg.io/v2/cards?q=${q}&page=${page}&pageSize=30&select=id,name,number,images,tcgplayer&orderBy=${orderBy}`;
+                    
+                    const res = await fetch(url, {
                         headers: { 'X-Api-Key': apiKey }
                     });
                     
                     if (!res.ok) throw new Error(`Search Error: ${res.status}`);
                     
                     const data = await res.json();
+                    
+                    // We only get 30 cards, so we just set them directly
                     this.searchResults = data.data || [];
-                    this.searchPage = page;
+                    
+                    // The API tells us how many total cards there are, we calculate total pages
+                    const totalCount = data.totalCount || 0;
+                    this.totalSearchPagesCount = Math.ceil(totalCount / 30);
 
                 } catch(e) { 
                     console.error("Search Failed:", e);
