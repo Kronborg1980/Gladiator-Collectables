@@ -198,7 +198,7 @@
             <div v-else class="space-y-10">
                 <div v-for="(setCards, setName) in cardsBySet" :key="setName">
                     <div class="flex items-center gap-4 mb-4 border-b border-white/10 pb-2">
-                        <h3 class="text-white font-bold text-lg font-brand uppercase tracking-widest">{{ setName }}</h3>
+                        <h3 class="text-white font-bold text-lg font-brand uppercase tracking-widest truncate">{{ setName }}</h3>
                         <span class="text-xs text-gray-500 font-bold bg-white/5 px-2 py-0.5 rounded">{{ setCards.length }} Cards</span>
                     </div>
                     <div class="grid grid-cols-2 md:grid-cols-5 lg:grid-cols-6 gap-6">
@@ -258,8 +258,8 @@
 
         <div v-else-if="currentView === 'binders'" class="flex-1 glass-panel overflow-y-auto p-8">
              <div class="flex justify-between items-center mb-6">
-                 <h2 class="text-xl font-brand font-bold text-white">My Collections</h2>
-                 <button @click="createBinder" class="bg-[#00f2ff] hover:bg-white text-black text-xs font-bold px-4 py-2 rounded shadow transition">New Binder</button>
+                <h2 class="text-xl font-brand font-bold text-white">My Collections</h2>
+                <button @click="createBinder" class="bg-[#00f2ff] hover:bg-white text-black text-xs font-bold px-4 py-2 rounded shadow transition">New Binder</button>
              </div>
              
              <div class="grid grid-cols-2 md:grid-cols-5 gap-6">
@@ -273,7 +273,7 @@
                     <i class="fa-regular fa-folder-open text-4xl text-gray-600 group-hover:text-white mb-auto mt-4 transition"></i>
                     <div><div class="font-bold text-white text-lg truncate font-brand tracking-wide">{{ b.name }}</div><div class="text-[10px] text-gray-500 font-bold uppercase tracking-wider">{{ getBinderCount(b.id) }} Cards</div></div>
                 </div>
-            </div>
+             </div>
         </div>
     </main>
 
@@ -314,11 +314,11 @@
                 </div>
                 
                 <div class="flex-1 overflow-y-auto p-8 bg-[#050508] relative">
-                     <div v-if="paginatedSearchResults.length > 0" class="flex justify-center gap-4 mb-4">
+                    <div v-if="paginatedSearchResults.length > 0" class="flex justify-center gap-4 mb-4">
                         <button @click="searchPage > 1 ? searchPage-- : null" :disabled="searchPage === 1" class="pagination-btn">< Prev</button>
                         <span class="text-xs font-bold text-[#00f2ff] px-2">Page {{ searchPage }} of {{ totalSearchPages || 1 }}</span>
                         <button @click="searchPage < totalSearchPages ? searchPage++ : null" :disabled="searchPage === totalSearchPages" class="pagination-btn">Next ></button>
-                     </div>
+                    </div>
 
                     <div v-if="isSearching" class="absolute inset-0 flex flex-col items-center justify-center bg-black/80 z-20 backdrop-blur-sm">
                         <i class="fa-solid fa-satellite-dish text-6xl text-[#00f2ff] mb-4 animate-pulse"></i>
@@ -490,17 +490,23 @@
                 return grouped;
             },
 
-            // --- SEARCH SORT & PAGINATION ---
+            // --- SEARCH SORT & PAGINATION (CLIENT-SIDE) ---
             filteredSearchList() {
                 let list = [...this.searchResults];
                 if(this.query) { list = list.filter(c => c.name.toLowerCase().includes(this.query.toLowerCase())); }
                 
+                // --- RE-ENABLING SORTING WITH ROBUST PRICE CHECK ---
                 list.sort((a, b) => {
-                    if (this.searchSort === 'price-desc') return this.getCardPrice(b) - this.getCardPrice(a);
-                    if (this.searchSort === 'price-asc') return this.getCardPrice(a) - this.getCardPrice(b);
+                    const priceA = this.getCardPrice(a);
+                    const priceB = this.getCardPrice(b);
+
+                    if (this.searchSort === 'price-desc') return priceB - priceA;
+                    if (this.searchSort === 'price-asc') return priceA - priceB;
                     if (this.searchSort === 'name') return a.name.localeCompare(b.name);
                     return a.number.localeCompare(b.number, undefined, {numeric: true});
                 });
+                // --- END RE-ENABLING SORTING ---
+
                 return list;
             },
             totalSearchPages() { return Math.ceil(this.filteredSearchList.length / this.searchPerPage); },
@@ -544,7 +550,7 @@
                 this.saveData();
             },
 
-            // --- SORT & PAGE METHODS ---
+            // --- SORT & PAGE METHODS (LOCAL) ---
             setSort(key) {
                 if(this.sortBy === key) {
                     this.sortDesc = !this.sortDesc; 
@@ -554,10 +560,27 @@
                 }
                 this.currentPage = 1; 
             },
-            nextPage() { if(this.currentPage < this.totalPages) this.currentPage++; },
-            prevPage() { if(this.currentPage > 1) this.currentPage--; },
+            nextPage() { 
+                if(this.currentView === 'collection' || this.currentView === 'calculator') {
+                    if(this.currentPage < this.totalPages) this.currentPage++; 
+                } else if (this.showSearch) {
+                    // Instant Page Switch for search results (client-side)
+                    if(this.searchPage < this.totalSearchPages) this.searchPage++;
+                }
+            },
+            prevPage() { 
+                if(this.currentView === 'collection' || this.currentView === 'calculator') {
+                    if(this.currentPage > 1) this.currentPage--; 
+                } else if (this.showSearch) {
+                     // Instant Page Switch for search results (client-side)
+                    if(this.searchPage > 1) this.searchPage--;
+                }
+            },
             
-            sortSearchResults() { this.searchPage = 1; },
+            sortSearchResults() { 
+                this.searchPage = 1; 
+                // Sorting happens instantly via the computed property filteredSearchList
+            },
 
             // --- DATA ---
             loadLocalData() {
@@ -619,54 +642,116 @@
             },
             getProfit(c) { return this.getEstValue(c) - ((c.rawCost || 0) + (c.fee || 0)); },
 
-            selectBinder(b) { this.currentView = 'armory'; this.currentBinder = b; this.currentPage = 1; },
+            selectBinder(b) { this.currentView = 'calculator'; this.currentBinder = b; this.currentPage = 1; },
             getBinderCount(id) { return this.cards.filter(c => c.binderId === id).length; },
-            openSearch() { this.showSearch = true; this.searchResults = []; this.searchPage = 1; this.query = ''; },
+            openSearch() { 
+                this.showSearch = true; this.searchResults = []; this.searchPage = 1; this.query = '';
+                if(this.currentView === 'calculator' && this.currentBinder) this.targetBinder = this.currentBinder.id;
+                else this.targetBinder = 'master';
+            },
             openCardDetail(c) { this.detailCard = c; },
             formatNumber(n) { return (n||0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}); },
-            getCardPrice(c) { return c.tcgplayer?.prices?.holofoil?.market || c.tcgplayer?.prices?.normal?.market || 0; },
+            
+            // --- ROBUST PRICE CHECK ---
+            getCardPrice(c) { 
+                const prices = c.tcgplayer?.prices;
+                if (!prices) return 0;
+                
+                // Aggregate all market prices from various potential rarity/foil fields
+                const marketPrices = Object.values(prices)
+                    .map(priceDetail => priceDetail?.market)
+                    .filter(price => price > 0); 
+
+                // Add the general market price if it exists and is non-zero
+                if (c.tcgplayer?.market && c.tcgplayer.market > 0) {
+                    marketPrices.push(c.tcgplayer.market);
+                }
+
+                return marketPrices.length > 0 ? Math.max(...marketPrices) : 0;
+            },
+            // --------------------------
             
             async loadSetsAPI() {
                 this.setsLoading = true;
                 const c = localStorage.getItem(this.cacheKey);
+                
                 if(c) { 
-                    const d = JSON.parse(c); this.allSets = d.sets; this.eras = d.eras; 
-                    this.setsLoading = false;
-                    return; 
+                    try {
+                        const d = JSON.parse(c); this.allSets = d.sets; this.eras = d.eras; 
+                        this.setsLoading = false;
+                        return;
+                    } catch (e) {
+                        console.error("Error parsing cached sets:", e);
+                    }
                 }
-                const res = await fetch('https://api.pokemontcg.io/v2/sets?select=id,name,series,releaseDate&orderBy=-releaseDate');
-                const data = await res.json();
-                this.allSets = data.data; this.eras = [...new Set(data.data.map(s => s.series))];
-                localStorage.setItem(this.cacheKey, JSON.stringify({sets: this.allSets, eras: this.eras}));
-                this.setsLoading = false;
+                
+                try {
+                    const res = await fetch('https://api.pokemontcg.io/v2/sets?select=id,name,series,releaseDate&orderBy=-releaseDate');
+                    
+                    if (!res.ok) {
+                        throw new Error(`API fetch failed with status: ${res.status}`);
+                    }
+
+                    const data = await res.json();
+                    this.allSets = data.data; 
+                    this.eras = [...new Set(data.data.map(s => s.series))];
+                    
+                    localStorage.setItem(this.cacheKey, JSON.stringify({sets: this.allSets, eras: this.eras}));
+                    
+                } catch(error) {
+                    console.error("CRITICAL: Failed to synchronize set database. Check network connection.", error);
+                } finally {
+                    this.setsLoading = false;
+                }
             },
             
             async fetchCards(page = 1) {
                 if(!this.selectedSet) return;
                 this.isSearching = true; 
+                this.searchPage = page; 
+
+                // --- EXISTING CLIENT-SIDE CACHE/FETCH LOGIC RETAINED ---
+
                 if(page === 1) { 
                     this.searchPage = 1; 
                     const setKey = `glad_set_${this.selectedSet}`;
                     const cachedSet = localStorage.getItem(setKey);
+                    
                     if(cachedSet && !this.query) { 
+                         // Cache hit for full set view
                          this.searchResults = JSON.parse(cachedSet);
                          this.isSearching = false;
                          return;
                     }
                 }
 
-                if(this.searchResults.length === 0 || page === 1) {
-                     try {
-                        const res = await fetch(`https://api.pokemontcg.io/v2/cards?q=set.id:${this.selectedSet}&pageSize=250&select=id,name,number,images,tcgplayer`);
+                // If searching by name OR cache miss (only fetching full set if query is blank)
+                if(this.searchResults.length === 0 || this.query || page === 1) {
+                    // NOTE: API is limited to ~250 cards per call, we fetch max per page.
+                    try {
+                        let q = `set.id:${this.selectedSet}`; 
+                        if(this.query) {
+                            q += ` name:"${this.query}*"`;
+                        }
+
+                        // We fetch ALL cards (pageSize=250) on the first search to populate the cache/list
+                        // This assumes most sets are < 250 cards (or that the API search handles large pages for sets)
+                        const res = await fetch(`https://api.pokemontcg.io/v2/cards?q=${q}&pageSize=250&select=id,name,number,images,tcgplayer`);
                         const data = await res.json();
                         this.searchResults = data.data || [];
-                        if(!this.query) try { localStorage.setItem(`glad_set_${this.selectedSet}`, JSON.stringify(this.searchResults)); } catch(e) {}
+                        
+                        // Only cache the full result if NO query was performed
+                        if(!this.query) { 
+                            try { localStorage.setItem(`glad_set_${this.selectedSet}`, JSON.stringify(this.searchResults)); } catch(e) {}
+                        }
                     } catch(e) { console.error(e); } 
                     finally { this.isSearching = false; }
                 } else {
+                    // Should not happen if pagination is controlled via computed property
                     this.isSearching = false;
                 }
             }
+            // --- END EXISTING CLIENT-SIDE CACHE/FETCH LOGIC RETAINED ---
         }
     }).mount('#app');
 </script>
