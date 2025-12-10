@@ -161,7 +161,7 @@
                         <div class="text-[8px] text-green-400 font-bold uppercase tracking-wider flex items-center gap-1 animate-pulse"><i class="fa-solid fa-circle text-[5px]"></i> Synced</div>
                     </div>
                 </div>
-                <button v-if="!user" @click="loginWithGoogle" class="w-full bg-[#00f2ff] hover:bg-white text-black font-bold py-3 rounded-lg text-xs uppercase tracking-widest transition flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(0,242,255,0.2)]">
+                <button v-else-if="!user" @click="loginWithGoogle" class="w-full bg-[#00f2ff] hover:bg-white text-black font-bold py-3 rounded-lg text-xs uppercase tracking-widest transition flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(0,242,255,0.2)]">
                     <i class="fa-brands fa-google"></i> Log In
                 </button>
                 <button v-else @click="logout" class="w-full text-xs text-red-500 hover:text-white text-center py-2 transition opacity-60 hover:opacity-100">Sign Out</button>
@@ -490,7 +490,6 @@
             const itemsPerPage = 30;
             const searchPage = ref(1);
             const searchPerPage = 30;
-            // FIX: Added ref() for sorting variables
             const sortBy = ref('profit');
             const sortDesc = ref(true);
 
@@ -516,6 +515,7 @@
             });
 
             const totalValue = computed(() => displayCards.value.reduce((sum, c) => sum + (c.market || 0), 0));
+            // FIX: This computed property is now being returned correctly below
             const filteredSets = computed(() => allSets.value.filter(s => s.series === selectedEra.value));
             const isAllSelected = computed(() => displayCards.value.length > 0 && selectedIds.value.length === displayCards.value.length);
             
@@ -524,7 +524,6 @@
                 let list = [...displayCards.value];
                 return list.sort((a, b) => {
                     let valA, valB;
-                    // Note: sortBy and sortDesc are accessed from the ref()s defined in setup()
                     if(sortBy.value === 'name') { valA = a.name.toLowerCase(); valB = b.name.toLowerCase(); } 
                     else if(sortBy.value === 'rawCost') { valA = a.rawCost || 0; valB = b.rawCost || 0; } 
                     else if(sortBy.value === 'market') { valA = getEstValue(a); valB = getEstValue(b); } 
@@ -718,6 +717,7 @@
                 }
                 
                 try {
+                    // Using API Key
                     const res = await fetch('https://api.pokemontcg.io/v2/sets?select=id,name,series,releaseDate,printedTotal,total&orderBy=-releaseDate', { headers: TCG_HEADERS });
                     
                     if (!res.ok) {
@@ -829,7 +829,8 @@
 
             const updateCardBinder = (card) => {
                 const binderUpdate = { binderId: card.binderId === undefined ? null : card.binderId };
-                if(user.value) db.collection('users').doc(user.value.uid).collection('cards').doc(uid).update(binderUpdate);
+                // Ensure to pass card.uid to Firestore update, not just uid
+                if(user.value) db.collection('users').doc(user.value.uid).collection('cards').doc(card.uid).update(binderUpdate);
                 else saveData();
             };
             
@@ -859,16 +860,19 @@
 
 
             return {
+                // Main State
                 user, currentView, currentBinder, binders, cards, showSearch, detailCard, setsLoading, isSearching,
                 allSets, eras, selectedEra, selectedSet, query, targetBinder, searchResults,
                 addedIds, selectedIds, searchSort,
                 
                 // UI & Computed
                 isDesktop, showMobileNav, currentPage, itemsPerPage, searchPage, searchPerPage,
-                headerTitle, totalValue, displayCards, totalPages, paginatedCards, cardsBySet, 
+                headerTitle, totalValue, displayCards, totalPages, paginatedCards, 
                 isAllSelected, totalSearchPages, paginatedSearchResults, 
-                // FIX: Exposed ref() variables so they can be accessed in the template
+                // FIX: Exposed all required computed properties/refs
+                cardsBySet, totalSetData, filteredSets, 
                 sortBy, sortDesc, 
+                sortedCards, // Also exposed sorted cards as it's needed by paginatedCards
                 
                 // Methods
                 formatNumber, checkIsDesktop, loginWithGoogle, logout,
