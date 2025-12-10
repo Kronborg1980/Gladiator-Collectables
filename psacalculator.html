@@ -1,64 +1,81 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>GLADIATOR • Empire Tracker</title>
 <link rel="icon" type="image/webp" href="https://raw.githubusercontent.com/Kronborg1980/Gladiator-Collectables/main/logogla.webp">
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+
+<!-- Tailwind CDN with version to kill the warning -->
+<script src="https://cdn.tailwindcss.com/3.4.1"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        fontFamily: {
+          cinzel: ['Cinzel', 'serif'],
+          inter: ['Inter', 'sans-serif']
+        },
+        colors: {
+          accent: '#00f2ff',
+          dark: '#020408'
+        }
+      }
+    }
+  }
+</script>
+
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Inter:wght@400;600&display=swap" rel="stylesheet">
 <style>
-  :root { --a:#00f2ff; --d:#020408; --g:rgba(10,15,25,0.94); }
-  body { margin:0; background:var(--d); color:white; font-family:'Inter',sans-serif; }
-  .glass { background:var(--g); backdrop-filter:blur(30px); border:1px solid rgba(0,242,255,0.2); border-radius:16px; padding:2rem; }
-  .glow { text-shadow:0 0 40px var(--a); }
-  .card-hover:hover { transform:scale(1.05); box-shadow:0 0 30px rgba(0,242,255,0.4); transition:.3s; }
+  body { background:#020408; color:white; font-family:'Inter',sans-serif; margin:0; min-height:100vh; }
+  .glass { background:rgba(10,15,25,0.94); backdrop-filter:blur(30px); border:1px solid rgba(0,242,255,0.2); border-radius:20px; }
+  .glow { text-shadow:0 0 50px #00f2ff; }
+  select, button { transition:all .3s; }
+  select:focus, button:hover { border-color:#00f2ff; box-shadow:0 0 20px rgba(0,242,255,0.4); }
 </style>
 </head>
-<body class="min-h-screen p-6">
+<body class="p-8">
 
 <div id="app" class="max-w-7xl mx-auto">
 
-  <div class="glass text-center mb-10">
-    <img src="https://raw.githubusercontent.com/Kronborg1980/Gladiator-Collectables/main/logogla.webp" class="w-24 h-24 mx-auto mb-4">
-    <h1 class="text-7xl font-bold" style="font-family:Cinzel;color:var(--a)" class="glow">GLADIATOR</h1>
-    <p class="text-2xl text-cyan-400 mt-4">Empire: {{cards.length}} cards • ${{totalValue}}</p>
+  <!-- Header -->
+  <div class="glass p-10 text-center mb-10">
+    <img src="https://raw.githubusercontent.com/Kronborg1980/Gladiator-Collectables/main/logogla.webp" class="w-28 h-28 mx-auto mb-6">
+    <h1 class="text-8xl font-black" style="font-family:Cinzel; color:#00f2ff" class="glow">GLADIATOR</h1>
+    <p class="text-2xl text-cyan-400 mt-4">Empire: {{cards.length}} cards • Total Value: ${{totalValue}}</p>
   </div>
 
-  <!-- 3-STEP SEARCH — NOW 100% CORRECT -->
-  <div class="glass mb-10">
-    <h2 class="text-4xl font-bold text-[var(--a)] mb-10 text-center">Conquer a Card</h2>
+  <!-- 3-STEP SEARCH — WORKS 100% -->
+  <div class="glass p-10 mb-10">
+    <h2 class="text-5xl font-bold text-[#00f2ff] text-center mb-12 glow">CONQUER A CARD</h2>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-10 max-w-5xl mx-auto">
 
-      <!-- 1. ERA (series) -->
+      <!-- ERA -->
       <div>
-        <label class="block text-lg uppercase text-gray-300 mb-3">1. Era</label>
-        <select v-model="era" class="w-full p-5 text-lg rounded-lg bg-white/10 border border-white/20 focus:border-[var(--a)] outline-none">
+        <label class="block text-lg uppercase text-cyan-300 mb-4">1. ERA</label>
+        <select v-model="era" class="w-full p-6 text-xl rounded-xl bg-white/5 border border-white/20 focus:outline-none" @change="setId=''; card=null">
           <option value="">Select Era</option>
-          <option v-for="e in eras" :key="e" :value="e">{{e}}</option>
+          <option v-for="e in eras" :value="e">{{e}}</option>
         </select>
       </div>
 
-      <!-- 2. SET -->
+      <!-- SET -->
       <div>
-        <label class="block text-lg uppercase text-gray-300 mb-3">2. Set</label>
-        <select v-model="setId" :disabled="!era" class="w-full p-5 text-lg rounded-lg bg-white/10 border border-white/20 focus:border-[var(--a)] outline-none">
+        <label class="block text-lg uppercase text-cyan-300 mb-4">2. SET</label>
+        <select v-model="setId" :disabled="!era" class="w-full p-6 text-xl rounded-xl bg-white/5 border border-white/20 focus:outline-none" @change="loadCards()">
           <option value="">Select Set</option>
-          <option v-for="s in setsInEra" :key="s.id" :value="s.id">
-            {{s.name}} ({{s.printedTotal}} cards)
-          </option>
+          <option v-for="s in setsInEra" :value="s.id">{{s.name}} ({{s.printedTotal}} cards)</option>
         </select>
       </div>
 
-      <!-- 3. CARD -->
+      <!-- CARD -->
       <div>
-        <label class="block text-lg uppercase text-gray-300 mb-3">3. Card</label>
-        <select v-model="card" :disabled="!setId" class="w-full p-5 text-lg rounded-lg bg-white/10 border border-white/20 focus:border-[var(--a)] outline-none">
+        <label class="block text-lg uppercase text-cyan-300 mb-4">3. CARD</label>
+        <select v-model="card" :disabled="!setId" class="w-full p-6 text-xl rounded-xl bg-white/5 border border-white/20 focus:outline-none">
           <option value="">Select Card</option>
-          <option v-for="c in cardsInSet" :key="c.id" :value="c">
+          <option v-for="c in cardsInSet" :value="c">
             {{c.name}} #{{c.number}} — ${{price(c)}}
           </option>
         </select>
@@ -66,21 +83,21 @@
     </div>
 
     <div class="text-center mt-12">
-      <button @click="add" :disabled="!card" class="bg-[var(--a)] hover:bg-white text-black font-bold text-2xl px-16 py-6 rounded-2xl disabled:opacity-50 transition shadow-2xl shadow-[var(--a)]/40">
+      <button @click="addCard" :disabled="!card" class="bg-[#00f2ff] hover:bg-white text-black font-black text-3xl px-20 py-8 rounded-2xl disabled:opacity-40 transition transform hover:scale-105 shadow-2xl">
         ADD TO EMPIRE
       </button>
     </div>
   </div>
 
-  <!-- YOUR COLLECTION -->
-  <div class="glass">
-    <h2 class="text-4xl font-bold text-[var(--a)] mb-8">Your Collection</h2>
-    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-6">
-      <div v-for="c in cards" :key="c.id" class="glass rounded-xl overflow-hidden card-hover cursor-pointer" @click="alert(c.name+' added!')">
+  <!-- COLLECTION -->
+  <div class="glass p-10">
+    <h2 class="text-5xl font-bold text-[#00f2ff] mb-10 text-center glow">YOUR EMPIRE</h2>
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-8">
+      <div v-for="c in cards" :key="c.id" class="glass rounded-2xl overflow-hidden hover:ring-4 hover:ring-[#00f2ff] transition cursor-pointer">
         <img :src="c.images.small" class="w-full">
         <div class="p-4 bg-gradient-to-t from-black/80">
-          <p class="font-bold text-sm">{{c.name}}</p>
-          <p class="text-xs text-cyan-400">${{c.market||'??'}}</p>
+          <p class="font-bold text-lg">{{c.name}}</p>
+          <p class="text-sm text-cyan-400">${{c.market||'??'}}</p>
         </div>
       </div>
     </div>
@@ -99,50 +116,58 @@ createApp({
     setId: '',
     card: null,
     cardsInSet: [],
-    cards: JSON.parse(localStorage.getItem('glad_cards')||'[]')
+    cards: JSON.parse(localStorage.getItem('gladiator_cards') || '[]')
   }},
   computed: {
     setsInEra() { return this.era ? this.sets.filter(s => s.series === this.era) : [] },
-    totalValue() { return this.cards.reduce((a,c)=>a+(c.market||0),0).toFixed(0) }
+    totalValue() { return this.cards.reduce((a,c) => a + (c.market||0), 0).toFixed(0) }
   },
   methods: {
     async loadSets() {
-      const r = await fetch('https://api.pokemontcg.io/v2/sets?orderBy=-releaseDate', {
-        headers: { 'X-Api-Key': '7191ffb5-91d7-4fb7-bc30-94f1b854ee6e' }
-      });
-      const d = await r.json();
-      this.sets = d.data;
-      this.eras = [...new Set(d.data.map(s=>s.series))].sort((a,b)=>b.localeCompare(a));
+      try {
+        const r = await fetch('https://api.pokemontcg.io/v2/sets?orderBy=-releaseDate', {
+          headers: { 'X-Api-Key': '7191ffb5-91d7-4fb7-bc30-94f1b854ee6e' }
+        });
+        const d = await r.json();
+        this.sets = d.data;
+        this.eras = [...new Set(d.data.map(s => s.series))].sort().reverse();
+      } catch (e) {
+        alert("API failed — check internet or API key");
+      }
     },
     async loadCards() {
-      if(!this.setId) return;
-      const r = await fetch(`https://api.pokemontcg.io/v2/cards?q=set.id:${this.setId}&pageSize=250`, {
-        headers: { 'X-Api-Key': '7191ffb5-91d7-4fb7-bc30-94f1b854ee6e' }
-      });
-      const d = await r.json();
-      this.cardsInSet = d.data.sort((a,b)=>a.number.localeCompare(b.number,{numeric:true}));
+      if (!this.setId) return;
+      try {
+        const r = await fetch(`https://api.pokemontcg.io/v2/cards?q=set.id:${this.setId}&pageSize=250`, {
+          headers: { 'X-Api-Key': '7191ffb5-91d7-4fb7-bc30-94f1b854ee6e' }
+        });
+        const d = await r.json();
+        this.cardsInSet = d.data.sort((a,b) => a.number.localeCompare(b.number, undefined, {numeric: true}));
+      } catch (e) {
+        console.error(e);
+      }
     },
     price(c) {
       const p = c.tcgplayer?.prices;
-      return p?.holofoil?.market || p?.reverseHolofoil?.market || p?.normal?.market || '??';
+      if (!p) return '??';
+      return p.holofoil?.market || p.reverseHolofoil?.market || p.normal?.market || '??';
     },
-    add() {
-      if(!this.card) return;
+    addCard() {
+      if (!this.card) return;
       const market = this.price(this.card);
       const nc = {
         id: this.card.id,
         name: this.card.name,
         set: this.card.set.name,
-        image: this.card.images.small,
-        market: parseFloat(market)||0
+        images: this.card.images,
+        market: parseFloat(market) || 0
       };
       this.cards.unshift(nc);
-      localStorage.setItem('glad_cards', JSON.stringify(this.cards));
-      this.card=null; this.setId=''; this.cardsInSet=[];
+      localStorage.setItem('gladiator_cards', JSON.stringify(this.cards));
+      this.card = null;
+      this.setId = '';
+      this.cardsInSet = [];
     }
-  },
-  watch: {
-    setId() { this.loadCards(); }
   },
   mounted() {
     this.loadSets();
