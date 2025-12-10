@@ -5,143 +5,153 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gladiator | Pro Ecosystem</title>
     <link rel="icon" type="image/webp" href="https://raw.githubusercontent.com/Kronborg1980/Gladiator-Collectables/main/logogla.webp">
-   
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
-   
+    
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
     <style>
-        :root {
-            --accent: #00f2ff;
+        :root { 
+            --accent: #00f2ff; 
             --accent-dim: rgba(0, 242, 255, 0.1);
             --bg-dark: #020408;
             --glass-surface: rgba(10, 15, 25, 0.85);
             --glass-edge: rgba(0, 242, 255, 0.15);
         }
-       
-        body {
+        
+        body { 
             font-family: 'Inter', sans-serif;
-            background-color: var(--bg-dark);
-            background-image:
+            background-color: var(--bg-dark); 
+            background-image: 
                 radial-gradient(circle at 15% 50%, rgba(0, 242, 255, 0.05) 0%, transparent 25%),
                 radial-gradient(circle at 85% 30%, rgba(40, 100, 255, 0.08) 0%, transparent 25%);
-            color: #fff;
-            min-height: 100dvh;
-            overflow-x: hidden;
+            color: #fff; 
+            height: 100vh; 
+            overflow: hidden; 
         }
         .font-brand { font-family: 'Cinzel', serif; }
         [v-cloak] { display: none; }
 
         /* GLASS THEME */
-        .glass-panel {
-            background: var(--glass-surface);
-            backdrop-filter: blur(25px);
+        .glass-panel { 
+            background: var(--glass-surface); 
+            backdrop-filter: blur(25px); 
             -webkit-backdrop-filter: blur(25px);
             border: 1px solid var(--glass-edge);
             box-shadow: 0 10px 40px rgba(0,0,0,0.6);
             border-radius: 16px;
         }
 
-        /* ROI TABLE — Horizontal scroll on mobile */
-        .roi-table-wrapper {
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-        }
+        /* --- ROI CALCULATOR TABLE --- */
         .roi-grid {
-            min-width: 1100px;
             display: grid;
-            grid-template-columns: 44px 66px 2fr 1.3fr 1fr 1fr 1fr 1.1fr 1fr 1.1fr 50px;
-            gap: 12px;
+            grid-template-columns: 30px 50px 2fr 1.2fr 0.8fr 0.8fr 0.8fr 1fr 0.8fr 1fr 40px;
+            gap: 16px;
             align-items: center;
-            padding: 10px 16px;
+            padding: 8px 24px;
             border-bottom: 1px solid rgba(255,255,255,0.05);
             transition: all 0.2s;
         }
         .roi-grid:hover { background: rgba(0, 242, 255, 0.03); }
-
+        
         .roi-header {
-            font-size: 9px; font-weight: 800; color: #888;
+            font-size: 9px; font-weight: 800; color: #888; 
             text-transform: uppercase; letter-spacing: 1px;
             background: rgba(0,0,0,0.3); border-bottom: 1px solid rgba(255,255,255,0.1);
-            user-select: none; padding: 12px 16px;
+            user-select: none; padding: 12px 24px;
         }
-
+        
         .sortable { cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 4px; }
         .sortable:hover { color: var(--accent); }
         .sortable.active { color: var(--accent); text-shadow: 0 0 10px rgba(0, 242, 255, 0.3); }
 
-        /* INPUTS */
+        /* --- INPUTS & CONTROLS --- */
         .table-input {
             background: transparent; border-bottom: 1px solid rgba(255,255,255,0.15);
-            color: #fff; text-align: right; width: 100%; outline: none;
-            font-size: 13px; padding: 6px 0;
+            color: #fff; text-align: right; width: 100%; outline: none; font-family: 'Inter', sans-serif; font-size: 12px;
+            transition: 0.2s; padding-bottom: 2px;
         }
         .table-input:focus { border-bottom-color: var(--accent); color: var(--accent); }
 
+        select option { background-color: #050508; color: #fff; padding: 10px; }
         .table-select {
             background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1);
-            color: #aaa; border-radius: 6px; padding: 6px 8px; font-size: 11px;
-            width: 100%; outline: none;
+            color: #aaa; border-radius: 6px; padding: 4px 8px; font-size: 10px; width: 100%;
+            outline: none; cursor: pointer; transition: 0.2s; text-transform: uppercase; font-weight: bold;
         }
+        .table-select:focus { border-color: var(--accent); color: var(--accent); }
 
-        /* SCROLLBARS */
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-checkbox {
+            appearance: none; background-color: #000; margin: 0;
+            font: inherit; color: var(--accent); width: 14px; height: 14px;
+            border: 1px solid #555; border-radius: 3px; display: grid; place-content: center; cursor: pointer;
+        }
+        .custom-checkbox::before { content: ""; width: 8px; height: 8px; transform: scale(0); transition: 120ms transform ease-in-out; box-shadow: inset 1em 1em var(--accent); transform-origin: center; clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%); }
+        .custom-checkbox:checked::before { transform: scale(1); }
+        .custom-checkbox:checked { border-color: var(--accent); }
+
+        .nav-btn { transition: all 0.2s; border-radius: 8px; font-weight: 600; letter-spacing: 0.5px; border-left: 3px solid transparent; }
+        .nav-btn:hover { background: rgba(255,255,255,0.05); color: white; }
+        .nav-btn.active { background: linear-gradient(90deg, var(--accent-dim) 0%, transparent 100%); border-left-color: var(--accent); color: var(--accent); }
+
+        .glass-input { background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 12px; width: 100%; border-radius: 8px; font-size: 12px; transition: 0.2s; }
+        .glass-input:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 10px rgba(0, 242, 255, 0.2); }
+        .glass-input:disabled { opacity: 0.5; cursor: not-allowed; }
+        
+        .pagination-btn {
+            padding: 6px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(0,0,0,0.3); color: #888; font-size: 10px; font-weight: bold; uppercase;
+            transition: all 0.2s; cursor: pointer;
+        }
+        .pagination-btn:hover:not(:disabled) { border-color: var(--accent); color: white; background: var(--accent-dim); }
+        .pagination-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
         ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
     </style>
 </head>
-<body class="flex flex-col min-h-screen">
+<body class="flex flex-col h-screen p-4">
 
-<!-- MOBILE TOP BAR (only visible on small screens) -->
-<header class="lg:hidden glass-panel px-5 py-4 flex justify-between items-center z-50 fixed top-0 left-0 right-0">
-    <div class="flex items-center gap-3">
-        <img src="https://raw.githubusercontent.com/Kronborg1980/Gladiator-Collectables/main/logogla.webp" class="w-10 h-10 object-contain drop-shadow-[0_0_10px_rgba(0,242,255,0.4)]">
-        <div>
-            <h1 class="text-lg font-brand font-bold tracking-[0.2em]">GLADIATOR</h1>
-            <div class="text-[9px] text-gray-400 uppercase tracking-widest">Portfolio Tracker</div>
-        </div>
-    </div>
-    <button @click="sidebarOpen = !sidebarOpen" class="text-2xl text-white">
-        <i class="fa-solid" :class="sidebarOpen ? 'fa-xmark' : 'fa-bars'"></i>
-    </button>
-</header>
+<div id="app" v-cloak class="flex h-full w-full max-w-[1920px] mx-auto relative gap-4">
 
-<div id="app" v-cloak class="flex flex-1 pt-16 lg:pt-0">
-
-    <!-- SIDEBAR — Slide in on mobile -->
-    <aside :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'"
-           class="fixed lg:relative inset-y-0 left-0 w-72 glass-panel flex flex-col z-40 transition-transform duration-300">
-        <div class="p-8 flex flex-col items-center border-b border-white/5 hidden lg:flex">
+    <aside class="w-72 glass-panel flex flex-col shrink-0 z-20">
+        <div class="p-8 flex flex-col items-center border-b border-white/5">
             <img src="https://raw.githubusercontent.com/Kronborg1980/Gladiator-Collectables/main/logogla.webp" class="w-12 h-12 object-contain mb-3 drop-shadow-[0_0_10px_rgba(0,242,255,0.4)]">
             <h1 class="text-xl font-brand font-bold text-white tracking-[0.2em]">GLADIATOR</h1>
             <div class="text-[10px] text-gray-400 uppercase tracking-widest mt-1">Portfolio Tracker</div>
         </div>
+
         <div class="flex-1 overflow-y-auto py-6 px-4 space-y-1">
             <div class="px-4 pb-2 text-[10px] text-gray-500 font-bold uppercase tracking-widest">Main Menu</div>
-           
-            <button @click="currentView='collection'; currentBinder=null; sidebarOpen=false" class="nav-btn w-full text-left px-4 py-3 text-sm text-gray-400 flex items-center gap-3" :class="{active: currentView==='collection'}">
+            
+            <button @click="currentView='collection'; currentBinder=null" class="nav-btn w-full text-left px-4 py-3 text-sm text-gray-400 flex items-center gap-3" :class="{active: currentView==='collection'}">
                 <i class="fa-solid fa-layer-group w-5 text-center"></i> Collection
             </button>
-           
-            <button @click="currentView='calculator'; currentBinder=null; sidebarOpen=false" class="nav-btn w-full text-left px-4 py-3 text-sm text-gray-400 flex items-center gap-3" :class="{active: currentView==='calculator'}">
+            
+            <button @click="currentView='calculator'; currentBinder=null" class="nav-btn w-full text-left px-4 py-3 text-sm text-gray-400 flex items-center gap-3" :class="{active: currentView==='calculator'}">
                 <i class="fa-solid fa-calculator w-5 text-center"></i> ROI Calculator
             </button>
-           
-            <button @click="currentView='binders'; currentBinder=null; sidebarOpen=false" class="nav-btn w-full text-left px-4 py-3 text-sm text-gray-400 flex items-center gap-3" :class="{active: currentView==='binders'}">
+            
+            <button @click="currentView='binders'; currentBinder=null" class="nav-btn w-full text-left px-4 py-3 text-sm text-gray-400 flex items-center gap-3" :class="{active: currentView==='binders'}">
                 <i class="fa-solid fa-folder-open w-5 text-center"></i> My Binders
             </button>
+
             <div v-for="binder in binders" :key="binder.id">
-                <button @click="selectBinder(binder); sidebarOpen=false" class="nav-btn w-full text-left px-4 py-2 text-sm text-gray-400 flex items-center justify-between group" :class="{active: currentView === 'single_binder' && currentBinder?.id === binder.id}">
+                <button @click="selectBinder(binder)" class="nav-btn w-full text-left px-4 py-2 text-sm text-gray-400 flex items-center justify-between group" :class="{active: currentView === 'single_binder' && currentBinder?.id === binder.id}">
                     <span class="truncate flex items-center gap-3"><i class="fa-regular fa-folder w-4 text-center"></i> {{ binder.name }}</span>
                     <i @click.stop="deleteBinder(binder.id)" class="fa-solid fa-trash text-[10px] opacity-0 group-hover:opacity-100 hover:text-red-500 transition px-2"></i>
                 </button>
             </div>
+            
         </div>
+
         <div class="p-6 border-t border-white/5 bg-black/20">
             <div v-if="user" class="bg-black/40 rounded-lg p-3 border border-white/10 flex items-center gap-3 mb-3">
                 <img :src="user.photoURL" class="w-8 h-8 rounded-full border border-[#00f2ff] shadow-[0_0_10px_#00f2ff]">
@@ -157,11 +167,9 @@
         </div>
     </aside>
 
-    <!-- MAIN CONTENT -->
-    <main class="flex-1 flex flex-col overflow-hidden bg-transparent">
-
-        <!-- Desktop Header -->
-        <header class="glass-panel px-8 py-5 flex justify-between items-center z-10 relative overflow-hidden hidden lg:flex">
+    <main class="flex-1 flex flex-col relative overflow-hidden rounded-2xl gap-4">
+        
+        <header class="glass-panel px-8 py-5 flex justify-between items-center z-10 relative overflow-hidden">
             <div class="absolute top-0 left-0 w-1 h-full bg-[#00f2ff] shadow-[0_0_20px_#00f2ff]"></div>
             <div>
                 <h2 class="text-2xl font-brand font-bold text-white tracking-widest uppercase">{{ headerTitle }}</h2>
@@ -174,33 +182,19 @@
             </button>
         </header>
 
-        <!-- Mobile Mini Header (below top bar) -->
-        <header class="glass-panel px-6 py-4 flex justify-between items-center z-10 lg:hidden mt-2 mx-4 rounded-2xl">
-            <div>
-                <h2 class="text-xl font-brand font-bold tracking-widest uppercase">{{ headerTitle }}</h2>
-                <div class="text-xs text-cyan-400 font-bold tracking-wider uppercase flex items-center gap-2 mt-1">
-                    <i class="fa-solid fa-coins"></i> ${{ formatNumber(totalValue) }}
-                </div>
-            </div>
-            <button @click="openSearch" class="bg-[#00f2ff] hover:bg-white text-black text-xs font-bold px-5 py-3 rounded-lg shadow-lg transition">
-                <i class="fa-solid fa-plus"></i>
-            </button>
-        </header>
-
-        <!-- COLLECTION VIEW -->
-        <div v-if="currentView === 'collection'" class="flex-1 glass-panel overflow-y-auto p-4 lg:p-8 mx-4 lg:mx-0 mt-4 lg:mt-0 rounded-2xl">
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-                <div class="bg-[#0a0f18] p-5 rounded-xl border border-white/5">
+        <div v-if="currentView === 'collection'" class="flex-1 glass-panel overflow-y-auto p-8">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="bg-[#0a0f18] p-6 rounded-xl border border-white/5 relative overflow-hidden group">
                     <div class="text-[10px] text-gray-500 uppercase tracking-widest font-bold mb-2">Total Value</div>
-                    <div class="text-3xl lg:text-4xl font-bold text-white">${{ formatNumber(totalValue) }}</div>
+                    <div class="text-4xl font-bold text-white mb-1">${{ formatNumber(totalValue) }}</div>
                 </div>
-                <div class="bg-[#0a0f18] p-5 rounded-xl border border-white/5 border-l-2 border-l-[#00f2ff]">
-                    <div class="text-[10px] text-gray-500 uppercase tracking-widest font-bold mb-2">Card Count</div>
-                    <div class="text-2xl lg:text-3xl font-bold text-white">{{ cards.length }}</div>
+                <div class="bg-[#0a0f18] p-6 rounded-xl border border-white/5 border-l-2 border-l-[#00f2ff]">
+                    <div class="text-[10px] text-gray-500 uppercase tracking-widest font-bold mb-2">Card Count (Total)</div>
+                    <div class="text-3xl font-bold text-white mb-1">{{ cards.length }}</div>
                 </div>
-                <div class="bg-[#0a0f18] p-5 rounded-xl border border-white/5 border-l-2 border-l-white">
-                    <div class="text-[10px] text-gray-500 uppercase tracking-widest font-bold mb-2">Unique Collected</div>
-                    <div class="text-2xl lg:text-3xl font-bold text-white">{{ Object.keys(cardsBySet).reduce((sum, setName) => sum + cardsBySet[setName].uniqueCount, 0) }}</div>
+                <div class="bg-[#0a0f18] p-6 rounded-xl border border-white/5 border-l-2 border-l-white">
+                    <div class="text-[10px] text-gray-500 uppercase tracking-widest font-bold mb-2">Unique Cards Collected</div>
+                    <div class="text-3xl font-bold text-white mb-1">{{ Object.keys(cardsBySet).reduce((sum, setName) => sum + cardsBySet[setName].uniqueCount, 0) }}</div>
                 </div>
             </div>
 
@@ -208,16 +202,17 @@
                 <i class="fa-solid fa-box-open text-6xl mb-4 text-[#00f2ff]"></i>
                 <p class="uppercase tracking-widest font-bold text-sm">No cards collected</p>
             </div>
-           
+            
             <div v-else class="space-y-10">
                 <div v-for="(setGroup, setName) in cardsBySet" :key="setName">
-                    <div class="flex items-center justify-between mb-4 border-b border-white/10 pb-2">
-                        <h3 class="text-lg lg:text-xl font-brand font-bold uppercase tracking-widest">{{ setName }}</h3>
-                        <span class="text-[10px] text-[#00f2ff] font-bold bg-[#00f2ff]/10 px-2 py-0.5 rounded border border-[#00f2ff]/30">
-                            {{ setGroup.uniqueCount }} / {{ getSetTotal(setName) }}
+                    <div class="flex items-center gap-4 mb-4 border-b border-white/10 pb-2">
+                        <h3 class="text-white font-bold text-lg font-brand uppercase tracking-widest truncate">{{ setName }}</h3>
+                        <span class="text-[10px] text-[#00f2ff] font-bold bg-[#00f2ff]/10 px-2 py-0.5 rounded border border-[#00f2ff]/30 shrink-0">
+                             {{ setGroup.uniqueCount }} / {{ getSetTotal(setName) }} Unique Collected
                         </span>
+                        
                     </div>
-                    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6 gap-4 lg:gap-6">
+                    <div class="grid grid-cols-2 md:grid-cols-5 lg:grid-cols-6 gap-6">
                         <div v-for="card in setGroup.cards" :key="card.uid" class="bg-[#0a0f18] p-3 rounded-xl hover:border-[#00f2ff] border border-white/5 group relative transition duration-200">
                             <div class="aspect-[0.7] rounded-lg bg-[#050505] overflow-hidden mb-3 relative cursor-pointer" @click="openCardDetail(card)">
                                 <img :src="card.image" class="w-full h-full object-cover transition duration-500 group-hover:scale-110">
@@ -235,24 +230,36 @@
                 </div>
             </div>
         </div>
+        
+        <div v-else-if="currentView === 'single_binder'" class="flex-1 glass-panel overflow-y-auto p-8">
+            <h2 class="text-xl font-brand font-bold text-white tracking-widest uppercase mb-4">{{ currentBinder.name }}</h2>
+             <div class="flex flex-col items-start justify-start py-8 opacity-90">
+                 <p class="uppercase tracking-widest font-bold text-sm">Total Cards in {{ currentBinder.name }}: {{ displayCards.length }}</p>
+                 <button @click="currentView='calculator'" class="text-xs text-cyan-400 hover:text-white mt-2">View in ROI Calculator</button>
+             </div>
+        </div>
 
-        <!-- ROI CALCULATOR — Now horizontally scrollable on mobile -->
-        <div v-else-if="currentView === 'calculator'" class="flex-1 flex flex-col overflow-hidden glass-panel mx-4 lg:mx-0 mt-4 lg:mt-0 rounded-2xl">
-            <div class="roi-table-wrapper">
-                <div class="roi-grid roi-header shrink-0">
-                    <div class="flex items-center justify-center"><input type="checkbox" :checked="isAllSelected" @click="toggleSelectAll" class="custom-checkbox"></div>
-                    <div class="text-center">IMG</div>
-                    <div class="sortable" @click="setSort('name')" :class="{active: sortBy==='name'}">DETAILS <i class="fa-solid" :class="getSortIcon('name')"></i></div>
-                    <div>Binder</div>
-                    <div class="text-right sortable justify-end" @click="setSort('rawCost')" :class="{active: sortBy==='rawCost'}">RAW $ <i class="fa-solid" :class="getSortIcon('rawCost')"></i></div>
-                    <div class="text-right">FEE $</div>
-                    <div class="text-center">TARGET</div>
-                    <div class="text-right sortable justify-end" @click="setSort('market')" :class="{active: sortBy==='market'}">VALUE <i class="fa-solid" :class="getSortIcon('market')"></i></div>
-                    <div class="text-center">DECISION</div>
-                    <div class="text-right sortable justify-end" @click="setSort('profit')" :class="{active: sortBy==='profit'}">PROFIT <i class="fa-solid" :class="getSortIcon('profit')"></i></div>
-                    <div class="flex justify-end"><button v-if="selectedIds.length > 0" @click="deleteSelected" class="bg-red-500 text-white text-[9px] font-bold px-2 py-1 rounded">DEL {{ selectedIds.length }}</button></div>
+
+        <div v-else-if="currentView === 'calculator'" class="flex-1 flex flex-col overflow-hidden glass-panel">
+            <div class="roi-grid roi-header shrink-0">
+                <div class="flex items-center justify-center"><input type="checkbox" :checked="isAllSelected" @click="toggleSelectAll" class="custom-checkbox"></div>
+                <div class="text-center">IMG</div>
+                <div class="sortable" @click="setSort('name')" :class="{active: sortBy==='name'}">DETAILS <i class="fa-solid" :class="getSortIcon('name')"></i></div>
+                <div>Binder</div>
+                <div class="text-right sortable justify-end" @click="setSort('rawCost')" :class="{active: sortBy==='rawCost'}">RAW $ <i class="fa-solid" :class="getSortIcon('rawCost')"></i></div>
+                <div class="text-right">FEE $</div>
+                <div class="text-center">TARGET</div>
+                <div class="text-right sortable justify-end" @click="setSort('market')" :class="{active: sortBy==='market'}">VALUE <i class="fa-solid" :class="getSortIcon('market')"></i></div>
+                <div class="text-center">DECISION</div>
+                <div class="text-right sortable justify-end" @click="setSort('profit')" :class="{active: sortBy==='profit'}">PROFIT <i class="fa-solid" :class="getSortIcon('profit')"></i></div>
+                <div class="flex justify-end"><button v-if="selectedIds.length > 0" @click="deleteSelected" class="bg-red-500 text-white text-[9px] font-bold px-2 py-1 rounded">DEL {{ selectedIds.length }}</button></div>
+            </div>
+
+            <div class="flex-1 overflow-y-auto p-0">
+                <div v-if="paginatedCards.length === 0" class="flex flex-col items-center justify-center h-full opacity-30">
+                    <p class="uppercase tracking-widest font-bold text-sm">List Empty</p>
                 </div>
-                <div class="flex-1 overflow-y-auto">
+                <div v-else>
                     <div v-for="(c, i) in paginatedCards" :key="c.uid || i" class="roi-grid hover:bg-white/5 transition" :class="{'bg-white/5': selectedIds.includes(c.uid)}">
                         <div class="flex justify-center"><input type="checkbox" :value="c.uid" v-model="selectedIds" class="custom-checkbox"></div>
                         <div class="flex justify-center"><div class="w-10 h-14 bg-black rounded border border-white/10 overflow-hidden cursor-pointer hover:border-[#00f2ff]" @click="openCardDetail(c)"><img :src="c.image" class="w-full h-full object-cover"></div></div>
@@ -268,53 +275,599 @@
                     </div>
                 </div>
             </div>
+
             <div class="px-6 py-3 border-t border-white/10 flex justify-between items-center bg-black/20 shrink-0">
                 <span class="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Total: {{ sortedCards.length }}</span>
-                <div class="flex gap-2 items-center">
-                    <button @click="prevPage" :disabled="currentPage === 1" class="pagination-btn">&lt; Prev</button>
-                    <span class="text-[10px] font-bold text-[#00f2ff] px-2">Page {{ currentPage }} / {{ totalPages || 1 }}</span>
-                    <button @click="nextPage" :disabled="currentPage === totalPages" class="pagination-btn">Next &gt;</button>
-                </div>
+                <div class="flex gap-2 items-center"><button @click="prevPage" :disabled="currentPage === 1" class="pagination-btn">< Prev</button><span class="text-[10px] font-bold text-[#00f2ff] px-2">Page {{ currentPage }} / {{ totalPages || 1 }}</span><button @click="nextPage" :disabled="currentPage === totalPages" class="pagination-btn">Next ></button></div>
             </div>
         </div>
 
-        <!-- BINDERS & SINGLE BINDER VIEWS (already responsive) -->
-        <div v-else-if="currentView === 'binders'" class="flex-1 glass-panel overflow-y-auto p-6 mx-4 lg:mx-0 mt-4 lg:mt-0 rounded-2xl">
-            <!-- Your existing binders view -->
-            <div class="flex justify-between items-center mb-6">
+        <div v-else-if="currentView === 'binders'" class="flex-1 glass-panel overflow-y-auto p-8">
+             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-xl font-brand font-bold text-white">My Collections</h2>
                 <button @click="createBinder" class="bg-[#00f2ff] hover:bg-white text-black text-xs font-bold px-4 py-2 rounded shadow transition">New Binder</button>
-            </div>
-            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6">
-                <!-- All Cards + Binder tiles -->
-                <!-- (unchanged — already perfect) -->
-            </div>
-        </div>
+             </div>
+             
+             <div class="grid grid-cols-2 md:grid-cols-5 gap-6">
+                <div @click="currentView='calculator'; currentBinder=null" class="bg-[#0a0f18] aspect-[3/4] rounded-xl p-5 flex flex-col justify-end cursor-pointer border border-white/5 hover:border-[#00f2ff] hover:shadow-[0_0_20px_rgba(0,242,255,0.1)] transition group relative overflow-hidden">
+                    <div class="absolute inset-0 bg-gradient-to-t from-[#00f2ff]/10 to-transparent"></div>
+                    <i class="fa-solid fa-layer-group text-4xl text-[#00f2ff] mb-auto mt-4 group-hover:scale-110 transition opacity-80"></i>
+                    <div class="relative z-10"><div class="font-bold text-white text-lg font-brand tracking-wide">All Cards</div><div class="text-[10px] text-gray-400 font-bold uppercase tracking-wider group-hover:text-white">Master List</div></div>
+                </div>
 
-        <div v-else-if="currentView === 'single_binder'" class="flex-1 glass-panel overflow-y-auto p-8 mx-4 lg:mx-0 mt-4 lg:mt-0 rounded-2xl">
-            <!-- unchanged -->
+                <div v-for="b in binders" :key="b.id" @click="selectBinder(b)" class="bg-[#0a0f18] aspect-[3/4] rounded-xl p-5 flex flex-col justify-end cursor-pointer border border-white/5 hover:bg-white/5 transition group">
+                    <i class="fa-regular fa-folder-open text-4xl text-gray-600 group-hover:text-white mb-auto mt-4 transition"></i>
+                    <div><div class="font-bold text-white text-lg truncate font-brand tracking-wide">{{ b.name }}</div><div class="text-[10px] text-gray-500 font-bold uppercase tracking-wider">{{ getBinderCount(b.id) }} Cards</div></div>
+                </div>
+             </div>
         </div>
     </main>
 
-    <!-- SEARCH MODAL & CARD DETAIL (already full-screen responsive) -->
-    <!-- Your existing modals below — no changes needed -->
-    <!-- ... (keep everything from your original <Transition> blocks exactly as-is) ... -->
+    <Transition enter-active-class="transition duration-300 ease-out" enter-from-class="opacity-0 scale-95" enter-to-class="opacity-100 scale-100" leave-active-class="transition duration-200 ease-in" leave-from-class="opacity-100 scale-100" leave-to-class="opacity-0 scale-95">
+    <div v-if="showSearch" class="fixed inset-0 bg-black/90 backdrop-blur-md z-[100] flex items-center justify-center p-6">
+        <div class="bg-[#0a0f18] w-full max-w-5xl rounded-xl shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden flex flex-col h-[85vh] border border-[#333]">
+            <div class="px-8 py-6 border-b border-white/10 flex justify-between items-center bg-[#050505]">
+                <h2 class="text-xl font-brand font-bold text-white tracking-[0.2em] uppercase">Card Search</h2>
+                <button @click="showSearch=false" class="text-gray-500 hover:text-white transition"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            
+            <div v-if="setsLoading" class="flex-1 flex flex-col items-center justify-center p-12 text-[#00f2ff]">
+                <i class="fa-solid fa-circle-notch fa-spin text-4xl mb-4"></i>
+                <p class="text-xs font-bold uppercase tracking-widest animate-pulse">Syncing Database...</p>
+            </div>
+
+            <template v-else>
+                <div class="px-8 py-8 bg-[#080a10] grid grid-cols-1 md:grid-cols-4 gap-6 border-b border-white/5">
+                    <div><label class="text-[10px] text-gray-500 font-bold uppercase mb-2 block tracking-widest">1. Era</label><select v-model="selectedEra" class="glass-input"><option value="">Select Era</option><option v-for="era in eras" :value="era">{{ era }}</option></select></div>
+                    <div><label class="text-[10px] text-gray-500 font-bold uppercase mb-2 block tracking-widest">2. Set</label><select v-model="selectedSet" :disabled="!selectedEra" class="glass-input disabled:opacity-30"><option value="">Select Set</option><option v-for="s in filteredSets" :value="s.id">{{ s.name }}</option></select></div>
+                    <div><label class="text-[10px] text-gray-500 font-bold uppercase mb-2 block tracking-widest">3. Name</label><input v-model="query" @keyup.enter="fetchCards(1)" :disabled="!selectedSet" placeholder="e.g. Charizard" class="glass-input disabled:opacity-30 lowercase placeholder:uppercase"></div>
+                    <div>
+                        <label class="text-[10px] text-[#00f2ff] font-bold uppercase mb-2 block tracking-widest">4. Sort</label>
+                        <select v-model="searchSort" class="glass-input border-[#00f2ff] text-[#00f2ff]">
+                            <option value="number">Number</option>
+                            <option value="price-desc">Price: High</option>
+                            <option value="price-asc">Price: Low</option>
+                            <option value="name">Name</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="px-8 py-4 bg-[#050505] flex justify-between items-center border-b border-white/5">
+                    <div class="text-[10px] text-gray-500 font-bold uppercase">Adding to: <span class="text-white">{{ targetBinder === 'master' ? 'Master Collection' : getBinderName(targetBinder) }}</span></div>
+                    <button @click="fetchCards(1)" :disabled="isSearching || !selectedSet" class="bg-[#00f2ff] hover:bg-white text-black text-xs font-bold px-10 py-3 rounded shadow-lg uppercase tracking-widest transition transform active:scale-95 disabled:opacity-50 disabled:scale-100 flex items-center gap-2">
+                        <i v-if="isSearching" class="fa-solid fa-circle-notch fa-spin"></i> {{ isSearching ? 'Scanning...' : 'Search' }}
+                    </button>
+                </div>
+                
+                <div class="flex-1 overflow-y-auto p-8 bg-[#050508] relative">
+                    <div v-if="paginatedSearchResults.length > 0" class="flex justify-center gap-4 mb-4">
+                        <button @click="searchPage > 1 ? searchPage-- : null" :disabled="searchPage === 1" class="pagination-btn">< Prev</button>
+                        <span class="text-xs font-bold text-[#00f2ff] px-2">Page {{ searchPage }} of {{ totalSearchPages || 1 }}</span>
+                        <button @click="searchPage < totalSearchPages ? searchPage++ : null" :disabled="searchPage === totalSearchPages" class="pagination-btn">Next ></button>
+                    </div>
+
+                    <div v-if="isSearching" class="absolute inset-0 flex flex-col items-center justify-center bg-black/80 z-20 backdrop-blur-sm">
+                        <i class="fa-solid fa-satellite-dish text-6xl text-[#00f2ff] mb-4 animate-pulse"></i>
+                        <p class="uppercase font-bold tracking-[0.3em] text-xs text-[#00f2ff]">Acquiring Data...</p>
+                    </div>
+
+                    <div v-if="!isSearching && searchResults.length === 0" class="h-full flex flex-col items-center justify-center opacity-30">
+                        <i class="fa-solid fa-magnifying-glass text-6xl mb-4 text-white"></i>
+                        <p class="uppercase font-bold tracking-widest text-xs">Ready to Search</p>
+                    </div>
+                    
+                    <div v-else>
+                        <div class="grid grid-cols-2 md:grid-cols-5 gap-6 mb-6">
+                            <div v-for="card in paginatedSearchResults" :key="card.id" @click="addCard(card)" class="bg-[#0a0f18] p-3 rounded-xl cursor-pointer hover:border-[#00f2ff] border border-white/5 group relative transition duration-200">
+                                <img :src="card.images.small" class="w-full rounded-lg mb-3 shadow-lg">
+                                <div class="text-center text-xs font-bold text-white truncate">{{ card.name }}</div>
+                                <div class="absolute top-2 right-2 bg-black/90 backdrop-blur text-[#00f2ff] text-[9px] font-bold px-2 py-1 rounded border border-[#00f2ff] shadow-lg">${{ formatNumber(getCardPrice(card)) }}</div>
+                                <div v-if="addedIds.includes(card.id)" class="absolute inset-0 bg-green-500/90 flex items-center justify-center rounded-xl font-bold text-black uppercase tracking-widest text-xs animate-pulse">
+                                    ACQUIRED <i class="fa-solid fa-check ml-2"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </template>
+        </div>
+    </div>
+    </Transition>
+
+    <Transition name="fade">
+        <div v-if="detailCard" class="fixed inset-0 bg-black/95 backdrop-blur-md z-[200] flex items-center justify-center p-6">
+            <div class="bg-[#0a0f18] w-full max-w-6xl h-[85vh] rounded-2xl border border-white/10 shadow-2xl flex overflow-hidden">
+                <div class="w-1/3 bg-[#050505] p-10 flex items-center justify-center border-r border-white/5 relative">
+                    <div class="absolute top-8 left-8 text-[#00f2ff] font-bold tracking-widest uppercase text-[10px] cursor-pointer hover:text-white transition" @click="detailCard=null"><i class="fa-solid fa-arrow-left mr-2"></i> Back</div>
+                    <img :src="detailCard.image.replace('small','large')" class="w-full max-w-sm rounded-lg shadow-2xl card-hover">
+                </div>
+                <div class="w-2/3 flex flex-col bg-[#080a10]">
+                    <div class="p-10 border-b border-white/5 flex justify-between items-start bg-black/20">
+                        <div>
+                            <h2 class="text-4xl font-brand font-bold text-white mb-2 tracking-wide">{{ detailCard.name }}</h2>
+                            <div class="flex items-center gap-4 text-xs text-gray-400 font-bold uppercase tracking-widest">
+                                <span class="bg-[#151515] px-3 py-1 rounded border border-[#333]">{{ detailCard.set }}</span>
+                                <span>#{{ detailCard.number }}</span>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-[10px] text-gray-500 uppercase tracking-widest font-bold mb-1">Market Price</div>
+                            <div class="text-5xl font-brand font-bold text-[#00f2ff]">${{ formatNumber(detailCard.market) }}</div>
+                        </div>
+                    </div>
+                    <div class="flex-1 p-10 relative">
+                        <div class="w-full h-full border-l border-b border-[#333] relative opacity-50">
+                            <svg viewBox="0 0 100 50" class="w-full h-full overflow-visible">
+                                <path d="M0,40 Q20,10 40,30 T80,20 T100,5" fill="none" stroke="#00f2ff" stroke-width="0.5" class="chart-line" />
+                                <path d="M0,40 Q20,10 40,30 T80,20 T100,5 L100,50 L0,50 Z" fill="url(#grad)" opacity="0.2" />
+                                <defs><linearGradient id="grad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:#00f2ff;stop-opacity:1" /><stop offset="100%" style="stop-color:#00f2ff;stop-opacity:0" /></linearGradient></defs>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="p-10 bg-[#050505] border-t border-white/5 flex justify-between items-center">
+                        <button @click="deleteCard(detailCard.uid); detailCard=null" class="text-red-500 hover:text-white text-[10px] font-bold uppercase tracking-widest flex items-center gap-3 transition">
+                            <i class="fa-solid fa-trash"></i> Remove Card
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </Transition>
 
 </div>
 
 <script>
-// Your entire original script — ONLY ONE LINE ADDED:
-const { createApp } = Vue;
-createApp({
-    data() {
-        return {
-            sidebarOpen: false,  // ← THIS IS THE ONLY NEW LINE
-            user: null, currentView: 'collection', currentBinder: null,
-            // ... all your original data properties exactly as before ...
+    // --- FIREBASE CONFIG (Paste Keys Here) ---
+    const firebaseConfig = {
+        apiKey: "AIzaSyBnb9VlLk4sNbj89beWtb2hmLGsvhgb6TE",
+        authDomain: "gladiator-portfolio.firebaseapp.com",
+        projectId: "gladiator-portfolio",
+        storageBucket: "gladiator-portfolio.firebasestorage.app",
+        messagingSenderId: "61051937804",
+        appId: "1:61051937804:web:535cbbcb5417c4bde67a29"
+    };
+
+    let auth, db, provider;
+    try {
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        auth = firebase.auth();
+        db = firebase.firestore();
+        provider = new firebase.auth.GoogleAuthProvider();
+    } catch(e) { console.log("Guest Mode Active"); }
+
+    const { createApp } = Vue;
+
+    createApp({
+        data() {
+            return {
+                user: null, currentView: 'collection', currentBinder: null, 
+                localBinders: [], localCards: [], cloudBinders: [], cloudCards: [],
+                showSearch: false, detailCard: null, setsLoading: false, isSearching: false,
+                allSets: [], eras: [], selectedEra: "", selectedSet: "", query: "", targetBinder: 'master', searchResults: [],
+                cacheKey: 'gladiator_sets_v6',
+                
+                totalSetData: {}, 
+                
+                // MAIN PAGINATION
+                sortBy: 'profit', sortDesc: true, currentPage: 1, itemsPerPage: 30, // 30 Cards per page
+                
+                // SEARCH PAGINATION
+                searchPage: 1, searchPerPage: 30, addedIds: [], selectedIds: [], searchSort: 'number'
+            }
+        },
+        watch: {
+            selectedEra(newEra, oldEra) {
+                // FIX 1: Reset search state when Era changes
+                if (newEra !== oldEra) {
+                    this.selectedSet = ""; 
+                    this.searchResults = [];
+                    this.searchPage = 1;
+                    this.query = "";
+                }
+            },
+            selectedSet(newSet, oldSet) {
+                // FIX 1: Reset search state when Set changes
+                if (newSet !== oldSet) {
+                    this.searchResults = []; 
+                    this.searchPage = 1;
+                    this.query = "";
+                }
+            }
+        },
+        mounted() {
+            this.loadLocalData();
+            this.loadSetsAPI(); // Load set metadata (including size) on mount
+            if(auth) {
+                auth.onAuthStateChanged(u => {
+                    if(u) { this.user = u; this.initCloudData(); } 
+                    else { this.user = null; }
+                });
+            }
+        },
+        computed: {
+            binders() { return this.user ? this.cloudBinders : this.localBinders; },
+            cards() { return this.user ? this.cloudCards : this.localCards; },
+            headerTitle() {
+                if(this.currentView === 'collection') return 'Collection';
+                if(this.currentView === 'binders') return 'My Binders';
+                // Handle currentBinder display for single_binder view
+                return this.currentBinder ? this.currentBinder.name : 'ROI Calculator';
+            },
+            
+            displayCards() { 
+                let list = this.cards; 
+                
+                // Filter cards based on currentBinder ID for single_binder/calculator view
+                if (this.currentBinder) {
+                    list = this.cards.filter(c => c.binderId === this.currentBinder.id);
+                }
+                
+                return list;
+            },
+            
+            isAllSelected() {
+                return this.displayCards.length > 0 && this.selectedIds.length === this.displayCards.length;
+            },
+
+            // --- SMART SORTING (ROI TABLE) ---
+            sortedCards() {
+                let list = [...this.displayCards];
+                return list.sort((a, b) => {
+                    let valA, valB;
+                    if(this.sortBy === 'name') { valA = a.name.toLowerCase(); valB = b.name.toLowerCase(); } 
+                    else if(this.sortBy === 'rawCost') { valA = a.rawCost || 0; valB = b.rawCost || 0; } 
+                    else if(this.sortBy === 'market') { valA = this.getEstValue(a); valB = this.getEstValue(b); } 
+                    else if(this.sortBy === 'profit') { valA = this.getProfit(a); valB = this.getProfit(b); } 
+                    else { valA = a.id; valB = b.id; }
+                    
+                    if(valA < valB) return this.sortDesc ? 1 : -1;
+                    if(valA > valB) return this.sortDesc ? -1 : 1;
+                    return 0;
+                });
+            },
+
+            // --- LOCAL PAGINATION ---
+            totalPages() { return Math.ceil(this.sortedCards.length / this.itemsPerPage); },
+            paginatedCards() {
+                const start = (this.currentPage - 1) * this.itemsPerPage;
+                return this.sortedCards.slice(start, start + this.itemsPerPage);
+            },
+
+            // --- GROUP BY SET (COLLECTION VIEW) ---
+            // FIX 3: Count unique cards by set (using `c.id` which is the card's TCG ID)
+            cardsBySet() {
+                const grouped = {};
+                
+                this.cards.forEach(c => {
+                    if(!grouped[c.set]) {
+                        // Store cards, a set of unique IDs, and an object for quantity counts
+                        grouped[c.set] = { cards: [], uniqueCardIds: new Set(), cardCounts: {}, uniqueCount: 0 };
+                    }
+                    
+                    grouped[c.set].cards.push(c);
+                    grouped[c.set].uniqueCardIds.add(c.id); // Track unique IDs
+                    grouped[c.set].cardCounts[c.id] = (grouped[c.set].cardCounts[c.id] || 0) + 1;
+                });
+
+                // Finalize unique count and sort cards in the list by number
+                for (const setName in grouped) {
+                    grouped[setName].uniqueCount = grouped[setName].uniqueCardIds.size;
+                    // Sort cards within the set grouping by their card number
+                    grouped[setName].cards.sort((a,b) => a.number.localeCompare(b.number, undefined, {numeric: true}));
+                    // Remove duplicate card objects for display (keep only one instance per card ID)
+                    const uniqueCards = [];
+                    const seenIds = new Set();
+                    grouped[setName].cards.forEach(card => {
+                        if (!seenIds.has(card.id)) {
+                            uniqueCards.push(card);
+                            seenIds.add(card.id);
+                        }
+                    });
+                    grouped[setName].cards = uniqueCards;
+                }
+                
+                return grouped;
+            },
+
+            // --- SEARCH SORT & PAGINATION (CLIENT-SIDE) ---
+            filteredSearchList() {
+                let list = [...this.searchResults];
+                if(this.query) { list = list.filter(c => c.name.toLowerCase().includes(this.query.toLowerCase())); }
+                
+                // --- SORTING ---
+                list.sort((a, b) => {
+                    const priceA = this.getCardPrice(a);
+                    const priceB = this.getCardPrice(b);
+
+                    if (this.searchSort === 'price-desc') return priceB - priceA;
+                    if (this.searchSort === 'price-asc') return priceA - priceB;
+                    if (this.searchSort === 'name') return a.name.localeCompare(b.name);
+                    return a.number.localeCompare(b.number, undefined, {numeric: true});
+                });
+                // --- END SORTING ---
+
+                return list;
+            },
+            totalSearchPages() { return Math.ceil(this.filteredSearchList.length / this.searchPerPage); },
+            paginatedSearchResults() {
+                const start = (this.searchPage - 1) * this.searchPerPage;
+                return this.filteredSearchList.slice(start, start + this.searchPerPage);
+            },
+
+            totalValue() { return this.displayCards.reduce((sum, c) => sum + (c.market || 0), 0); },
+            filteredSets() { return this.allSets.filter(s => s.series === this.selectedEra); },
+            topCard() { return [...this.cards].sort((a,b) => b.market - a.market)[0]; }
+        },
+        methods: {
+            loginWithGoogle() { if(auth) auth.signInWithPopup(provider).catch(e => alert(e.message)); },
+            logout() { if(auth) auth.signOut(); },
+
+            // --- UI HELPERS ---
+            getSortIcon(key) {
+                if(this.sortBy !== key) return 'fa-sort text-gray-700';
+                return this.sortDesc ? 'fa-caret-down text-[#00f2ff]' : 'fa-caret-up text-[#00f2ff]';
+            },
+            getBinderName(id) {
+                if(id==='master') return 'Master';
+                const b = this.binders.find(x => x.id === id);
+                return b ? b.name : 'Unknown';
+            },
+            
+            // Get total set size for Collection view
+            getSetTotal(setName) {
+                const set = this.totalSetData[setName];
+                if (!set) return '?';
+                // Prioritize 'total' (Master Set size), then 'printedTotal'
+                return (set.total && set.total > 0) ? set.total : set.printedTotal;
+            },
+            
+            // --- BULK DELETE ---
+            toggleSelectAll() {
+                if (this.isAllSelected) this.selectedIds = [];
+                else this.selectedIds = this.displayCards.map(c => c.uid);
+            },
+            deleteSelected() {
+                if(!confirm(`Delete ${this.selectedIds.length} cards?`)) return;
+                this.selectedIds.forEach(uid => {
+                    if(this.user) db.collection('users').doc(this.user.uid).collection('cards').doc(uid).delete();
+                    else this.localCards = this.localCards.filter(c => c.uid !== uid);
+                });
+                this.selectedIds = [];
+                this.saveData();
+            },
+
+            // --- SORT & PAGE METHODS (LOCAL) ---
+            setSort(key) {
+                if(this.sortBy === key) {
+                    this.sortDesc = !this.sortDesc; 
+                } else {
+                    this.sortBy = key;
+                    this.sortDesc = true; 
+                }
+                this.currentPage = 1; 
+            },
+            nextPage() { 
+                if(this.currentView === 'collection' || this.currentView === 'calculator') {
+                    if(this.currentPage < this.totalPages) this.currentPage++; 
+                } else if (this.showSearch) {
+                    if(this.searchPage < this.totalSearchPages) this.searchPage++;
+                }
+            },
+            prevPage() { 
+                if(this.currentView === 'collection' || this.currentView === 'calculator') {
+                    if(this.currentPage > 1) this.currentPage--; 
+                } else if (this.showSearch) {
+                    if(this.searchPage > 1) this.searchPage--;
+                }
+            },
+            
+            sortSearchResults() { 
+                this.searchPage = 1; 
+            },
+
+            // --- DATA ---
+            loadLocalData() {
+                const b = localStorage.getItem('glad_binders'); if(b) this.localBinders = JSON.parse(b);
+                const c = localStorage.getItem('glad_cards'); if(c) this.localCards = JSON.parse(c);
+            },
+            saveData() {
+                if(!this.user) {
+                    localStorage.setItem('glad_binders', JSON.stringify(this.localBinders));
+                    localStorage.setItem('glad_cards', JSON.stringify(this.localCards));
+                }
+            },
+            initCloudData() {
+                db.collection('users').doc(this.user.uid).collection('binders').onSnapshot(s => this.cloudBinders = s.docs.map(d => ({id: d.id, ...d.data()})));
+                db.collection('users').doc(this.user.uid).collection('cards').onSnapshot(s => this.cloudCards = s.docs.map(d => ({uid: d.id, ...d.data()})));
+            },
+
+            createBinder() {
+                const name = prompt("Name your new Collection (e.g. Eevee Heroes):");
+                if(!name) return;
+                if(this.user) db.collection('users').doc(this.user.uid).collection('binders').add({ name, createdAt: new Date() });
+                else { this.localBinders.push({ id: Date.now().toString(), name }); this.saveData(); }
+            },
+            deleteBinder(id) {
+                if(!confirm("Delete this collection? Cards will remain in 'All Cards'.")) return;
+                if(this.user) db.collection('users').doc(this.user.uid).collection('binders').doc(id).delete();
+                else { this.localBinders = this.localBinders.filter(b => b.id !== id); this.saveData(); }
+            },
+            addCard(c) {
+                const market = this.getCardPrice(c);
+                const cardData = {
+                    id: c.id, name: c.name, set: this.allSets.find(s=>s.id === this.selectedSet)?.name || 'Set', 
+                    image: c.images.small, number: c.number, 
+                    market: market, 
+                    rawCost: market, fee: 15, targetGrade: 10,
+                    binderId: this.targetBinder === 'master' ? null : this.targetBinder
+                };
+                if(this.user) db.collection('users').doc(this.user.uid).collection('cards').add(cardData);
+                else { cardData.uid = Date.now().toString(); this.localCards.push(cardData); this.saveData(); }
+                
+                this.addedIds.push(c.id);
+                setTimeout(() => { this.addedIds = this.addedIds.filter(id => id !== c.id); }, 1500);
+            },
+            // FIX 2: Delete card implementation (used in collection, calculator, and detail view)
+            deleteCard(uid) {
+                if(!confirm("Remove this card permanently?")) return;
+                if(this.user) db.collection('users').doc(this.user.uid).collection('cards').doc(uid).delete();
+                else { this.localCards = this.localCards.filter(c => c.uid !== uid); this.saveData(); }
+                this.detailCard = null; // Close detail view if open
+            },
+            updateCardBinder(card) {
+                if(this.user) db.collection('users').doc(this.user.uid).collection('cards').doc(card.uid).update({ binderId: card.binderId });
+                else this.saveData();
+            },
+
+            getEstValue(c) {
+                const raw = c.market || 0;
+                if(c.targetGrade == 10) return raw * 3.2;
+                if(c.targetGrade == 9) return raw * 1.1;
+                return raw * 0.85;
+            },
+            getProfit(c) { return this.getEstValue(c) - ((c.rawCost || 0) + (c.fee || 0)); },
+
+            selectBinder(b) { this.currentView = 'single_binder'; this.currentBinder = b; this.currentPage = 1; },
+            getBinderCount(id) { return this.cards.filter(c => c.binderId === id).length; },
+            openSearch() { 
+                this.showSearch = true; this.searchResults = []; this.searchPage = 1; this.query = '';
+                if(this.currentView === 'calculator' && this.currentBinder) this.targetBinder = this.currentBinder.id;
+                else this.targetBinder = 'master';
+            },
+            openCardDetail(c) { this.detailCard = c; },
+            formatNumber(n) { return (n||0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}); },
+            
+            getCardPrice(c) { 
+                const prices = c.tcgplayer?.prices;
+                if (!prices) return 0;
+                
+                const marketPrices = Object.values(prices)
+                    .map(priceDetail => priceDetail?.market)
+                    .filter(price => price > 0); 
+
+                if (c.tcgplayer?.market && c.tcgplayer.market > 0) {
+                    marketPrices.push(c.tcgplayer.market);
+                }
+
+                return marketPrices.length > 0 ? Math.max(...marketPrices) : 0;
+            },
+            
+            async loadSetsAPI() {
+                this.setsLoading = true;
+                const cacheKeySets = 'gladiator_all_sets_v2';
+                const c = localStorage.getItem(cacheKeySets);
+                
+                if(c) { 
+                    try {
+                        const data = JSON.parse(c);
+                        this.allSets = data.sets; 
+                        this.eras = data.eras;
+                        this.totalSetData = data.totalSetData; // Load cached size data
+                        this.setsLoading = false;
+                        return;
+                    } catch (e) {
+                        console.error("Error parsing cached sets:", e);
+                    }
+                }
+                
+                try {
+                    // Fetch id, name, series, and the size parameters
+                    const res = await fetch('https://api.pokemontcg.io/v2/sets?select=id,name,series,releaseDate,printedTotal,total&orderBy=-releaseDate');
+                    
+                    if (!res.ok) {
+                        throw new Error(`API fetch failed with status: ${res.status}`);
+                    }
+
+                    const data = await res.json();
+                    
+                    const setSizeMap = {};
+                    data.data.forEach(s => {
+                        setSizeMap[s.name] = { total: s.total, printedTotal: s.printedTotal };
+                    });
+
+                    this.allSets = data.data; 
+                    this.eras = [...new Set(data.data.map(s => s.series))];
+                    this.totalSetData = setSizeMap; // Store the set size map
+                    
+                    localStorage.setItem(cacheKeySets, JSON.stringify({
+                        sets: this.allSets, 
+                        eras: this.eras, 
+                        totalSetData: this.totalSetData
+                    }));
+                    
+                } catch(error) {
+                    console.error("CRITICAL: Failed to synchronize set database.", error);
+                } finally {
+                    this.setsLoading = false;
+                }
+            },
+            
+            async fetchCards(page = 1) {
+                if(!this.selectedSet) return;
+                this.isSearching = true; 
+                this.searchPage = page; 
+
+                // 1. Prepare Query and Cache Key
+                let nameQuery = this.query ? this.query.trim().toLowerCase() : '';
+                
+                let q = `set.id:${this.selectedSet}`; 
+                if(nameQuery) {
+                    q += ` name:"${nameQuery}*"`;
+                }
+                
+                // Cache key includes set and name query, but not page (we cache all 250 results)
+                const cacheKey = `search_${this.selectedSet}_${nameQuery}`; 
+                const now = Date.now();
+                
+                // 2. Check Session Cache 
+                const cachedData = sessionStorage.getItem(cacheKey);
+                if (cachedData) {
+                    try {
+                        const cache = JSON.parse(cachedData);
+                        if (now - cache.timestamp < 1000 * 60 * 30) { // 30 minutes TTL
+                            this.searchResults = cache.results;
+                            this.searchPage = page;
+                            this.isSearching = false; // Important: Exit search state immediately on cache hit
+                            return;
+                        } else {
+                            sessionStorage.removeItem(cacheKey);
+                        }
+                    } catch (e) {
+                        sessionStorage.removeItem(cacheKey);
+                    }
+                }
+
+                // 3. Fetch from API (New or Expired Cache)
+                try {
+                    // Fetch up to 250 cards to maximize client-side filtering speed
+                    // Use the user's selected sort directly in the API call for better results on large sets
+                    const res = await fetch(`https://api.pokemontcg.io/v2/cards?q=${q}&pageSize=250&select=id,name,number,images,tcgplayer&orderBy=${this.searchSort.replace('-', '')}`);
+                    
+                    if (!res.ok) {
+                        throw new Error(`API fetch failed with status: ${res.status}`);
+                    }
+                    
+                    const data = await res.json();
+                    this.searchResults = data.data || [];
+                    this.searchPage = page;
+
+                    // 4. Cache Result
+                    if (this.searchResults.length > 0) {
+                        const cache = { timestamp: now, results: this.searchResults };
+                        sessionStorage.setItem(cacheKey, JSON.stringify(cache));
+                    }
+
+                } catch(e) { 
+                    console.error("API Fetch Error:", e);
+                    this.searchResults = []; 
+                } 
+                finally { 
+                    this.isSearching = false; 
+                }
+            }
         }
-    },
-    // ... rest of your entire script 100% unchanged ...
-}).mount('#app');
+    }).mount('#app');
 </script>
+
 </body>
 </html>
