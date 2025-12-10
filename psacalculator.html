@@ -417,7 +417,7 @@
                     </label>
                     <select v-model="selectedSet" :disabled="!selectedEra || loadingSets" class="glass-input disabled:opacity-30">
                         <option value="">{{ loadingSets ? 'Loading...' : 'Select Set' }}</option>
-                        <option v-for="s in availableSets" :value="s.tcgPlayerId || s.id">{{ s.name }}</option>
+                        <option v-for="s in availableSets" :value="s.id">{{ s.name }}</option>
                     </select>
                 </div>
                 <div class="col-span-2 md:col-span-1">
@@ -453,7 +453,7 @@
                         
                         <div class="flex flex-col truncate pr-4">
                             <div class="text-sm font-bold text-white truncate group-hover:text-[#00f2ff] transition">{{ card.name }}</div>
-                            <div class="text-[10px] text-gray-500 font-mono">{{ card.cardNumber }} / {{ getSetTotal(availableSets.find(s=>(s.tcgPlayerId || s.id) === selectedSet)?.name) }}</div>
+                            <div class="text-[10px] text-gray-500 font-mono">{{ card.number }} / {{ getSetTotal(availableSets.find(s=>s.id === selectedSet)?.name) }}</div>
                         </div>
                         
                         <div class="text-right shrink-0">
@@ -476,7 +476,7 @@
                 <div class="w-full h-1/3 md:h-auto md:w-1/3 bg-[#020202] p-8 flex items-center justify-center border-b md:border-b-0 md:border-r border-white/10 relative shrink-0">
                     <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20"></div>
                     <div class="absolute top-6 left-6 text-[#00f2ff] font-bold tracking-widest uppercase text-[10px] cursor-pointer hover:text-white transition z-10 flex items-center gap-2" @click="detailCard=null"><i class="fa-solid fa-arrow-left"></i> Return</div>
-                    <img :src="detailCard.image" class="max-w-[80%] md:max-w-xs rounded-xl shadow-2xl relative z-10 transition duration-500 hover:scale-105 hover:shadow-[0_0_30px_rgba(0,242,255,0.3)]">
+                    <img :src="detailCard.image.replace('small','large')" class="max-w-[80%] md:max-w-xs rounded-xl shadow-2xl relative z-10 transition duration-500 hover:scale-105 hover:shadow-[0_0_30px_rgba(0,242,255,0.3)]">
                 </div>
                 
                 <div class="w-full md:w-2/3 flex flex-col bg-[#050508] overflow-y-auto relative">
@@ -524,8 +524,7 @@
         appId: "1:61051937804:web:535cbbcb5417c4bde67a29"
     };
 
-    // --- API CONFIG (PokemonPriceTracker.com) ---
-    // Docs: https://www.pokemonpricetracker.com/docs
+    // --- POKÉMON TCG API KEY ---
     const API_KEY = "pokeprice_free_897eaf1e7da854c45520eacd7976fccb81b8f9fbb494f08b".trim(); 
     const API_BASE = "https://www.pokemonpricetracker.com/api/v2";
 
@@ -679,14 +678,13 @@
             },
             filteredSearchList() {
                 let list = [...this.searchResults];
-                // Client-side sort is fine, API already filtered by set/name
                 list.sort((a, b) => {
                     const priceA = this.getCardPrice(a);
                     const priceB = this.getCardPrice(b);
                     if (this.searchSort === 'price-desc') return priceB - priceA;
                     if (this.searchSort === 'price-asc') return priceA - priceB;
                     if (this.searchSort === 'name') return a.name.localeCompare(b.name);
-                    return a.cardNumber.localeCompare(b.cardNumber, undefined, {numeric: true});
+                    return a.number.localeCompare(b.number, undefined, {numeric: true});
                 });
                 return list;
             },
@@ -696,6 +694,7 @@
                 return this.filteredSearchList.slice(start, start + this.searchPerPage);
             },
             totalValue() { return this.displayCards.reduce((sum, c) => sum + (c.market || 0), 0); },
+            // UPDATED: Use the dynamically loaded availableSets
             filteredSets() { return this.availableSets; },
         },
         methods: {
@@ -756,25 +755,22 @@
             
             // --- UPDATED ADD CARD ---
             addCard(c) {
-                const market = this.getCardPrice(c); // Use updated helper
-                const setName = this.availableSets.find(s=>(s.tcgPlayerId || s.id) === this.selectedSet)?.name || 'Set';
+                const market = this.getCardPrice(c);
+                const setName = this.availableSets.find(s=>s.id === this.selectedSet)?.name || 'Set';
                 
                 if (!this.totalSetData[setName]) {
-                    const setObj = this.availableSets.find(s => (s.tcgPlayerId || s.id) === this.selectedSet);
-                    if(setObj) this.totalSetData[setName] = setObj.cardCount; // Docs say cardCount, old API was total
+                    const setObj = this.availableSets.find(s => s.id === this.selectedSet);
+                    if(setObj) this.totalSetData[setName] = setObj.total; // Use total from new API if available
                 }
 
                 const cardData = {
-                    id: c.id, 
-                    name: c.name, 
-                    set: setName, 
-                    image: c.imageUrl, // New API uses imageUrl
-                    number: c.cardNumber, // New API uses cardNumber
+                    id: c.id, name: c.name, set: setName, 
+                    image: c.image || c.images?.small, // Handle new vs old API structure
+                    number: c.number, 
                     market: market, 
                     rawCost: market, fee: 15, targetGrade: 10,
                     binderId: this.targetBinder === 'master' ? null : this.targetBinder
                 };
-                
                 if(this.user) db.collection('users').doc(this.user.uid).collection('cards').add(cardData);
                 else { cardData.uid = Date.now().toString(); this.localCards.push(cardData); this.saveData(); }
                 
@@ -819,31 +815,42 @@
             
             // --- UPDATED PRICE HELPER ---
             getCardPrice(c) { 
-                // New API structure: c.prices.market
+                // Check new API structure: c.prices.market
                 if (c.prices && c.prices.market) {
                     return c.prices.market;
                 }
-                // Fallback if structure is different or missing
+                // Fallback for old API structure: c.tcgplayer.prices...
+                if (c.tcgplayer?.prices) {
+                     const marketPrices = Object.values(c.tcgplayer.prices)
+                        .map(p => p?.market).filter(p => p > 0); 
+                     if (c.tcgplayer?.market && c.tcgplayer.market > 0) marketPrices.push(c.tcgplayer.market);
+                     return marketPrices.length > 0 ? Math.max(...marketPrices) : 0;
+                }
                 return 0;
             },
 
             // --- FETCH SETS (Updated Endpoint) ---
             async fetchSetsForEra(era) {
                 this.loadingSets = true;
-                // Docs: Authentication requires Bearer token
                 const headers = { 'Authorization': `Bearer ${API_KEY}` };
                 
-                // Docs: GET /api/v2/sets?series=EraName
-                const url = `${API_BASE}/sets?series=${encodeURIComponent(era)}&sortBy=releaseDate&sortOrder=desc&limit=100`;
+                // New API structure: /sets?series=...
+                // Removed extra filters that might cause 400 errors on new API
+                const url = `${API_BASE}/sets?series=${encodeURIComponent(era)}`;
                 
                 try {
+                    console.log("Fetching sets from:", url);
                     const res = await fetch(url, { headers });
+                    
+                    if (!res.ok) {
+                        throw new Error(`${res.status} ${res.statusText}`);
+                    }
+
                     const data = await res.json();
-                    // Docs: Response is { data: [...] }
                     this.availableSets = data.data || [];
                 } catch (e) {
                     console.error("Set fetch failed", e);
-                    alert("Could not load sets. Check API key.");
+                    alert(`Error loading sets: ${e.message}. Check network/API key.`);
                 } finally {
                     this.loadingSets = false;
                 }
@@ -857,27 +864,28 @@
                 this.searchPage = page; 
                 const headers = { 'Authorization': `Bearer ${API_KEY}` };
 
-                // Docs: GET /api/v2/cards?setId=...&search=...
-                // Using URLSearchParams for cleaner query building
-                const params = new URLSearchParams();
-                params.append('setId', this.selectedSet); // Set ID or slug
-                params.append('limit', '250');
-                // params.append('offset', '0'); // Add offset logic if pagination is needed later
+                // New API structure: /cards?set_id=...
+                // Using set_id instead of Lucene query string
+                let url = `${API_BASE}/cards?set_id=${this.selectedSet}`;
                 
                 if(this.query && this.query.trim()) {
-                    params.append('search', this.query.trim());
+                    url += `&q=${encodeURIComponent(this.query.trim())}`;
                 }
                 
-                const url = `${API_BASE}/cards?${params.toString()}`;
-                
                 try {
+                    console.log("Fetching cards from:", url);
                     const res = await fetch(url, { headers });
+                    
+                    if (!res.ok) {
+                        throw new Error(`${res.status} ${res.statusText}`);
+                    }
+
                     const data = await res.json();
                     this.searchResults = data.data || [];
                     this.searchPage = 1;
-                } catch(e) { 
+                } catch (e) { 
                     console.error("Card search failed", e);
-                    alert("Search failed.");
+                    alert(`Search failed: ${e.message}`);
                 } finally { 
                     this.isSearching = false; 
                 }
