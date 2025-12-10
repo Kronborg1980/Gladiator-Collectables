@@ -113,7 +113,7 @@
         /* FIX 2: Ensure the app container itself can stretch and manage flow */
         @media (max-width: 767px) {
             .app-mobile-flow {
-                display: block !important; /* Override flex */
+                display: block !important;
                 height: auto !important;
                 min-height: 100vh;
             }
@@ -751,12 +751,13 @@
             openCardDetail(c) { this.detailCard = c; },
             formatNumber(n) { return (n||0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}); },
             
-            // --- UPDATED PRICE CHECK METHOD ---
+            // --- FIXED PRICE CHECK METHOD ---
             getCardPrice(c) { 
                 // Checks for multiple common price fields and returns the highest one found, or 0
                 const prices = c.tcgplayer?.prices;
                 if (!prices) return 0;
                 
+                // Get all market prices from various potential rarity/foil fields
                 const marketPrices = [
                     prices.holofoil?.market,
                     prices.reverseHolofoil?.market,
@@ -764,9 +765,9 @@
                     prices['1stEditionHolofoil']?.market,
                     prices['unlimitedHolofoil']?.market,
                     prices.market // General market price if available
-                ].filter(p => p > 0); // Filter out nulls, undefineds, and zeros
+                ].filter(p => p > 0); 
 
-                // Return the highest price found, or 0
+                // Return the highest price found, or 0 if none are available
                 return marketPrices.length > 0 ? Math.max(...marketPrices) : 0;
             },
             // ----------------------------------
@@ -791,7 +792,6 @@
                     const res = await fetch('https://api.pokemontcg.io/v2/sets?select=id,name,series,releaseDate,printedTotal,total&orderBy=-releaseDate');
                     
                     if (!res.ok) {
-                        // Throw an error if HTTP status is not 200-299
                         throw new Error(`API fetch failed with status: ${res.status}`);
                     }
 
@@ -802,10 +802,8 @@
                     localStorage.setItem(this.cacheKey, JSON.stringify({sets: this.allSets, eras: this.eras}));
                     
                 } catch(error) {
-                    // This catches network errors and failed HTTP responses.
                     console.error("CRITICAL: Failed to synchronize set database. Check network connection.", error);
                 } finally {
-                    // GUARANTEED TO RUN: Ends the loading spinner state.
                     this.setsLoading = false;
                 }
             },
