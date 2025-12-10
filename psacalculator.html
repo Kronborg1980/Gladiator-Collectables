@@ -11,6 +11,10 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
     
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
     <style>
         :root { 
             --accent: #00f2ff; 
@@ -82,29 +86,16 @@
             }
         }
 
-        .roi-header .desktop-only, .roi-grid .desktop-only {
-            display: none;
-        }
+        .roi-header .desktop-only, .roi-grid .desktop-only { display: none; }
         @media (min-width: 768px) {
-            .roi-header .desktop-only, .roi-grid .desktop-only {
-                display: block;
-            }
-            .roi-header .desktop-only.justify-end {
-                 display: flex;
-            }
+            .roi-header .desktop-only, .roi-grid .desktop-only { display: block; }
+            .roi-header .desktop-only.justify-end { display: flex; }
         }
-        .roi-grid .mobile-value {
-             text-align: right;
-        }
-        .roi-grid .mobile-action {
-             text-align: center;
-        }
+        .roi-grid .mobile-value { text-align: right; }
+        .roi-grid .mobile-action { text-align: center; }
         @media (min-width: 768px) {
-            .roi-grid .mobile-value, .roi-grid .mobile-action {
-                 display: none; 
-            }
+            .roi-grid .mobile-value, .roi-grid .mobile-action { display: none; }
         }
-
 
         .sortable { cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 4px; }
         .sortable:hover { color: var(--accent); }
@@ -212,11 +203,7 @@
                     <img :src="user.photoURL" class="w-8 h-8 rounded-full border border-[#00f2ff] shadow-[0_0_10px_#00f2ff]">
                     <div class="overflow-hidden">
                         <div class="text-xs font-bold text-white truncate">{{ user.displayName }}</div>
-                        <div class="text-[8px] font-bold uppercase tracking-wider flex items-center gap-1"
-                             :class="firestoreStatus === 'connected' ? 'text-green-400' : 'text-orange-400'">
-                            <i class="fa-solid fa-circle text-[5px]" :class="{'animate-pulse': firestoreStatus !== 'connected'}"></i> 
-                            {{ firestoreStatus === 'connected' ? 'Synced' : 'Connecting...' }}
-                        </div>
+                        <div class="text-[8px] text-green-400 font-bold uppercase tracking-wider flex items-center gap-1 animate-pulse"><i class="fa-solid fa-circle text-[5px]"></i> Synced</div>
                     </div>
                 </div>
                 <button v-if="!user" @click="loginWithGoogle" class="w-full bg-[#00f2ff] hover:bg-white text-black font-bold py-3 rounded-lg text-xs uppercase tracking-widest transition flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(0,242,255,0.2)]">
@@ -275,7 +262,7 @@
                     <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-4 md:gap-6">
                         <div v-for="card in setGroup.cards" :key="card.uid" class="bg-[#0a0f18] p-3 rounded-xl hover:border-[#00f2ff] border border-white/5 group relative transition duration-200">
                             <div class="aspect-[0.7] rounded-lg bg-[#050505] overflow-hidden mb-3 relative cursor-pointer" @click="openCardDetail(card)">
-                                <img :src="card.image" class="w-full h-full object-cover transition duration-500 group-hover:scale-110">
+                                <img :src="card.image" loading="lazy" class="w-full h-full object-cover transition duration-500 group-hover:scale-110">
                             </div>
                             <div class="text-center text-xs font-bold text-white truncate cursor-pointer" @click="openCardDetail(card)">{{ card.name }}</div>
                             <div class="text-[9px] text-center text-gray-500 font-bold mt-1">${{ formatNumber(card.market) }}</div>
@@ -335,7 +322,7 @@
                 <div v-else>
                     <div v-for="(c, i) in paginatedCards" :key="c.uid || i" class="roi-grid hover:bg-white/5 transition" :class="{'bg-white/5': selectedIds.includes(c.uid)}">
                         <div class="flex justify-center"><input type="checkbox" :value="c.uid" v-model="selectedIds" class="custom-checkbox"></div>
-                        <div class="flex justify-center"><div class="w-10 h-14 bg-black rounded border border-white/10 overflow-hidden cursor-pointer hover:border-[#00f2ff]" @click="openCardDetail(c)"><img :src="c.image" class="w-full h-full object-cover"></div></div>
+                        <div class="flex justify-center"><div class="w-10 h-14 bg-black rounded border border-white/10 overflow-hidden cursor-pointer hover:border-[#00f2ff]" @click="openCardDetail(c)"><img :src="c.image" loading="lazy" class="w-full h-full object-cover"></div></div>
                         <div class="min-w-0">
                             <div class="font-bold text-white text-sm truncate cursor-pointer" @click="openCardDetail(c)">{{ c.name }}</div>
                             <div class="text-[9px] text-gray-500 font-bold uppercase tracking-wider">{{ c.set }}</div>
@@ -423,7 +410,7 @@
                     <div v-else>
                         <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 md:gap-6 mb-6">
                             <div v-for="card in paginatedSearchResults" :key="card.id" @click="addCard(card)" class="bg-[#0a0f18] p-3 rounded-xl cursor-pointer hover:border-[#00f2ff] border border-white/5 group relative transition duration-200">
-                                <img :src="card.images.small" class="w-full rounded-lg mb-3 shadow-lg">
+                                <img :src="card.images.small" loading="lazy" class="w-full rounded-lg mb-3 shadow-lg">
                                 <div class="text-center text-xs font-bold text-white truncate">{{ card.name }}</div>
                                 <div class="absolute top-2 right-2 bg-black/90 backdrop-blur text-[#00f2ff] text-[9px] font-bold px-2 py-1 rounded border border-[#00f2ff] shadow-lg">${{ formatNumber(getCardPrice(card)) }}</div>
                                 <div v-if="addedIds.includes(card.id)" class="absolute inset-0 bg-green-500/90 flex items-center justify-center rounded-xl font-bold text-black uppercase tracking-widest text-xs animate-pulse">
@@ -443,7 +430,7 @@
             <div class="bg-[#0a0f18] w-full max-w-6xl h-[95vh] md:h-[85vh] rounded-2xl border border-white/10 shadow-2xl flex flex-col md:flex-row overflow-hidden">
                 <div class="w-full h-1/3 md:h-auto md:w-1/3 bg-[#050505] p-6 md:p-10 flex items-center justify-center border-b md:border-b-0 md:border-r border-white/5 relative shrink-0">
                     <div class="absolute top-4 left-4 md:top-8 md:left-8 text-[#00f2ff] font-bold tracking-widest uppercase text-[10px] cursor-pointer hover:text-white transition z-10" @click="detailCard=null"><i class="fa-solid fa-arrow-left mr-2"></i> Back</div>
-                    <img :src="detailCard.image.replace('small','large')" class="max-w-[70%] md:max-w-sm rounded-lg shadow-2xl card-hover max-h-full object-contain">
+                    <img :src="detailCard.image.replace('small','large')" loading="lazy" class="max-w-[70%] md:max-w-sm rounded-lg shadow-2xl card-hover max-h-full object-contain">
                 </div>
                 <div class="w-full md:w-2/3 flex flex-col bg-[#080a10] overflow-y-auto">
                     <div class="p-6 md:p-10 border-b border-white/5 flex justify-between items-start bg-black/20 shrink-0">
@@ -481,11 +468,8 @@
 
 </div>
 
-<script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
-    import { getAuth, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-    import { getFirestore, collection, doc, addDoc, updateDoc, deleteDoc, onSnapshot, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
-
+<script>
+    // --- FIREBASE CONFIG (Paste Keys Here) ---
     const firebaseConfig = {
         apiKey: "AIzaSyBnb9VlLk4sNbj89beWtb2hmLGsvhgb6TE",
         authDomain: "gladiator-portfolio.firebaseapp.com",
@@ -495,17 +479,13 @@
         appId: "1:61051937804:web:535cbbcb5417c4bde67a29"
     };
 
-    let app, auth, db, provider;
-    
-    // Initialize Modular SDK
+    let auth, db, provider;
     try {
-        app = initializeApp(firebaseConfig);
-        auth = getAuth(app);
-        db = getFirestore(app);
-        provider = new GoogleAuthProvider();
-    } catch(e) {
-        console.error("Firebase Initialization Error:", e);
-    }
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        auth = firebase.auth();
+        db = firebase.firestore();
+        provider = new firebase.auth.GoogleAuthProvider();
+    } catch(e) { console.log("Guest Mode Active or Firebase Error", e); }
 
     const { createApp } = Vue;
 
@@ -526,14 +506,9 @@
                 // SEARCH PAGINATION
                 searchPage: 1, searchPerPage: 30, addedIds: [], selectedIds: [], searchSort: 'number',
 
-                // MOBILE NAV
+                // MOD: New state for mobile navigation
                 showMobileNav: false,
-                isDesktop: true,
-
-                // PATCH: Connection State & Unsubscribers
-                firestoreStatus: 'disconnected',
-                unsubCards: null,
-                unsubBinders: null
+                isDesktop: true, // Will be updated on mount
             }
         },
         watch: {
@@ -557,48 +532,54 @@
             this.loadLocalData();
             this.loadSetsAPI(); 
             
+            // MOD: Listen for resize events to update isDesktop
             window.addEventListener('resize', this.checkIsDesktop);
             this.checkIsDesktop();
             
             if(auth) {
-                // PATCH: Modular Auth Listener
-                onAuthStateChanged(auth, (u) => {
-                    if(u) { 
-                        this.user = u; 
-                        this.initCloudData(); 
-                    } else { 
-                        this.user = null; 
-                        // Clean up listeners on auto-logout
-                        if(this.unsubCards) this.unsubCards();
-                        if(this.unsubBinders) this.unsubBinders();
-                    }
+                auth.onAuthStateChanged(u => {
+                    if(u) { this.user = u; this.initCloudData(); } 
+                    else { this.user = null; }
                 });
             }
         },
         unmounted() {
             window.removeEventListener('resize', this.checkIsDesktop);
-            if(this.unsubCards) this.unsubCards();
-            if(this.unsubBinders) this.unsubBinders();
         },
         computed: {
-            isDesktop() { return window.innerWidth >= 768; },
+            // MOD: Helper to determine if we are on a desktop-sized screen (md breakpoint: 768px)
+            // Used to toggle mobile-specific UI elements.
+            isDesktop() {
+                return window.innerWidth >= 768;
+            },
             binders() { return this.user ? this.cloudBinders : this.localBinders; },
             cards() { return this.user ? this.cloudCards : this.localCards; },
             headerTitle() {
                 if(this.currentView === 'collection') return 'Collection';
                 if(this.currentView === 'binders') return 'My Binders';
+                // MODIFIED: Display the current binder's name if set, otherwise "ROI Calculator"
                 return this.currentBinder ? this.currentBinder.name : 'ROI Calculator';
             },
+            
+            // FIX: This filter logic is updated to correctly filter cards
             displayCards() { 
                 let list = this.cards; 
+                
+                // If a specific binder object is selected, filter the list
                 if (this.currentBinder) {
+                    // Filter: only show cards where the binderId matches the currentBinder's ID.
                     list = this.cards.filter(c => c.binderId === this.currentBinder.id);
                 }
+                // If currentBinder is null (ROI Calculator/All Cards), list remains the full this.cards array.
+                
                 return list;
             },
+            
             isAllSelected() {
                 return this.displayCards.length > 0 && this.selectedIds.length === this.displayCards.length;
             },
+
+            // --- SMART SORTING (ROI TABLE) ---
             sortedCards() {
                 let list = [...this.displayCards];
                 return list.sort((a, b) => {
@@ -614,17 +595,23 @@
                     return 0;
                 });
             },
+
+            // --- LOCAL PAGINATION ---
             totalPages() { return Math.ceil(this.sortedCards.length / this.itemsPerPage); },
             paginatedCards() {
                 const start = (this.currentPage - 1) * this.itemsPerPage;
                 return this.sortedCards.slice(start, start + this.itemsPerPage);
             },
+
+            // --- GROUP BY SET (COLLECTION VIEW) ---
             cardsBySet() {
                 const grouped = {};
+                
                 this.cards.forEach(c => {
                     if(!grouped[c.set]) {
                         grouped[c.set] = { cards: [], uniqueCardIds: new Set(), cardCounts: {}, uniqueCount: 0 };
                     }
+                    
                     grouped[c.set].cards.push(c);
                     grouped[c.set].uniqueCardIds.add(c.id); 
                     grouped[c.set].cardCounts[c.id] = (grouped[c.set].cardCounts[c.id] || 0) + 1;
@@ -643,14 +630,19 @@
                     });
                     grouped[setName].cards = uniqueCards;
                 }
+                
                 return grouped;
             },
+
+            // --- SEARCH SORT & PAGINATION (CLIENT-SIDE) ---
             filteredSearchList() {
                 let list = [...this.searchResults];
                 if(this.query) { list = list.filter(c => c.name.toLowerCase().includes(this.query.toLowerCase())); }
+                
                 list.sort((a, b) => {
                     const priceA = this.getCardPrice(a);
                     const priceB = this.getCardPrice(b);
+
                     if (this.searchSort === 'price-desc') return priceB - priceA;
                     if (this.searchSort === 'price-asc') return priceA - priceB;
                     if (this.searchSort === 'name') return a.name.localeCompare(b.name);
@@ -663,26 +655,21 @@
                 const start = (this.searchPage - 1) * this.searchPerPage;
                 return this.filteredSearchList.slice(start, start + this.searchPerPage);
             },
+
             totalValue() { return this.displayCards.reduce((sum, c) => sum + (c.market || 0), 0); },
             filteredSets() { return this.allSets.filter(s => s.series === this.selectedEra); },
+            topCard() { return [...this.cards].sort((a,b) => b.market - a.market)[0]; }
         },
         methods: {
+            // MOD: Method to force close mobile nav on resize/interaction
             checkIsDesktop() {
                 this.isDesktop = window.innerWidth >= 768;
                 if (this.isDesktop) {
                     this.showMobileNav = false;
                 }
             },
-            loginWithGoogle() { 
-                // PATCH: Modular Auth
-                if(auth) signInWithPopup(auth, provider).catch(e => alert(e.message)); 
-            },
-            logout() { 
-                // PATCH: Cleanup listeners + Modular Auth
-                if(this.unsubCards) this.unsubCards();
-                if(this.unsubBinders) this.unsubBinders();
-                if(auth) signOut(auth); 
-            },
+            loginWithGoogle() { if(auth) auth.signInWithPopup(provider).catch(e => alert(e.message)); },
+            logout() { if(auth) auth.signOut(); },
 
             // --- UI HELPERS ---
             getSortIcon(key) {
@@ -694,11 +681,14 @@
                 const b = this.binders.find(x => x.id === id);
                 return b ? b.name : 'Unknown';
             },
+            
             getSetTotal(setName) {
                 const set = this.totalSetData[setName];
                 if (!set) return '?';
                 return (set.total && set.total > 0) ? set.total : set.printedTotal;
             },
+            
+            // --- BULK DELETE ---
             toggleSelectAll() {
                 if (this.isAllSelected) this.selectedIds = [];
                 else this.selectedIds = this.displayCards.map(c => c.uid);
@@ -706,13 +696,14 @@
             deleteSelected() {
                 if(!confirm(`Delete ${this.selectedIds.length} cards?`)) return;
                 this.selectedIds.forEach(uid => {
-                    // PATCH: Modular Delete
-                    if(this.user) deleteDoc(doc(db, 'users', this.user.uid, 'cards', uid));
+                    if(this.user) db.collection('users').doc(this.user.uid).collection('cards').doc(uid).delete();
                     else this.localCards = this.localCards.filter(c => c.uid !== uid);
                 });
                 this.selectedIds = [];
                 this.saveData();
             },
+
+            // --- SORT & PAGE METHODS (LOCAL) ---
             setSort(key) {
                 if(this.sortBy === key) {
                     this.sortDesc = !this.sortDesc; 
@@ -737,6 +728,10 @@
                 }
             },
             
+            sortSearchResults() { 
+                this.searchPage = 1; 
+            },
+
             // --- DATA ---
             loadLocalData() {
                 const b = localStorage.getItem('glad_binders'); if(b) this.localBinders = JSON.parse(b);
@@ -749,39 +744,81 @@
                 }
             },
             initCloudData() {
-                this.firestoreStatus = 'connecting';
+                db.collection('users').doc(this.user.uid).collection('binders').onSnapshot(s => this.cloudBinders = s.docs.map(d => ({id: d.id, ...d.data()})));
                 
-                // PATCH: Cleanup old listeners first
-                if (this.unsubCards) this.unsubCards();
-                if (this.unsubBinders) this.unsubBinders();
-
-                // PATCH: Modular onSnapshot + Status Tracking
-                const userRef = doc(db, 'users', this.user.uid);
-                
-                this.unsubBinders = onSnapshot(collection(userRef, 'binders'), (snap) => {
-                    this.cloudBinders = snap.docs.map(d => ({id: d.id, ...d.data()}));
-                }, (error) => { console.error(error); });
-
-                this.unsubCards = onSnapshot(collection(userRef, 'cards'), (snap) => {
-                    this.cloudCards = snap.docs.map(d => ({uid: d.id, ...d.data()}));
-                    this.firestoreStatus = 'connected';
-                }, (error) => {
-                    console.error("Firestore Error:", error);
-                    this.firestoreStatus = 'error';
+                // NEW: Added updateMarketPrices call inside the snapshot logic
+                db.collection('users').doc(this.user.uid).collection('cards').onSnapshot(s => {
+                    this.cloudCards = s.docs.map(d => ({uid: d.id, ...d.data()}));
+                    // Trigger the background price refresher once cards are loaded
+                    this.updateMarketPrices();
                 });
+            },
+
+            // --- "SMART" BACKGROUND PRICE REFRESHER ---
+            async updateMarketPrices() {
+                // 1. Get all cards currently in the user's collection
+                const myCards = this.cards; 
+                if (myCards.length === 0) return;
+
+                // 2. Identify which ones need an update (older than 24 hours)
+                const oneDayAgo = Date.now() - (24 * 60 * 60 * 1000);
+                
+                // Filter cards that are "stale" (older than 24h or missing a timestamp)
+                const staleCards = myCards.filter(c => !c.lastUpdated || c.lastUpdated < oneDayAgo);
+                
+                if (staleCards.length === 0) return; // Everything is fresh!
+
+                console.log(`Auto-refreshing prices for ${staleCards.length} cards...`);
+
+                // 3. The API allows fetching explicitly by ID string (e.g. "id:xy1-1 OR id:xy1-2")
+                // We do this in chunks to not break the URL limit
+                const chunkSize = 10;
+                
+                for (let i = 0; i < staleCards.length; i += chunkSize) {
+                    const chunk = staleCards.slice(i, i + chunkSize);
+                    const query = chunk.map(c => `id:${c.id}`).join(' OR ');
+                    
+                    try {
+                        const res = await fetch(`https://api.pokemontcg.io/v2/cards?q=${query}&select=id,tcgplayer`);
+                        const data = await res.json();
+                        
+                        // 4. Update Firestore with the new prices
+                        const batch = db.batch(); // Use a batch for efficiency
+                        
+                        data.data.forEach(apiCard => {
+                            // Find the matching card in our Firestore list
+                            // Note: A user might have 3 copies of Charizard, we need to update all of them
+                            const cardsToUpdate = this.cards.filter(c => c.id === apiCard.id);
+                            
+                            cardsToUpdate.forEach(localCard => {
+                                const newMarket = this.getCardPrice(apiCard); // Re-use your pricing logic
+                                
+                                const ref = db.collection('users').doc(this.user.uid).collection('cards').doc(localCard.uid);
+                                batch.update(ref, { 
+                                    market: newMarket,
+                                    lastUpdated: Date.now() 
+                                });
+                            });
+                        });
+                        
+                        await batch.commit();
+                        console.log('Batch updated successfully');
+                        
+                    } catch (e) {
+                        console.error("Auto-refresh failed", e);
+                    }
+                }
             },
 
             createBinder() {
                 const name = prompt("Name your new Collection (e.g. Eevee Heroes):");
                 if(!name) return;
-                // PATCH: Modular Add
-                if(this.user) addDoc(collection(db, 'users', this.user.uid, 'binders'), { name, createdAt: new Date() });
+                if(this.user) db.collection('users').doc(this.user.uid).collection('binders').add({ name, createdAt: new Date() });
                 else { this.localBinders.push({ id: Date.now().toString(), name }); this.saveData(); }
             },
             deleteBinder(id) {
                 if(!confirm("Delete this collection? Cards will remain in 'All Cards'.")) return;
-                // PATCH: Modular Delete
-                if(this.user) deleteDoc(doc(db, 'users', this.user.uid, 'binders', id));
+                if(this.user) db.collection('users').doc(this.user.uid).collection('binders').doc(id).delete();
                 else { this.localBinders = this.localBinders.filter(b => b.id !== id); this.saveData(); }
             },
             addCard(c) {
@@ -791,10 +828,10 @@
                     image: c.images.small, number: c.number, 
                     market: market, 
                     rawCost: market, fee: 15, targetGrade: 10,
-                    binderId: this.targetBinder === 'master' ? null : this.targetBinder
+                    binderId: this.targetBinder === 'master' ? null : this.targetBinder,
+                    lastUpdated: Date.now() // Important for cache logic
                 };
-                // PATCH: Modular Add
-                if(this.user) addDoc(collection(db, 'users', this.user.uid, 'cards'), cardData);
+                if(this.user) db.collection('users').doc(this.user.uid).collection('cards').add(cardData);
                 else { cardData.uid = Date.now().toString(); this.localCards.push(cardData); this.saveData(); }
                 
                 this.addedIds.push(c.id);
@@ -802,15 +839,14 @@
             },
             deleteCard(uid) {
                 if(!confirm("Remove this card permanently?")) return;
-                // PATCH: Modular Delete
-                if(this.user) deleteDoc(doc(db, 'users', this.user.uid, 'cards', uid));
+                if(this.user) db.collection('users').doc(this.user.uid).collection('cards').doc(uid).delete();
                 else { this.localCards = this.localCards.filter(c => c.uid !== uid); this.saveData(); }
                 this.detailCard = null; 
             },
             updateCardBinder(card) {
+                // If binderId is set to null, ensure it is saved as null (for 'Master Only')
                 const binderUpdate = { binderId: card.binderId === undefined ? null : card.binderId };
-                // PATCH: Modular Update
-                if(this.user) updateDoc(doc(db, 'users', this.user.uid, 'cards', card.uid), binderUpdate);
+                if(this.user) db.collection('users').doc(this.user.uid).collection('cards').doc(card.uid).update(binderUpdate);
                 else this.saveData();
             },
 
@@ -821,6 +857,8 @@
                 return raw * 0.85;
             },
             getProfit(c) { return this.getEstValue(c) - ((c.rawCost || 0) + (c.fee || 0)); },
+
+            // FIX: Unified selectBinder to use the calculator view for displaying the filtered list.
             selectBinder(b) { 
                 this.currentBinder = b; 
                 this.currentPage = 1; 
@@ -829,6 +867,7 @@
             getBinderCount(id) { return this.cards.filter(c => c.binderId === id).length; },
             openSearch() { 
                 this.showSearch = true; this.searchResults = []; this.searchPage = 1; this.query = '';
+                // Set target binder for new cards based on current view/binder
                 if(this.currentView === 'calculator' && this.currentBinder) this.targetBinder = this.currentBinder.id;
                 else this.targetBinder = 'master';
             },
