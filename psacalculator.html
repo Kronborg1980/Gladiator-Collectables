@@ -248,6 +248,7 @@
             <div v-if="cards.length === 0" class="flex flex-col items-center justify-center py-20 opacity-30">
                 <i class="fa-solid fa-box-open text-6xl mb-4 text-[#00f2ff]"></i>
                 <p class="uppercase tracking-widest font-bold text-sm">No cards collected</p>
+                <button @click="openSearch" class="mt-4 bg-white/10 hover:bg-white/20 px-4 py-2 rounded text-xs uppercase tracking-widest">Add your first card</button>
             </div>
             
             <div v-else class="space-y-10">
@@ -369,27 +370,14 @@
 
             <template v-else>
                 <div class="px-4 md:px-8 py-4 md:py-8 bg-[#080a10] grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 border-b border-white/5 shrink-0">
-                    <div>
-                        <label class="text-[10px] text-gray-500 font-bold uppercase mb-2 block tracking-widest">1. Era</label>
-                        <select v-model="selectedEra" class="glass-input">
-                            <option value="">Select Era</option>
-                            <option v-for="era in eras" :value="era">{{ era }}</option>
-                        </select>
-                    </div>
+                    <div><label class="text-[10px] text-gray-500 font-bold uppercase mb-2 block tracking-widest">1. Era</label><select v-model="selectedEra" class="glass-input"><option value="">Select Era</option><option v-for="era in eras" :value="era">{{ era }}</option></select></div>
+                    <div><label class="text-[10px] text-gray-500 font-bold uppercase mb-2 block tracking-widest">2. Set</label><select v-model="selectedSet" :disabled="!selectedEra" class="glass-input disabled:opacity-30"><option value="">Select Set</option><option v-for="s in filteredSets" :value="s.id">{{ s.name }}</option></select></div>
                     
-                    <div>
-                        <label class="text-[10px] text-gray-500 font-bold uppercase mb-2 block tracking-widest">2. Set</label>
-                        <select v-model="selectedSet" :disabled="!selectedEra" class="glass-input disabled:opacity-30">
-                            <option value="">Select Set</option>
-                            <option v-for="s in filteredSets" :value="s.id">{{ s.name }}</option>
-                        </select>
-                    </div>
-
                     <div class="col-span-2 md:col-span-1">
                         <label class="text-[10px] text-gray-500 font-bold uppercase mb-2 block tracking-widest">3. Card Name</label>
                         <input v-if="!selectedSet" disabled placeholder="Select Set First" class="glass-input disabled:opacity-30">
                         <div v-else-if="isListLoading" class="glass-input text-gray-400 italic flex items-center gap-2">
-                             <i class="fa-solid fa-circle-notch fa-spin text-[#00f2ff]"></i> Loading Pokémon...
+                             <i class="fa-solid fa-circle-notch fa-spin text-[#00f2ff]"></i> Loading...
                         </div>
                         <select v-else v-model="selectedPokemon" class="glass-input" @change="query = ''">
                             <option value="all" class="font-bold text-[#00f2ff]">★ LOAD FULL SET ★</option>
@@ -494,6 +482,7 @@
 </div>
 
 <script>
+    // --- FIREBASE KEYS ---
     const firebaseConfig = {
         apiKey: "AIzaSyBnb9VlLk4sNbj89beWtb2hmLGsvhgb6TE",
         authDomain: "gladiator-portfolio.firebaseapp.com",
@@ -509,7 +498,7 @@
         auth = firebase.auth();
         db = firebase.firestore();
         provider = new firebase.auth.GoogleAuthProvider();
-    } catch(e) { console.log("Guest Mode/Firebase Error", e); }
+    } catch(e) { console.log("Firebase Error", e); }
 
     const { createApp } = Vue;
 
@@ -523,9 +512,46 @@
                 // LOADERS
                 setsLoading: false, 
                 isSearching: false,
-                isListLoading: false, // Tracks if the name dropdown is loading
+                isListLoading: false, 
+                isLoadingCards: false, 
                 
-                allSets: [], eras: [], 
+                // --- HARDCODED SETS (Instant Load) ---
+                eras: ["Scarlet & Violet", "Sword & Shield", "Sun & Moon", "XY", "Black & White", "Classic"],
+                allSets: [
+                    // Scarlet & Violet
+                    { id: "sv3pt5", name: "151", series: "Scarlet & Violet" },
+                    { id: "sv4", name: "Paradox Rift", series: "Scarlet & Violet" },
+                    { id: "sv3", name: "Obsidian Flames", series: "Scarlet & Violet" },
+                    { id: "sv2", name: "Paldea Evolved", series: "Scarlet & Violet" },
+                    { id: "sv1", name: "Scarlet & Violet Base", series: "Scarlet & Violet" },
+                    // Sword & Shield
+                    { id: "swsh12pt5", name: "Crown Zenith", series: "Sword & Shield" },
+                    { id: "swsh11", name: "Lost Origin", series: "Sword & Shield" },
+                    { id: "swsh10", name: "Astral Radiance", series: "Sword & Shield" },
+                    { id: "swsh9", name: "Brilliant Stars", series: "Sword & Shield" },
+                    { id: "swsh8", name: "Fusion Strike", series: "Sword & Shield" },
+                    { id: "swsh7", name: "Evolving Skies", series: "Sword & Shield" },
+                    { id: "swsh6", name: "Chilling Reign", series: "Sword & Shield" },
+                    { id: "swsh5", name: "Battle Styles", series: "Sword & Shield" },
+                    { id: "swsh45", name: "Shining Fates", series: "Sword & Shield" },
+                    { id: "swsh4", name: "Vivid Voltage", series: "Sword & Shield" },
+                    { id: "swsh35", name: "Champion's Path", series: "Sword & Shield" },
+                    { id: "swsh3", name: "Darkness Ablaze", series: "Sword & Shield" },
+                    // Sun & Moon
+                    { id: "sm12", name: "Cosmic Eclipse", series: "Sun & Moon" },
+                    { id: "sm115", name: "Hidden Fates", series: "Sun & Moon" },
+                    { id: "sm11", name: "Unified Minds", series: "Sun & Moon" },
+                    { id: "sm10", name: "Unbroken Bonds", series: "Sun & Moon" },
+                    { id: "sm9", name: "Team Up", series: "Sun & Moon" },
+                    // Classic
+                    { id: "base1", name: "Base Set", series: "Classic" },
+                    { id: "base2", name: "Jungle", series: "Classic" },
+                    { id: "base3", name: "Fossil", series: "Classic" },
+                    { id: "base4", name: "Team Rocket", series: "Classic" },
+                    { id: "gym1", name: "Gym Heroes", series: "Classic" },
+                    { id: "neo1", name: "Neo Genesis", series: "Classic" }
+                ],
+                
                 setPokemonList: [], 
                 
                 selectedEra: "", 
@@ -533,7 +559,6 @@
                 selectedPokemon: "all", 
                 
                 query: "", targetBinder: 'master', searchResults: [],
-                cacheKey: 'gladiator_sets_v7', // Changed version to force fresh download of sets
                 totalSetData: {}, 
                 
                 sortBy: 'profit', sortDesc: true, currentPage: 1, itemsPerPage: 30, 
@@ -555,14 +580,14 @@
                     this.searchResults = []; 
                     this.selectedPokemon = "all";
                     this.query = "";
-                    if(newSet) this.fetchSetPokemon(newSet); // Only fetch if set exists
+                    if(newSet) this.fetchSetPokemon(newSet); 
                     else this.setPokemonList = [];
                 }
             }
         },
         mounted() {
             this.loadLocalData();
-            this.loadSetsAPI(); 
+            // Removed loadSetsAPI() because we are using hardcoded sets for speed
             window.addEventListener('resize', this.checkIsDesktop);
             this.checkIsDesktop();
             if(auth) auth.onAuthStateChanged(u => { if(u) { this.user = u; this.initCloudData(); } else { this.user = null; } });
@@ -660,9 +685,8 @@
                 return b ? b.name : 'Unknown';
             },
             getSetTotal(setName) {
-                const set = this.totalSetData[setName];
-                if (!set) return '?';
-                return (set.total && set.total > 0) ? set.total : set.printedTotal;
+                // Simplified total logic for hardcoded sets
+                return '∞'; 
             },
             toggleSelectAll() {
                 if (this.isAllSelected) this.selectedIds = [];
@@ -707,10 +731,25 @@
                 }
             },
             initCloudData() {
-                db.collection('users').doc(this.user.uid).collection('binders').onSnapshot(s => this.cloudBinders = s.docs.map(d => ({id: d.id, ...d.data()})));
+                this.isLoadingCards = true;
+                
+                // Binder Listener
+                db.collection('users').doc(this.user.uid).collection('binders').onSnapshot(s => {
+                    this.cloudBinders = s.docs.map(d => ({id: d.id, ...d.data()}));
+                });
+
+                // Card Listener with ERROR HANDLING
                 db.collection('users').doc(this.user.uid).collection('cards').onSnapshot(s => {
                     this.cloudCards = s.docs.map(d => ({uid: d.id, ...d.data()}));
-                    this.updateMarketPrices();
+                    this.isLoadingCards = false;
+                    this.updateMarketPrices(); // Trigger background update
+                }, error => {
+                    this.isLoadingCards = false;
+                    if(error.code === 'permission-denied') {
+                        alert("DATABASE ERROR: Permission Denied. Check Rules.");
+                    } else {
+                        console.error("Firestore Error:", error);
+                    }
                 });
             },
             async updateMarketPrices() {
@@ -726,12 +765,7 @@
                     const chunk = staleCards.slice(i, i + chunkSize);
                     const query = chunk.map(c => `id:${c.id}`).join(' OR ');
                     try {
-                        // FIX: Encoding special characters in price refresh
-                        const encodedQuery = encodeURIComponent(query);
-                        // However, for multiple IDs "id:x OR id:y", we shouldn't encode the colons/ORs blindly, 
-                        // but the API handles raw params usually. The safer way for IDs is usually fine raw.
-                        // We will keep raw here as IDs rarely have spaces.
-                        const res = await fetch(`https://api.pokemontcg.io/v2/cards?q=${query}&select=id,tcgplayer`);
+                        const res = await fetch(`https://api.pokemontcg.io/v2/cards?q=${encodeURIComponent(query)}&select=id,tcgplayer`);
                         const data = await res.json();
                         const batch = db.batch(); 
                         data.data.forEach(apiCard => {
@@ -757,6 +791,7 @@
                 if(this.user) db.collection('users').doc(this.user.uid).collection('binders').doc(id).delete();
                 else { this.localBinders = this.localBinders.filter(b => b.id !== id); this.saveData(); }
             },
+            
             addCard(c) {
                 const market = this.getCardPrice(c);
                 const cardData = {
@@ -767,12 +802,23 @@
                     binderId: this.targetBinder === 'master' ? null : this.targetBinder,
                     lastUpdated: Date.now() 
                 };
-                if(this.user) db.collection('users').doc(this.user.uid).collection('cards').add(cardData);
-                else { cardData.uid = Date.now().toString(); this.localCards.push(cardData); this.saveData(); }
                 
                 this.addedIds.push(c.id);
                 setTimeout(() => { this.addedIds = this.addedIds.filter(id => id !== c.id); }, 1500);
+
+                if(this.user) {
+                    db.collection('users').doc(this.user.uid).collection('cards').add(cardData)
+                    .catch(error => {
+                        this.addedIds = this.addedIds.filter(id => id !== c.id); 
+                        alert("ERROR SAVING CARD: " + error.message);
+                    });
+                } else { 
+                    cardData.uid = Date.now().toString(); 
+                    this.localCards.push(cardData); 
+                    this.saveData(); 
+                }
             },
+            
             deleteCard(uid) {
                 if(!confirm("Remove this card permanently?")) return;
                 if(this.user) db.collection('users').doc(this.user.uid).collection('cards').doc(uid).delete();
@@ -807,41 +853,14 @@
                 if (c.tcgplayer?.market && c.tcgplayer.market > 0) marketPrices.push(c.tcgplayer.market);
                 return marketPrices.length > 0 ? Math.max(...marketPrices) : 0;
             },
-            async loadSetsAPI() {
-                this.setsLoading = true;
-                const cacheKeySets = 'gladiator_sets_v7'; // UPDATED VERSION KEY
-                const c = localStorage.getItem(cacheKeySets);
-                if(c) { 
-                    try {
-                        const data = JSON.parse(c);
-                        this.allSets = data.sets; 
-                        this.eras = data.eras;
-                        this.totalSetData = data.totalSetData; 
-                        this.setsLoading = false;
-                        return;
-                    } catch (e) { console.error("Error parsing sets:", e); }
-                }
-                try {
-                    const res = await fetch('https://api.pokemontcg.io/v2/sets?select=id,name,series,releaseDate,printedTotal,total&orderBy=-releaseDate');
-                    if (!res.ok) throw new Error(`API fetch failed: ${res.status}`);
-                    const data = await res.json();
-                    const setSizeMap = {};
-                    data.data.forEach(s => { setSizeMap[s.name] = { total: s.total, printedTotal: s.printedTotal }; });
-                    this.allSets = data.data; 
-                    this.eras = [...new Set(data.data.map(s => s.series))];
-                    this.totalSetData = setSizeMap; 
-                    localStorage.setItem(cacheKeySets, JSON.stringify({ sets: this.allSets, eras: this.eras, totalSetData: this.totalSetData }));
-                } catch(error) { console.error("CRITICAL: Failed to sync sets.", error); } finally { this.setsLoading = false; }
-            },
 
-            // --- Name Fetcher ---
             async fetchSetPokemon(setId) {
                 if(!setId) return;
                 this.isListLoading = true; 
                 this.setPokemonList = []; 
 
                 try {
-                    // Added quotes around ID for safety
+                    // Safety check for ID
                     const res = await fetch(`https://api.pokemontcg.io/v2/cards?q=set.id:"${setId}"&select=name&pageSize=250`);
                     if(!res.ok) throw new Error("API Limit");
                     
@@ -872,10 +891,10 @@
                     q += ` name:"${this.query.trim()}*"`;
                 }
                 
-                // FIX: Log query to debug
                 console.log("Searching for:", q);
 
-                const cacheKey = `search_${this.selectedSet}_${this.selectedPokemon}_${this.query}`; 
+                // Use a simple version key to prevent old cache issues
+                const cacheKey = `search_v3_${this.selectedSet}_${this.selectedPokemon}_${this.query}`; 
                 const now = Date.now();
                 
                 try {
@@ -892,7 +911,7 @@
                 } catch (e) { }
 
                 try {
-                    // FIX: Added encodeURIComponent to handle spaces and symbols in names/ids
+                    // CRITICAL FIX: encodeURIComponent handles spaces and special chars
                     const res = await fetch(`https://api.pokemontcg.io/v2/cards?q=${encodeURIComponent(q)}&pageSize=250&select=id,name,number,images,tcgplayer&orderBy=${this.searchSort.replace('-', '')}`);
                     
                     if (!res.ok) {
@@ -904,11 +923,12 @@
                     this.searchResults = data.data || [];
                     this.searchPage = page;
 
+                    // Try to cache, but don't crash if memory is full
                     if (this.searchResults.length > 0) {
                         try {
                             const cache = { timestamp: now, results: this.searchResults };
                             sessionStorage.setItem(cacheKey, JSON.stringify(cache));
-                        } catch (storageError) { console.warn("Session storage is full.", storageError); }
+                        } catch (storageError) { console.warn("Session storage full - skipping cache."); }
                     }
                 } catch(e) { 
                     console.error("API Fetch Error:", e);
