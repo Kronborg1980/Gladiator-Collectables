@@ -1,49 +1,188 @@
-const apiKey = '7191ffb5-91d7-4fb7-bc30-94f1b854ee6e';
-const cardId = 'xy1-1'; // Example Card ID for Venusaur-EX
-const baseUrl = 'https://api.pokemontcg.io/v2/cards';
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⚡ Fast Pokémon TCG Card Lookup</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f4f7f9;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #cc0000;
+            text-align: center;
+        }
+        input[type="text"] {
+            width: calc(100% - 110px);
+            padding: 10px;
+            margin-right: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #3b4cca;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        button:hover {
+            background-color: #2a3aa8;
+        }
+        #results {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: #fff;
+            min-height: 50px;
+        }
+        .card-name {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #3b4cca;
+        }
+        .card-details p {
+            margin: 4px 0;
+        }
+        .card-image {
+            float: right;
+            margin-left: 15px;
+            max-height: 150px;
+            border: 2px solid #ccc;
+            border-radius: 5px;
+        }
+        .error {
+            color: #cc0000;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
 
-/**
- * Fetches card data by a specific Card ID.
- * @param {string} id - The unique ID of the card (e.g., 'xy1-1').
- */
-async function lookupCard(id) {
-    const url = `${baseUrl}/${id}`;
+    <div class="container">
+        <h1>⚡ Pokémon Card Lookup (by ID)</h1>
 
-    try {
-        const response = await fetch(url, {
-            headers: {
-                'X-Api-Key': apiKey,
-                'Content-Type': 'application/json'
+        <p>Enter a specific Card ID (e.g., <strong>base1-4</strong>, <strong>swsh1-14</strong>, <strong>sv3pt5-246</strong>):</p>
+
+        <div style="display: flex;">
+            <input type="text" id="cardIdInput" placeholder="Enter Card ID..." value="base1-4">
+            <button onclick="lookupCard()">Search</button>
+        </div>
+
+        <div id="results">
+            <p>Enter a Card ID above and click "Search" to see the results!</p>
+        </div>
+    </div>
+
+    <script>
+        // NOTE: Replace 'YOUR_API_KEY_HERE' with your actual key if needed.
+        // The pokemontcg.io API often works without a key, but using one gives you a higher rate limit.
+        const apiKey = '7191ffb5-91d7-4fb7-bc30-94f1b854ee6e';
+        const baseUrl = 'https://api.pokemontcg.io/v2/cards';
+        const resultsDiv = document.getElementById('results');
+
+        /**
+         * Fetches and displays card data based on the input ID.
+         */
+        async function lookupCard() {
+            const cardId = document.getElementById('cardIdInput').value.trim();
+
+            if (!cardId) {
+                resultsDiv.innerHTML = '<p class="error">Please enter a Card ID.</p>';
+                return;
+            }
+
+            // Clear previous results and show loading state
+            resultsDiv.innerHTML = '<p>Loading card data...</p>';
+            const url = `${baseUrl}/${cardId}`;
+
+            try {
+                const response = await fetch(url, {
+                    headers: {
+                        // The X-Api-Key header is included for best practice/higher rate limit
+                        'X-Api-Key': apiKey, 
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    // Specific error handling for 404 (Not Found)
+                    if (response.status === 404) {
+                        resultsDiv.innerHTML = `<p class="error">Error: Card ID <strong>${cardId}</strong> not found.</p>`;
+                    } else {
+                        // General HTTP error
+                        resultsDiv.innerHTML = `<p class="error">HTTP Error! Status: ${response.status}.</p>`;
+                    }
+                    return;
+                }
+
+                const data = await response.json();
+                const card = data.data;
+
+                if (card) {
+                    displayCard(card);
+                } else {
+                    resultsDiv.innerHTML = `<p class="error">Error: Received an invalid response for <strong>${cardId}</strong>.</p>`;
+                }
+
+            } catch (error) {
+                console.error('Fetch Error:', error);
+                resultsDiv.innerHTML = `<p class="error">An unexpected error occurred: ${error.message}</p>`;
+            }
+        }
+
+        /**
+         * Renders the card details into the results div.
+         * @param {object} card - The card object returned from the API.
+         */
+        function displayCard(card) {
+            resultsDiv.innerHTML = `
+                <img src="${card.images.small}" alt="${card.name}" class="card-image">
+                <div class="card-details">
+                    <div class="card-name">${card.name}</div>
+                    ${card.hp ? `<p><strong>HP:</strong> ${card.hp}</p>` : ''}
+                    <p><strong>Type:</strong> ${card.types ? card.types.join(', ') : 'N/A'}</p>
+                    <p><strong>Set:</strong> ${card.set.name} (${card.set.id})</p>
+                    <p><strong>Rarity:</strong> ${card.rarity || 'N/A'}</p>
+                    <p><strong>Price (Tcgplayer):</strong> ${getTcgPrice(card.tcgplayer)}</p>
+                    <p><strong>API ID:</strong> ${card.id}</p>
+                </div>
+                <div style="clear: both;"></div>
+            `;
+        }
+        
+        /**
+         * Helper function to safely extract the current price.
+         */
+        function getTcgPrice(tcgplayer) {
+            if (tcgplayer && tcgplayer.prices && tcgplayer.prices.holofoil) {
+                const price = tcgplayer.prices.holofoil.market;
+                return price ? `\$${price.toFixed(2)}` : 'Price data unavailable';
+            }
+            return 'Price data unavailable';
+        }
+
+        // Add a listener to allow searching with the Enter key
+        document.getElementById('cardIdInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                lookupCard();
             }
         });
+    </script>
 
-        // Handle HTTP errors
-        if (!response.ok) {
-            throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-
-        const data = await response.json();
-
-        // The card data is nested under the 'data' field
-        const card = data.data;
-
-        if (card) {
-            console.log(`✅ Card Found: ${card.name}`);
-            console.log(`   Set: ${card.set.name}`);
-            console.log(`   Rarity: ${card.rarity}`);
-            console.log(`   HP: ${card.hp}`);
-            // You can use card.images.large for the image URL
-            console.log(`   Image URL: ${card.images.small}`);
-            return card;
-        } else {
-            console.log(`❌ Card with ID ${id} not found.`);
-            return null;
-        }
-
-    } catch (error) {
-        console.error('An error occurred during lookup:', error.message);
-    }
-}
-
-// --- Run the lookup ---
-lookupCard(cardId);
+</body>
+</html>
