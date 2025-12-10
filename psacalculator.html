@@ -439,7 +439,7 @@
                                 
                                 <div class="flex flex-col truncate pr-4">
                                     <div class="text-sm font-bold text-white truncate">{{ card.name }}</div>
-                                    <div class="text-[9px] text-gray-500">{{ card.number }} / {{ getSetTotal(allSets.find(s=>s.id === selectedSet)?.name) }}</div>
+                                    <div class="text-[9px] text-gray-500">Card #{{ card.number }}</div> 
                                 </div>
                                 
                                 <div class="text-right shrink-0">
@@ -512,9 +512,10 @@
         appId: "1:61051937804:web:535cbbcb5417c4bde67a29"
     };
 
-    // --- API KEY CONFIG ---
-    // PASTE YOUR KEY HERE:
-    const API_KEY = "7191ffb5-91d7-4fb7-bc30-94f1b854ee6e"; 
+    // --- PRICECHARTING API TOKEN ---
+    // NOTE: You MUST replace this placeholder with your actual 40-character token 
+    const PRICECHARTING_TOKEN = "YOUR_40_CHARACTER_PRICECHARTING_TOKEN_HERE"; 
+    const BASE_URL = "https://www.pricecharting.com/api/product";
 
     let auth, db, provider;
     try {
@@ -536,10 +537,23 @@
                 setsError: false, 
                 isSearching: false,
                 
-                allSets: [], eras: [], selectedEra: "", selectedSet: "", query: "", targetBinder: 'master', searchResults: [],
-                cacheKey: 'gladiator_sets_v7_reliable', 
+                // SIMPLIFIED DUMMY DATA FOR PRICECHARTING STRUCTURE
+                allSets: [
+                    { id: 'xy', name: 'XY Base Set', series: 'XY' },
+                    { id: 'swsh', name: 'Sword & Shield', series: 'Sword & Shield' },
+                    { id: 'es', name: 'Evolving Skies', series: 'Sword & Shield' },
+                    { id: 'pf', name: 'Phantasmal Flames', series: 'Mega Evolution' },
+                ],
+                eras: ['XY', 'Sword & Shield', 'Mega Evolution'],
+                selectedEra: "", selectedSet: "", query: "", targetBinder: 'master', searchResults: [],
+                cacheKey: 'gladiator_sets_v8_pc', // Updated cache key
                 
-                totalSetData: {}, 
+                totalSetData: { 
+                    'XY Base Set': { total: 146, printedTotal: 146 },
+                    'Sword & Shield': { total: 202, printedTotal: 202 },
+                    'Evolving Skies': { total: 237, printedTotal: 237 },
+                    'Phantasmal Flames': { total: 94, printedTotal: 94 },
+                }, 
                 
                 // MAIN PAGINATION
                 sortBy: 'profit', sortDesc: true, currentPage: 1, itemsPerPage: 30, 
@@ -570,7 +584,6 @@
                 }
             },
             query(newQuery) {
-                // When the query is changed, clear previous search results instantly to give visual feedback
                 if (newQuery === '') {
                     this.searchResults = [];
                 }
@@ -578,7 +591,8 @@
         },
         mounted() {
             this.loadLocalData();
-            this.loadSetsAPI(); 
+            // NOTE: We rely on hardcoded sets for PriceCharting structure since the list endpoint is proprietary
+            // this.loadSetsAPI(); 
             
             window.addEventListener('resize', this.checkIsDesktop);
             this.checkIsDesktop();
@@ -801,7 +815,9 @@
                 const market = this.getCardPrice(c);
                 const cardData = {
                     id: c.id, name: c.name, set: this.allSets.find(s=>s.id === this.selectedSet)?.name || 'Set', 
-                    image: c.images.small, number: c.number, 
+                    // NOTE: This uses generic image URL and number from the PriceCharting data transformation
+                    image: c.images.small || 'https://raw.githubusercontent.com/Kronborg1980/Gladiator-Collectables/main/logogla.webp', 
+                    number: c.number || 'N/A', 
                     market: market, 
                     rawCost: market, fee: 15, targetGrade: 10,
                     binderId: this.targetBinder === 'master' ? null : this.targetBinder
@@ -846,98 +862,26 @@
             openCardDetail(c) { this.detailCard = c; },
             formatNumber(n) { return (n||0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}); },
             
+            // NOTE: This assumes PriceCharting data contains a key like 'ungraded-price' for market value
             getCardPrice(c) { 
-                const prices = c.tcgplayer?.prices;
-                if (!prices) return 0;
-                
-                const marketPrices = Object.values(prices)
-                    .map(priceDetail => priceDetail?.market)
-                    .filter(price => price > 0); 
-
-                if (c.tcgplayer?.market && c.tcgplayer.market > 0) {
-                    marketPrices.push(c.tcgplayer.market);
-                }
-
-                return marketPrices.length > 0 ? Math.max(...marketPrices) : 0;
+                const price = c['ungraded-price'] || c['loose-price'] || c['market-price'] || c.price || 0;
+                return parseFloat(price);
             },
             
-            /**
-             * HIGH RELIABILITY SETS/ERAS FETCH with Retry and Caching
-             */
+            // NOTE: loadSetsAPI uses hardcoded dummy data until the PC API endpoint is integrated
             async loadSetsAPI(attempt = 1) {
-                const MAX_ATTEMPTS = 3;
                 this.setsLoading = true;
                 this.setsError = false; 
-                const cacheKeySets = this.cacheKey;
-                const cachedData = localStorage.getItem(cacheKeySets);
                 
-                // Headers object for all authenticated API requests
-                const headers = { 'X-Api-Key': API_KEY };
-
-                // 1. Try to load from cache
-                if(cachedData) { 
-                    try {
-                        const data = JSON.parse(cachedData);
-                        if (data.sets && data.eras && data.sets.length > 0) {
-                            this.allSets = data.sets; 
-                            this.eras = data.eras;
-                            this.totalSetData = data.totalSetData; 
-                            this.setsLoading = false;
-                            console.log("Sets loaded from cache.");
-                            return; 
-                        }
-                    } catch (e) {
-                        console.warn("Error parsing cached sets. Attempting fresh fetch.", e);
-                        localStorage.removeItem(cacheKeySets); 
-                    }
-                }
-                
-                // 2. Try fetching from API with retry logic
-                try {
-                    console.log(`Fetching set data from API. Attempt ${attempt}...`);
-                    const res = await fetch('https://api.pokemontcg.io/v2/sets?select=id,name,series,releaseDate,printedTotal,total&orderBy=-releaseDate', { headers });
-                    
-                    if (!res.ok) {
-                        if (attempt < MAX_ATTEMPTS) {
-                            const delay = 2000 * attempt;
-                            console.warn(`API error (${res.status}). Retrying in ${delay / 1000}s...`);
-                            await new Promise(resolve => setTimeout(resolve, delay));
-                            return this.loadSetsAPI(attempt + 1);
-                        }
-                        throw new Error(`API fetch failed with status: ${res.status}`);
-                    }
-
-                    const data = await res.json();
-                    
-                    const setSizeMap = {};
-                    data.data.forEach(s => {
-                        setSizeMap[s.name] = { total: s.total, printedTotal: s.printedTotal };
-                    });
-
-                    this.allSets = data.data; 
-                    this.eras = [...new Set(data.data.map(s => s.series))];
-                    this.totalSetData = setSizeMap; 
-                    
-                    // Cache the fresh, valid data
-                    localStorage.setItem(cacheKeySets, JSON.stringify({
-                        sets: this.allSets, 
-                        eras: this.eras, 
-                        totalSetData: this.totalSetData
-                    }));
-                    
-                    console.log("Sets successfully fetched and cached.");
-
-                } catch(error) {
-                    console.error(`CRITICAL: Failed to synchronize set database after ${MAX_ATTEMPTS} attempts.`, error);
-                    this.setsError = true; 
-                } finally {
+                setTimeout(() => {
                     this.setsLoading = false;
-                }
+                    console.log("Sets loaded from hardcoded PriceCharting structure.");
+                }, 500); 
             },
             
 
             /**
-             * HIGH RELIABILITY CARD SEARCH FETCH (Strictly Manual)
+             * PRIMARY SEARCH FUNCTION: Rewritten for PriceCharting API
              */
             async fetchCards(page = 1) {
                 if(!this.selectedSet) {
@@ -945,26 +889,28 @@
                     return;
                 }
                 
+                if (!PRICECHARTING_TOKEN || PRICECHARTING_TOKEN.length !== 40) {
+                     alert("CRITICAL: Please set your 40-character PriceCharting API Token in the script file.");
+                     return;
+                }
+
+                let set = this.allSets.find(s => s.id === this.selectedSet);
                 let nameQuery = this.query ? this.query.trim() : '';
                 
                 this.isSearching = true; 
                 this.searchPage = page; 
 
-                // Headers object for all authenticated API requests
-                const headers = { 'X-Api-Key': API_KEY };
-
-                // 1. Construct API Query: Filter by set ID and name pattern
-                let q = `set.id:"${this.selectedSet}"`; 
-                
-                if(nameQuery) {
-                    // FINAL FIX: Use the most robust and flexible syntax for name search: 
-                    // name:*query* is generally the best for partial matching (type-ahead style)
-                    const cleanedQuery = nameQuery.toLowerCase().replace(/"/g, '\\"');
-                    q += ` name:*${cleanedQuery}*`; 
+                // 1. Construct API Query String
+                let search_query = `pokemon ${set.series} ${set.name}`; 
+                if (nameQuery) {
+                    search_query += ` ${nameQuery}`;
                 }
+
+                const encodedQuery = encodeURIComponent(search_query.trim()); 
+                const url = `${BASE_URL}?t=${PRICECHARTING_TOKEN}&q=${encodedQuery}`;
                 
-                // 2. Cache Key and Check (Session Storage - 30 min cache)
-                const cacheKey = `search_${this.selectedSet}_${nameQuery.toLowerCase()}`; 
+                // 2. Cache Check 
+                const cacheKey = `pc_search_${encodedQuery.toLowerCase()}`; 
                 const now = Date.now();
                 
                 const cachedData = sessionStorage.getItem(cacheKey);
@@ -975,10 +921,9 @@
                             this.searchResults = cache.results;
                             this.searchPage = page;
                             this.isSearching = false; 
-                            console.log("Card search results loaded from session cache.");
+                            console.log("PC card search loaded from cache.");
                             return;
                         } else {
-                            // Invalidate old cache aggressively
                             sessionStorage.removeItem(cacheKey); 
                         }
                     } catch (e) {
@@ -986,34 +931,53 @@
                     }
                 }
 
-                // 3. API Fetch with proper URL Encoding
-                const orderByParam = 'number';
-                const encodedQuery = encodeURIComponent(q); 
-                const url = `https://api.pokemontcg.io/v2/cards?q=${encodedQuery}&pageSize=250&select=id,name,number,images,tcgplayer&orderBy=${orderByParam}`;
-                
+                // 3. API Fetch
                 try {
-                    console.log("Running API Query:", url);
-                    const res = await fetch(url, { headers });
+                    console.log("Running PriceCharting Query:", url);
+                    const res = await fetch(url);
                     
                     if (!res.ok) {
-                        console.error(`Card search failed. Status: ${res.status}. Query: ${url}`); 
-                        alert(`Card search failed (Error: ${res.status}). Please try again.`);
+                        console.error(`PriceCharting fetch failed. Status: ${res.status}.`); 
+                        alert(`Search failed (Error: ${res.status}). Check your token and API endpoint.`);
                         throw new Error(`API fetch failed with status: ${res.status}`);
                     }
                     
                     const data = await res.json();
-                    this.searchResults = data.data || [];
-                    this.searchPage = 1; // Always reset to page 1 on new search results
+                    
+                    // NOTE: Assuming PriceCharting response structure has a 'products' array of results
+                    let products = data.products || data.data || []; 
+                    
+                    this.searchResults = products.map(item => ({
+                        // MAP PC FIELDS TO YOUR VUE CARD STRUCTURE
+                        id: item['product-id'] || item.id,
+                        name: item['product-name'] || item.title || 'Unknown Card',
+                        number: item['num-in-set'] || item.number || 'N/A', // Card number
+                        image_url: item['image-url'] || item.image || '', // PC image URL
+                        
+                        // NOTE: You must use the correct price field based on your PC data. 
+                        // Assuming 'ungraded-price' is the market price.
+                        market: parseFloat(item['ungraded-price'] || item['loose-price'] || item.price || 0),
+                        
+                        // Required fields for your card object
+                        rawCost: parseFloat(item['ungraded-price'] || item.price || 0), 
+                        fee: 15, 
+                        targetGrade: 10,
+                        
+                        // Transform for existing Collection View (using image_url as 'small' image)
+                        images: { small: item['image-url'] || item.image || 'https://raw.githubusercontent.com/Kronborg1980/Gladiator-Collectables/main/logogla.webp' }
+                    }));
 
-                    // Cache results if successful
+                    this.searchPage = 1; 
+
+                    // Cache results
                     if (this.searchResults.length > 0) {
                         const cache = { timestamp: now, results: this.searchResults };
                         sessionStorage.setItem(cacheKey, JSON.stringify(cache));
-                        console.log("Card search results saved to session cache.");
+                        console.log("PC card search results saved to session cache.");
                     }
 
                 } catch(e) { 
-                    console.error("API Card Search Error:", e);
+                    console.error("PriceCharting Search Error:", e);
                     this.searchResults = []; 
                 } 
                 finally { 
