@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Gladiator | Pro Ecosystem</title>
+    <title>Gladiator | Portfolio Tracker</title>
     <link rel="icon" type="image/webp" href="https://raw.githubusercontent.com/Kronborg1980/Gladiator-Collectables/main/logogla.webp">
     
     <script src="https://cdn.tailwindcss.com"></script>
@@ -33,6 +33,7 @@
             color: #fff; 
             height: 100vh; 
             overflow: hidden; 
+            padding: 0;
         }
         .font-brand { font-family: 'Cinzel', serif; }
         [v-cloak] { display: none; }
@@ -43,108 +44,41 @@
             backdrop-filter: blur(25px); 
             -webkit-backdrop-filter: blur(25px);
             border: 1px solid var(--glass-edge);
-            box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.6);
             border-radius: 16px;
         }
 
-        /* --- ROI CALCULATOR TABLE (FIXED FOR SCROLLING) --- */
+        /* --- UI COMPONENTS --- */
         .roi-grid {
             display: grid;
-            /* Default column layout for desktop */
             grid-template-columns: 30px 50px 2fr 1.2fr 0.8fr 0.8fr 0.8fr 1fr 0.8fr 1fr 40px;
-            min-width: 1000px; /* Ensure horizontal scroll on mobile */
+            min-width: 1000px; 
             gap: 16px;
             align-items: center;
             padding: 8px 24px;
             border-bottom: 1px solid rgba(255,255,255,0.05);
             transition: all 0.2s;
         }
-        .roi-grid:hover { background: rgba(0, 242, 255, 0.03); }
-        
-        .roi-header {
-            font-size: 9px; font-weight: 800; color: #888; 
-            text-transform: uppercase; letter-spacing: 1px;
-            background: rgba(0,0,0,0.3); border-bottom: 1px solid rgba(255,255,255,0.1);
-            user-select: none; padding: 12px 24px;
-            /* Match grid structure and min-width */
-            display: grid;
-            grid-template-columns: 30px 50px 2fr 1.2fr 0.8fr 0.8fr 0.8fr 1fr 0.8fr 1fr 40px;
-            min-width: 1000px; 
-            gap: 16px;
-        }
-        
-        .sortable { cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 4px; }
-        .sortable:hover { color: var(--accent); }
-        .sortable.active { color: var(--accent); text-shadow: 0 0 10px rgba(0, 242, 255, 0.3); }
-
-        /* --- INPUTS & CONTROLS --- */
-        .table-input {
-            background: transparent; border-bottom: 1px solid rgba(255,255,255,0.15);
-            color: #fff; text-align: right; width: 100%; outline: none; font-family: 'Inter', sans-serif; font-size: 12px;
-            transition: all 0.2s; padding-bottom: 2px;
-        }
-        .table-input:focus { border-bottom-color: var(--accent); color: var(--accent); }
-
-        select option { background-color: #050508; color: #fff; padding: 10px; }
-        .table-select {
-            background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1);
-            color: #aaa; border-radius: 6px; padding: 4px 8px; font-size: 10px; width: 100%;
-            outline: none; cursor: pointer; transition: all 0.2s; text-transform: uppercase; font-weight: bold;
-        }
-        .table-select:focus { border-color: var(--accent); color: var(--accent); }
-
-        .custom-checkbox {
-            appearance: none; background-color: #000; margin: 0;
-            font: inherit; color: var(--accent); width: 14px; height: 14px;
-            border: 1px solid #555; border-radius: 3px; display: grid; place-content: center; cursor: pointer;
-        }
-        .custom-checkbox::before { content: ""; width: 8px; height: 8px; transform: scale(0); transition: 120ms transform ease-in-out; box-shadow: inset 1em 1em var(--accent); transform-origin: center; clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%); }
-        .custom-checkbox:checked::before { transform: scale(1); }
-        .custom-checkbox:checked { border-color: var(--accent); }
-
         .nav-btn { transition: all 0.2s; border-radius: 8px; font-weight: 600; letter-spacing: 0.5px; border-left: 3px solid transparent; }
         .nav-btn:hover { background: rgba(255,255,255,0.05); color: white; }
         .nav-btn.active { background: linear-gradient(90deg, var(--accent-dim) 0%, transparent 100%); border-left-color: var(--accent); color: var(--accent); }
+        .table-select:focus { border-color: var(--accent); color: var(--accent); }
 
-        .glass-input { background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 12px; width: 100%; border-radius: 8px; font-size: 12px; transition: all 0.2s; }
-        .glass-input:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 10px rgba(0, 242, 255, 0.2); }
-        .glass-input:disabled { opacity: 0.5; cursor: not-allowed; }
-        
-        .pagination-btn {
-            padding: 6px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1);
-            background: rgba(0,0,0,0.3); color: #888; font-size: 10px; font-weight: bold; uppercase;
-            transition: all 0.2s; cursor: pointer;
-        }
-        .pagination-btn:hover:not(:disabled) { border-color: var(--accent); color: white; background: var(--accent-dim); }
-        .pagination-btn:disabled { opacity: 0.3; cursor: not-allowed; }
 
-        ::-webkit-scrollbar { width: 5px; height: 5px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
-
-        /* --- MOBILE LAYOUT ADJUSTMENTS --- */
+        /* --- LAYOUT FIXES (Mobile First) --- */
         @media (max-width: 767px) {
-            body { padding: 0; }
             .glass-panel { border-radius: 0; }
             
             /* Main App Container */
-            #app {
-                flex-direction: column;
-                height: 100%; 
-                gap: 0;
-            }
-            
-            /* Hide Desktop Sidebar and Footer on Mobile */
-            .desktop-only { display: none !important; }
-            
+            #app { flex-direction: column; height: 100%; gap: 0; padding: 0; }
+
             /* Main Content Scroll Area */
             main {
-                padding-top: 5rem; 
-                padding-bottom: 4rem; 
+                padding-top: 5rem; /* Space for fixed header */
+                padding-bottom: 4rem; /* Space for fixed bottom nav */
                 height: 100%;
                 overflow-y: auto;
-                width: 100%; 
+                width: 100%;
             }
             
             /* Mobile Fixed Header */
@@ -175,22 +109,19 @@
             /* 2. Ensure MAIN content starts after the sidebar width */
             main {
                 margin-left: 18rem; /* ml-72 */
+                overflow-y: hidden; /* Main scroll is internal to divs */
             }
-            /* 3. Ensure MAIN content wrapper uses relative height/overflow */
-            main .flex-1 {
-                overflow-y: hidden; 
-            }
-            /* Restore desktop specific header margins */
+            /* Reset mobile styles for desktop header */
             main header {
-                padding-left: 2rem; /* px-8 */
-                padding-right: 2rem; /* px-8 */
-                padding-top: 1.25rem; /* py-5 */
-                padding-bottom: 1.25rem; /* py-5 */
+                position: relative;
+                top: auto;
+                left: auto;
+                right: auto;
             }
         }
     </style>
 </head>
-<body class="flex flex-col h-screen p-2 md:p-4">
+<body class="flex flex-col h-screen md:p-2">
 
 <div id="app" v-cloak class="flex h-full w-full max-w-[1920px] mx-auto relative gap-2 md:gap-4">
 
