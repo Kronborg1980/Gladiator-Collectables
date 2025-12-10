@@ -869,15 +869,27 @@
 
             // NEW: Clear search results and sessionStorage cache
             clearSearchCache() {
-                if (confirm("Are you sure you want to clear the local search cache? You will need to re-sync set data.")) {
+                if (confirm("Are you sure you want to clear the local search cache? This forces a fresh data download next time you search.")) {
+                    // Clear search results and query field
                     this.searchResults = [];
                     this.query = "";
+                    this.searchPage = 1;
+                    
+                    // Clear SETS data from localStorage (forcing reload on next app open)
+                    // Note: If you want to keep sets cached, comment out this line:
+                    // localStorage.removeItem(this.cacheKey); 
+
+                    // Clear CARD search results from sessionStorage
+                    sessionStorage.clear(); 
+
+                    // Reset selected set/era to force user to re-select
                     this.selectedEra = "";
                     this.selectedSet = "";
-                    sessionStorage.clear(); // Clear card search cache
-                    localStorage.removeItem(this.cacheKey); // Clear sets data cache
-                    this.loadSetsAPI(); // Re-sync sets immediately
-                    console.log("Search cache and current results cleared.");
+                    
+                    // Re-sync sets immediately in case localStorage was cleared
+                    this.loadSetsAPI(); 
+                    
+                    console.log("Search cache successfully cleared. Ready for a fresh search.");
                     alert("Search cache successfully cleared. Please select a Series and Set to begin a fresh search.");
                 }
             },
@@ -983,6 +995,7 @@
                 }
                 
                 // 2. Cache Check (Local Session Cache)
+                // Use the full query string (q) for a unique cache key
                 const sessionStorageKey = `search_${encodeURIComponent(q).toLowerCase()}`; 
                 const now = Date.now();
                 
