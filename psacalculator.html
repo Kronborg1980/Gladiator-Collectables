@@ -423,13 +423,13 @@
                         <p class="uppercase font-bold tracking-[0.3em] text-xs text-[#00f2ff]">Acquiring Data...</p>
                     </div>
 
-                    <div v-if="!isSearching && searchResults.length === 0 && !query" class="h-full flex flex-col items-center justify-center opacity-30">
+                    <div v-if="!isSearching && searchResults.length === 0 && !selectedSet" class="h-full flex flex-col items-center justify-center opacity-30">
                         <i class="fa-solid fa-magnifying-glass text-6xl mb-4 text-white"></i>
-                        <p class="uppercase font-bold tracking-widest text-xs">Select a Set to Begin</p>
+                        <p class="uppercase font-bold tracking-widest text-xs">Select a Series and Set to Begin</p>
                     </div>
-                    <div v-else-if="!isSearching && searchResults.length === 0 && query" class="h-full flex flex-col items-center justify-center opacity-30">
+                    <div v-else-if="!isSearching && searchResults.length === 0 && selectedSet" class="h-full flex flex-col items-center justify-center opacity-30">
                         <i class="fa-solid fa-magnifying-glass-minus text-6xl mb-4 text-red-500"></i>
-                        <p class="uppercase font-bold tracking-widest text-xs">No Results for "{{ query }}"</p>
+                        <p class="uppercase font-bold tracking-widest text-xs">No Results for "{{ query }}" in this set.</p>
                     </div>
                     
                     <div v-else>
@@ -545,7 +545,9 @@
                 sortBy: 'profit', sortDesc: true, currentPage: 1, itemsPerPage: 30, 
                 
                 // SEARCH PAGINATION
-                searchPage: 1, searchPerPage: 30, addedIds: [], selectedIds: [], searchSort: 'number',
+                searchPage: 1, 
+                searchPerPage: 30, // Locked to 30 per page
+                addedIds: [], selectedIds: [], searchSort: 'number',
 
                 showMobileNav: false,
                 isDesktop: true,
@@ -955,7 +957,7 @@
                 
                 let nameQuery = this.query ? this.query.trim() : '';
                 
-                // Block search if not explicitly forced, and the query is too short
+                // Block search if not explicitly forced, and the query is too short (1 or 2 characters)
                 if (!forceSearch && nameQuery.length > 0 && nameQuery.length < 3) return;
 
                 this.isSearching = true; 
@@ -966,7 +968,9 @@
                 
                 if(nameQuery) {
                     // FIX: Use the specific Lucene syntax for wildcard search, ensuring proper quotes and handling of name
-                    q += ` name:"${nameQuery.replace(/"/g, '\\"')}"*`; 
+                    // Replace existing quotes in the query before wrapping with quotes and wildcard
+                    const cleanedQuery = nameQuery.replace(/"/g, '\\"');
+                    q += ` name:"${cleanedQuery}*"`; 
                 }
                 
                 // 2. Cache Key and Check (Session Storage - 30 min cache)
@@ -993,7 +997,7 @@
 
                 // 3. API Fetch with proper URL Encoding
                 const orderByParam = 'number';
-                // NOTE: The full query string 'q' including quotes needs to be encoded.
+                // NOTE: We fetch max 250 cards (API max) and then client-side paginate to 30.
                 const encodedQuery = encodeURIComponent(q); 
                 const url = `https://api.pokemontcg.io/v2/cards?q=${encodedQuery}&pageSize=250&select=id,name,number,images,tcgplayer&orderBy=${orderByParam}`;
                 
@@ -1010,7 +1014,7 @@
                     
                     const data = await res.json();
                     this.searchResults = data.data || [];
-                    this.searchPage = page;
+                    this.searchPage = 1; // Always reset to page 1 on new search results
 
                     // Cache results if successful
                     if (this.searchResults.length > 0) {
