@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
   
-        <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     <style>
@@ -229,7 +229,7 @@
                             <button @click="deleteCard(card.uid)" class="absolute bottom-2 left-2 text-gray-600 hover:text-red-500 transition opacity-0 group-hover:opacity-100">
                                 <i class="fa-solid fa-trash-can text-sm"></i>
                             </button>
-                        </div>
+                    </div>
                     </div>
                 </div>
             </div>
@@ -407,7 +407,8 @@
 </div>
 
 <script>
-// Firebase config (kept outside of Vue component)
+// --- START: Global Configuration (Needed for Scope) ---
+
 const firebaseConfig = {
     apiKey: "AIzaSyBnb9VlLk4sNbj89beWtb2hmLGsvhgb6TE",
     authDomain: "gladiator-portfolio.firebaseapp.com",
@@ -418,6 +419,9 @@ const firebaseConfig = {
 };
 
 const POKEPRICE_KEY = 'pokeprice_free_83318c79cd2cb8b3e6090a261ebe543e2828a1bb09472062';
+
+// --- END: Global Configuration ---
+
 
 const { createApp } = Vue;
 
@@ -437,7 +441,7 @@ createApp({
         }
     },
 
-    // 2. Define Firebase properties on the instance (must be outside of data)
+    // Define Firebase properties on the instance
     auth: null,
     db: null,
     provider: null,
@@ -460,7 +464,7 @@ createApp({
         }
     },
     mounted() {
-        // 3. Initialize Firebase inside Vue lifecycle hook
+        // Initialize Firebase inside Vue lifecycle hook
         this.initFirebase(); 
 
         this.loadLocalData();
@@ -468,7 +472,7 @@ createApp({
         window.addEventListener('resize', this.checkIsDesktop);
         this.checkIsDesktop();
         
-        // 4. Set up the auth listener only if initialization was successful
+        // Set up the auth listener only if initialization was successful
         if(this.auth) {
             this.auth.onAuthStateChanged(u => {
                 if(u) { this.user = u; this.initCloudData(); }
@@ -565,9 +569,10 @@ createApp({
         topCard() { return [...this.cards].sort((a,b) => b.market - a.market)[0]; }
     },
     methods: {
-        // --- NEW FIREBASE INITIALIZATION METHOD ---
+        // --- FIREBASE INITIALIZATION METHOD ---
         initFirebase() {
             try {
+                // firebaseConfig is defined globally above
                 if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
                 
                 // Assign to instance properties
@@ -585,9 +590,7 @@ createApp({
             this.isDesktop = window.innerWidth >= 768;
             if (this.isDesktop) this.showMobileNav = false;
         },
-        // Use this.auth and this.provider
         loginWithGoogle() { if(this.auth) this.auth.signInWithPopup(this.provider).catch(e => alert(e.message)); },
-        // Use this.auth
         logout() { if(this.auth) this.auth.signOut(); },
         getSortIcon(key) {
             if(this.sortBy !== key) return 'fa-sort text-gray-700';
@@ -610,8 +613,7 @@ createApp({
         deleteSelected() {
             if(!confirm(`Delete ${this.selectedIds.length} cards?`)) return;
             this.selectedIds.forEach(uid => {
-                // Use this.db
-                if(this.user) this.db.collection('users').doc(this.user.uid).collection('cards').doc(uid).delete();
+                if(this.user && this.db) this.db.collection('users').doc(this.user.uid).collection('cards').doc(uid).delete();
                 else this.localCards = this.localCards.filter(c => c.uid !== uid);
             });
             this.selectedIds = [];
@@ -646,22 +648,19 @@ createApp({
                 localStorage.setItem('glad_cards', JSON.stringify(this.localCards));
             }
         },
-        // Use this.db
         initCloudData() {
-            if(!this.db || !this.user) return; // safety check
+            if(!this.db || !this.user) return;
             this.db.collection('users').doc(this.user.uid).collection('binders').onSnapshot(s => this.cloudBinders = s.docs.map(d => ({id: d.id, ...d.data()})));
             this.db.collection('users').doc(this.user.uid).collection('cards').onSnapshot(s => this.cloudCards = s.docs.map(d => ({uid: d.id, ...d.data()})));
         },
         createBinder() {
             const name = prompt("Name your new Collection (e.g. Eevee Heroes):");
             if(!name) return;
-            // Use this.db
             if(this.user && this.db) this.db.collection('users').doc(this.user.uid).collection('binders').add({ name, createdAt: new Date() });
             else { this.localBinders.push({ id: Date.now().toString(), name }); this.saveData(); }
         },
         deleteBinder(id) {
             if(!confirm("Delete this collection? Cards will remain in 'All Cards'.")) return;
-            // Use this.db
             if(this.user && this.db) this.db.collection('users').doc(this.user.uid).collection('binders').doc(id).delete();
             else { this.localBinders = this.localBinders.filter(b => b.id !== id); this.saveData(); }
         },
@@ -674,7 +673,6 @@ createApp({
                 rawCost: market, fee: 15, targetGrade: 10,
                 binderId: this.targetBinder === 'master' ? null : this.targetBinder
             };
-            // Use this.db
             if(this.user && this.db) this.db.collection('users').doc(this.user.uid).collection('cards').add(cardData);
             else { cardData.uid = Date.now().toString(); this.localCards.push(cardData); this.saveData(); }
             this.addedIds.push(c.id);
@@ -682,14 +680,12 @@ createApp({
         },
         deleteCard(uid) {
             if(!confirm("Remove this card permanently?")) return;
-            // Use this.db
             if(this.user && this.db) this.db.collection('users').doc(this.user.uid).collection('cards').doc(uid).delete();
             else { this.localCards = this.localCards.filter(c => c.uid !== uid); this.saveData(); }
             this.detailCard = null;
         },
         updateCardBinder(card) {
             const binderUpdate = { binderId: card.binderId === undefined ? null : card.binderId };
-            // Use this.db
             if(this.user && this.db) this.db.collection('users').doc(this.user.uid).collection('cards').doc(card.uid).update(binderUpdate);
             else this.saveData();
         },
@@ -819,7 +815,6 @@ createApp({
         },
 
         // EVERYTHING ELSE IS YOUR ORIGINAL CODE – 100% UNTOUCHED
-        // addCard, deleteCard, getProfit, saveData, etc. – all exactly the same
     }
 }).mount('#app');
 </script>
