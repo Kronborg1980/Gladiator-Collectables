@@ -457,7 +457,7 @@
                         </div>
                         
                         <div class="text-right shrink-0">
-                            <div class="text-[#00f2ff] text-xs font-bold font-mono text-shadow-sm">${{ formatNumber(card.prices?.market) }}</div>
+                            <div class="text-[#00f2ff] text-xs font-bold font-mono text-shadow-sm">${{ formatNumber(getCardPrice(card)) }}</div>
                         </div>
 
                         <div v-if="addedIds.includes(card.id)" class="absolute inset-0 bg-[#00ff88]/90 flex items-center justify-center rounded-lg font-bold text-black uppercase tracking-widest text-xs animate-pulse">
@@ -497,7 +497,13 @@
                     <div class="flex-1 p-8">
                          <div class="w-full h-64 border border-white/5 rounded-xl bg-[#080a10] relative overflow-hidden flex items-center justify-center group">
                              <div class="absolute inset-0 bg-gradient-to-t from-[#00f2ff]/5 to-transparent"></div>
-                             <span class="relative z-10 text-xs font-bold uppercase tracking-[0.3em] text-gray-600">Price History (Coming Soon)</span>
+                             
+                             <svg viewBox="0 0 100 50" class="w-full h-full absolute bottom-0 left-0 p-4 opacity-50 group-hover:opacity-100 transition duration-500">
+                                <path d="M0,40 Q20,20 40,35 T80,20 T100,5" fill="none" stroke="#00f2ff" stroke-width="0.5" />
+                                <path d="M0,40 Q20,20 40,35 T80,20 T100,5 L100,50 L0,50 Z" fill="url(#grad)" opacity="0.2" />
+                                <defs><linearGradient id="grad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:#00f2ff;stop-opacity:1" /><stop offset="100%" style="stop-color:#00f2ff;stop-opacity:0" /></linearGradient></defs>
+                            </svg>
+                            <span class="relative z-10 text-xs font-bold uppercase tracking-[0.3em] text-gray-600">Price History (Coming Soon)</span>
                          </div>
                     </div>
                     
@@ -525,8 +531,13 @@
     };
 
     // --- POKÉMON TCG API KEY ---
+    // WARNING: This specific API Service (PokemonPriceTracker) BLOCKS browser requests (CORS).
+    // To make this work without a backend server, we MUST use a proxy.
     const API_KEY = "pokeprice_free_897eaf1e7da854c45520eacd7976fccb81b8f9fbb494f08b".trim(); 
     const API_BASE = "https://www.pokemonpricetracker.com/api/v2";
+    
+    // Using a CORS Proxy to bypass the browser block
+    const CORS_PROXY = "https://corsproxy.io/?";
 
     let auth, db, provider;
     try {
@@ -583,7 +594,7 @@
                 addedIds: [], selectedIds: [], searchSort: 'number',
 
                 showMobileNav: false,
-                isDesktop: true,
+                isDesktop: true, // Fixed Vue warning by removing from computed
                 totalSetData: {} // Cache for set counts
             }
         },
@@ -606,6 +617,7 @@
         },
         mounted() {
             this.loadLocalData();
+            // No more massive "loadSetsAPI" call here!
             
             window.addEventListener('resize', this.checkIsDesktop);
             this.checkIsDesktop();
@@ -621,7 +633,7 @@
             window.removeEventListener('resize', this.checkIsDesktop);
         },
         computed: {
-            isDesktop() { return window.innerWidth >= 768; },
+            // REMOVED 'isDesktop' from here to fix Vue warning. It is now only in data().
             binders() { return this.user ? this.cloudBinders : this.localBinders; },
             cards() { return this.user ? this.cloudCards : this.localCards; },
             headerTitle() {
@@ -705,6 +717,7 @@
             getBinderName(id) { if(id===null) return 'Master'; const b = this.binders.find(x => x.id === id); return b ? b.name : 'Unknown'; },
             
             getSetTotal(setName) {
+                // If we haven't loaded this set's total yet, return '?'
                 return this.totalSetData[setName] || '?';
             },
             
@@ -752,21 +765,19 @@
                 if(this.user) db.collection('users').doc(this.user.uid).collection('binders').doc(id).delete();
                 else { this.localBinders = this.localBinders.filter(b => b.id !== id); this.saveData(); }
             },
-            
-            // --- UPDATED ADD CARD ---
             addCard(c) {
                 const market = this.getCardPrice(c);
                 const setName = this.availableSets.find(s=>s.id === this.selectedSet)?.name || 'Set';
                 
+                // Cache the set total for future reference since we have it now
                 if (!this.totalSetData[setName]) {
                     const setObj = this.availableSets.find(s => s.id === this.selectedSet);
-                    if(setObj) this.totalSetData[setName] = setObj.total; // Use total from new API if available
+                    if(setObj) this.totalSetData[setName] = setObj.total;
                 }
 
                 const cardData = {
                     id: c.id, name: c.name, set: setName, 
-                    image: c.image || c.images?.small, // Handle new vs old API structure
-                    number: c.number, 
+                    image: c.images.small, number: c.number, 
                     market: market, 
                     rawCost: market, fee: 15, targetGrade: 10,
                     binderId: this.targetBinder === 'master' ? null : this.targetBinder
@@ -777,7 +788,6 @@
                 this.addedIds.push(c.id);
                 setTimeout(() => { this.addedIds = this.addedIds.filter(id => id !== c.id); }, 1500);
             },
-            
             deleteCard(uid) {
                 if(!confirm("Remove this card permanently?")) return;
                 if(this.user) db.collection('users').doc(this.user.uid).collection('cards').doc(uid).delete();
@@ -804,88 +814,72 @@
                 this.searchResults = []; 
                 this.searchPage = 1; 
                 this.query = '';
+                // Reset selections so user starts fresh
                 this.selectedSet = '';
-                this.availableSets = []; 
+                this.availableSets = []; // Clear sets to keep it clean
                 
                 if(this.currentView === 'calculator' && this.currentBinder) this.targetBinder = this.currentBinder.id;
                 else this.targetBinder = 'master';
             },
             openCardDetail(c) { this.detailCard = c; },
             formatNumber(n) { return (n||0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}); },
-            
-            // --- UPDATED PRICE HELPER ---
             getCardPrice(c) { 
-                // Check new API structure: c.prices.market
-                if (c.prices && c.prices.market) {
-                    return c.prices.market;
-                }
-                // Fallback for old API structure: c.tcgplayer.prices...
-                if (c.tcgplayer?.prices) {
-                     const marketPrices = Object.values(c.tcgplayer.prices)
-                        .map(p => p?.market).filter(p => p > 0); 
-                     if (c.tcgplayer?.market && c.tcgplayer.market > 0) marketPrices.push(c.tcgplayer.market);
-                     return marketPrices.length > 0 ? Math.max(...marketPrices) : 0;
-                }
-                return 0;
+                const prices = c.tcgplayer?.prices;
+                if (!prices) return 0;
+                const marketPrices = Object.values(prices).map(p => p?.market).filter(p => p > 0); 
+                if (c.tcgplayer?.market && c.tcgplayer.market > 0) marketPrices.push(c.tcgplayer.market);
+                return marketPrices.length > 0 ? Math.max(...marketPrices) : 0;
             },
 
-            // --- FETCH SETS (Updated Endpoint) ---
+            // --- NEW: FETCH SETS ONLY WHEN ERA IS CHOSEN ---
             async fetchSetsForEra(era) {
                 this.loadingSets = true;
-                const headers = { 'Authorization': `Bearer ${API_KEY}` };
+                const headers = { 'X-Api-Key': API_KEY };
                 
-                // New API structure: /sets?series=...
-                // Removed extra filters that might cause 400 errors on new API
-                const url = `${API_BASE}/sets?series=${encodeURIComponent(era)}`;
+                const q = `series:"${era}"`;
+                // PROXY: Route through CORS Proxy
+                const targetUrl = `https://api.pokemontcg.io/v2/sets?q=${encodeURIComponent(q)}&select=id,name,releaseDate,printedTotal,total&orderBy=-releaseDate`;
+                const url = CORS_PROXY + encodeURIComponent(targetUrl);
                 
                 try {
-                    console.log("Fetching sets from:", url);
                     const res = await fetch(url, { headers });
-                    
-                    if (!res.ok) {
-                        throw new Error(`${res.status} ${res.statusText}`);
-                    }
-
                     const data = await res.json();
                     this.availableSets = data.data || [];
                 } catch (e) {
                     console.error("Set fetch failed", e);
-                    alert(`Error loading sets: ${e.message}. Check network/API key.`);
+                    alert("Could not load sets. Please check connection.");
                 } finally {
                     this.loadingSets = false;
                 }
             },
 
-            // --- FETCH CARDS (Updated Endpoint) ---
+            // --- FETCH CARDS FOR SELECTED SET ---
             async fetchCards(page = 1) {
                 if(!this.selectedSet) return;
                 
                 this.isSearching = true; 
                 this.searchPage = page; 
-                const headers = { 'Authorization': `Bearer ${API_KEY}` };
+                const headers = { 'X-Api-Key': API_KEY };
 
-                // New API structure: /cards?set_id=...
-                // Using set_id instead of Lucene query string
-                let url = `${API_BASE}/cards?set_id=${this.selectedSet}`;
-                
+                // Build query: filter by SET ID + optional Name
+                let q = `set.id:"${this.selectedSet}"`; 
                 if(this.query && this.query.trim()) {
-                    url += `&q=${encodeURIComponent(this.query.trim())}`;
+                    const cleanedQuery = this.query.trim().toLowerCase().replace(/"/g, '\\"');
+                    q += ` name:*${cleanedQuery}*`; 
                 }
                 
+                // PROXY: Route through CORS Proxy
+                const targetUrl = `https://api.pokemontcg.io/v2/cards?q=${encodeURIComponent(q)}&pageSize=250&select=id,name,number,images,tcgplayer&orderBy=number`;
+                const url = CORS_PROXY + encodeURIComponent(targetUrl);
+                
                 try {
-                    console.log("Fetching cards from:", url);
                     const res = await fetch(url, { headers });
-                    
-                    if (!res.ok) {
-                        throw new Error(`${res.status} ${res.statusText}`);
-                    }
-
                     const data = await res.json();
                     this.searchResults = data.data || [];
                     this.searchPage = 1;
                 } catch (e) { 
                     console.error("Card search failed", e);
-                    alert(`Search failed: ${e.message}`);
+                    alert("Search failed.");
                 } finally { 
                     this.isSearching = false; 
                 }
