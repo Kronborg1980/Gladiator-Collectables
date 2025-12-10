@@ -9,7 +9,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
     
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
@@ -17,274 +17,342 @@
 
     <style>
         :root { 
-            --accent: #00f2ff; 
-            --accent-dim: rgba(0, 242, 255, 0.1);
-            --bg-dark: #020408;
-            --glass-surface: rgba(10, 15, 25, 0.85);
-            --glass-edge: rgba(0, 242, 255, 0.15);
+            --neon-cyan: #00f2ff;
+            --neon-pink: #ff0055;
+            --neon-blue: #0066ff;
+            --glass-bg: rgba(13, 18, 30, 0.65);
+            --glass-border: rgba(255, 255, 255, 0.12);
+            --glass-shine: rgba(255, 255, 255, 0.05);
+            --bg-dark: #050505;
         }
         
         body { 
-            font-family: 'Inter', sans-serif;
+            font-family: 'Rajdhani', sans-serif;
             background-color: var(--bg-dark); 
             background-image: 
-                radial-gradient(circle at 15% 50%, rgba(0, 242, 255, 0.05) 0%, transparent 25%),
-                radial-gradient(circle at 85% 30%, rgba(40, 100, 255, 0.08) 0%, transparent 25%);
-            color: #fff; 
+                radial-gradient(circle at 10% 20%, rgba(0, 242, 255, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(255, 0, 85, 0.06) 0%, transparent 40%),
+                radial-gradient(circle at 50% 50%, rgba(0, 102, 255, 0.05) 0%, transparent 60%);
+            color: #e0e0e0; 
             min-height: 100vh;
             overflow-y: auto;
         }
+
+        /* --- SCROLLBAR --- */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
+        ::-webkit-scrollbar-thumb { background: rgba(0, 242, 255, 0.2); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--neon-cyan); box-shadow: 0 0 10px var(--neon-cyan); }
+
         @media (min-width: 768px) {
-            body { 
-                height: 100vh;
-                overflow: hidden; 
-            }
+            body { height: 100vh; overflow: hidden; }
         }
 
         .font-brand { font-family: 'Cinzel', serif; }
         [v-cloak] { display: none; }
 
-        /* GLASS THEME */
+        /* --- HYPER GLASS THEME --- */
         .glass-panel { 
-            background: var(--glass-surface); 
-            backdrop-filter: blur(25px); 
-            -webkit-backdrop-filter: blur(25px);
-            border: 1px solid var(--glass-edge);
-            box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+            background: var(--glass-bg); 
+            backdrop-filter: blur(20px); 
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            box-shadow: 
+                0 4px 30px rgba(0, 0, 0, 0.5),
+                inset 0 0 0 1px rgba(255, 255, 255, 0.05);
             border-radius: 16px;
         }
 
-        /* --- ROI CALCULATOR TABLE --- */
+        .neon-text {
+            color: var(--neon-cyan);
+            text-shadow: 0 0 10px rgba(0, 242, 255, 0.6);
+        }
+        
+        .neon-border-bottom {
+            position: relative;
+        }
+        .neon-border-bottom::after {
+            content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 1px;
+            background: linear-gradient(90deg, transparent, var(--neon-cyan), transparent);
+            box-shadow: 0 1px 10px var(--neon-cyan);
+            opacity: 0.5;
+        }
+
+        /* --- BUTTONS --- */
+        .btn-neon {
+            background: rgba(0, 242, 255, 0.05);
+            border: 1px solid rgba(0, 242, 255, 0.3);
+            color: var(--neon-cyan);
+            text-transform: uppercase;
+            font-weight: 700;
+            letter-spacing: 1px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        .btn-neon:hover {
+            background: rgba(0, 242, 255, 0.15);
+            border-color: var(--neon-cyan);
+            box-shadow: 0 0 20px rgba(0, 242, 255, 0.4), inset 0 0 10px rgba(0, 242, 255, 0.2);
+            color: white;
+            text-shadow: 0 0 5px white;
+            transform: translateY(-1px);
+        }
+        .btn-neon:active { transform: scale(0.98); }
+
+        .nav-btn { 
+            border-radius: 8px; font-weight: 500; letter-spacing: 1px; 
+            border: 1px solid transparent;
+            transition: all 0.2s ease;
+            color: #8892b0;
+        }
+        .nav-btn:hover { 
+            background: rgba(255,255,255,0.03); color: white; 
+            border-color: rgba(255,255,255,0.1);
+        }
+        .nav-btn.active { 
+            background: linear-gradient(90deg, rgba(0, 242, 255, 0.1) 0%, transparent 100%);
+            border-left: 3px solid var(--neon-cyan);
+            color: white;
+            text-shadow: 0 0 8px rgba(0, 242, 255, 0.5);
+            box-shadow: inset 10px 0 20px -10px rgba(0, 242, 255, 0.2);
+        }
+
+        /* --- CARDS & GRID --- */
+        .card-item {
+            background: rgba(10, 15, 25, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: all 0.3s;
+        }
+        .card-item:hover {
+            border-color: var(--neon-cyan);
+            box-shadow: 0 0 20px rgba(0, 242, 255, 0.15);
+            transform: translateY(-4px);
+            z-index: 10;
+        }
+
         .roi-grid {
             display: grid;
             grid-template-columns: 30px 40px 1fr 0.8fr 40px; 
-            gap: 10px;
-            align-items: center;
-            padding: 8px 16px;
+            gap: 10px; align-items: center; padding: 12px 16px;
             border-bottom: 1px solid rgba(255,255,255,0.05);
             transition: all 0.2s;
         }
         @media (min-width: 768px) {
             .roi-grid {
                 grid-template-columns: 30px 50px 2fr 1.2fr 0.8fr 0.8fr 0.8fr 1fr 0.8fr 1fr 40px;
-                gap: 16px;
-                padding: 8px 24px;
+                gap: 16px; padding: 10px 24px;
             }
         }
-        .roi-grid:hover { background: rgba(0, 242, 255, 0.03); }
-        
+        .roi-grid:hover { background: rgba(255, 255, 255, 0.02); }
         .roi-header {
-            font-size: 9px; font-weight: 800; color: #888; 
-            text-transform: uppercase; letter-spacing: 1px;
-            background: rgba(0,0,0,0.3); border-bottom: 1px solid rgba(255,255,255,0.1);
-            user-select: none; 
-            padding: 12px 16px;
+            font-size: 10px; font-weight: 700; color: var(--neon-cyan); 
+            text-transform: uppercase; letter-spacing: 1.5px;
+            background: rgba(0,0,0,0.4); 
+            border-bottom: 1px solid rgba(0, 242, 255, 0.2);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            backdrop-filter: blur(10px);
+            z-index: 5;
         }
+
+        .roi-header .desktop-only, .roi-grid .desktop-only { display: none; }
         @media (min-width: 768px) {
-            .roi-header {
-                padding: 12px 24px;
-            }
+            .roi-header .desktop-only, .roi-grid .desktop-only { display: block; }
+            .roi-header .desktop-only.justify-end { display: flex; }
         }
-
-        .roi-header .desktop-only, .roi-grid .desktop-only {
-            display: none;
-        }
+        .roi-grid .mobile-value, .roi-grid .mobile-action { text-align: right; }
+        .roi-grid .mobile-action { text-align: center; }
         @media (min-width: 768px) {
-            .roi-header .desktop-only, .roi-grid .desktop-only {
-                display: block;
-            }
-            .roi-header .desktop-only.justify-end {
-                 display: flex;
-            }
-        }
-        .roi-grid .mobile-value {
-             text-align: right;
-        }
-        .roi-grid .mobile-action {
-             text-align: center;
-        }
-        @media (min-width: 768px) {
-            .roi-grid .mobile-value, .roi-grid .mobile-action {
-                 display: none;
-            }
+            .roi-grid .mobile-value, .roi-grid .mobile-action { display: none; }
         }
 
-
-        .sortable { cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 4px; }
-        .sortable:hover { color: var(--accent); }
-        .sortable.active { color: var(--accent); text-shadow: 0 0 10px rgba(0, 242, 255, 0.3); }
-
-        /* --- INPUTS & CONTROLS --- */
+        /* --- FORMS --- */
+        .glass-input { 
+            background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); 
+            color: white; padding: 12px; width: 100%; border-radius: 8px; font-size: 14px; 
+            transition: 0.3s; 
+            font-family: 'Rajdhani', sans-serif; letter-spacing: 0.5px;
+        }
+        .glass-input:focus { 
+            border-color: var(--neon-cyan); outline: none; 
+            box-shadow: 0 0 15px rgba(0, 242, 255, 0.2); 
+            background: rgba(0, 242, 255, 0.02);
+        }
+        
         .table-input {
             background: transparent; border-bottom: 1px solid rgba(255,255,255,0.15);
-            color: #fff; text-align: right; width: 100%; outline: none; font-family: 'Inter', sans-serif; font-size: 12px;
-            transition: 0.2s; padding-bottom: 2px;
+            color: #fff; text-align: right; width: 100%; outline: none; 
+            font-family: 'Rajdhani', sans-serif; font-size: 14px; font-weight: 500;
+            transition: 0.3s; padding-bottom: 4px;
         }
-        .table-input:focus { border-bottom-color: var(--accent); color: var(--accent); }
+        .table-input:focus { border-bottom-color: var(--neon-cyan); color: var(--neon-cyan); text-shadow: 0 0 8px rgba(0,242,255,0.4); }
 
-        select option { background-color: #050508; color: #fff; padding: 10px; }
         .table-select {
-            background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1);
-            color: #aaa; border-radius: 6px; padding: 4px 8px; font-size: 10px; width: 100%;
-            outline: none; cursor: pointer; transition: 0.2s; text-transform: uppercase; font-weight: bold;
+            background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1);
+            color: #ccc; border-radius: 4px; padding: 4px 8px; font-size: 12px; width: 100%;
+            outline: none; cursor: pointer; transition: 0.2s; text-transform: uppercase;
         }
-        .table-select:focus { border-color: var(--accent); color: var(--accent); }
+        .table-select:focus { border-color: var(--neon-cyan); color: white; }
 
         .custom-checkbox {
-            appearance: none; background-color: #000; margin: 0;
-            font: inherit; color: var(--accent); width: 14px; height: 14px;
-            border: 1px solid #555; border-radius: 3px; display: grid; place-content: center; cursor: pointer;
+            appearance: none; background-color: rgba(0,0,0,0.5); margin: 0;
+            color: var(--neon-cyan); width: 16px; height: 16px;
+            border: 1px solid #555; border-radius: 4px; display: grid; place-content: center; cursor: pointer;
+            transition: 0.2s;
         }
-        .custom-checkbox::before { content: ""; width: 8px; height: 8px; transform: scale(0); transition: 120ms transform ease-in-out; box-shadow: inset 1em 1em var(--accent); transform-origin: center; clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%); }
+        .custom-checkbox::before { content: ""; width: 8px; height: 8px; transform: scale(0); transition: 120ms transform ease-in-out; box-shadow: inset 1em 1em var(--neon-cyan); transform-origin: center; clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%); }
         .custom-checkbox:checked::before { transform: scale(1); }
-        .custom-checkbox:checked { border-color: var(--accent); }
+        .custom-checkbox:checked { border-color: var(--neon-cyan); box-shadow: 0 0 8px rgba(0,242,255,0.3); }
 
-        .nav-btn { transition: all 0.2s; border-radius: 8px; font-weight: 600; letter-spacing: 0.5px; border-left: 3px solid transparent; }
-        .nav-btn:hover { background: rgba(255,255,255,0.05); color: white; }
-        .nav-btn.active { background: linear-gradient(90deg, var(--accent-dim) 0%, transparent 100%); border-left-color: var(--accent); color: var(--accent); }
-
-        .glass-input { background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 12px; width: 100%; border-radius: 8px; font-size: 12px; transition: 0.2s; }
-        .glass-input:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 10px rgba(0, 242, 255, 0.2); }
-        .glass-input:disabled { opacity: 0.5; cursor: not-allowed; }
-        
-        .pagination-btn {
-            padding: 6px 12px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.1);
-            background: rgba(0,0,0,0.3); color: #888; font-size: 10px; font-weight: bold; uppercase;
-            transition: all 0.2s; cursor: pointer;
+        /* Animation */
+        @keyframes scanline {
+            0% { transform: translateY(-100%); }
+            100% { transform: translateY(100%); }
         }
-        .pagination-btn:hover:not(:disabled) { border-color: var(--accent); color: white; background: var(--accent-dim); }
-        .pagination-btn:disabled { opacity: 0.3; cursor: not-allowed; }
-
-        ::-webkit-scrollbar { width: 5px; height: 5px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+        .scan-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(to bottom, transparent 95%, rgba(0, 242, 255, 0.03) 100%);
+            pointer-events: none; z-index: 2;
+        }
     </style>
 </head>
-<body class="p-4">
+<body class="p-2 md:p-6">
 
-<div id="app" v-cloak class="w-full max-w-[1920px] mx-auto relative gap-4 md:h-full md:flex">
+<div id="app" v-cloak class="w-full max-w-[1920px] mx-auto relative gap-6 md:h-full md:flex">
 
-    <button v-if="!showSearch && !detailCard" @click="showMobileNav = !showMobileNav" class="md:hidden fixed top-4 right-4 z-40 bg-[#00f2ff] text-black w-10 h-10 rounded-full shadow-lg transition active:scale-95">
+    <button v-if="!showSearch && !detailCard" @click="showMobileNav = !showMobileNav" class="md:hidden fixed top-4 right-4 z-50 bg-[#00f2ff] text-black w-10 h-10 rounded-full shadow-[0_0_20px_#00f2ff] flex items-center justify-center transition active:scale-95">
         <i class="fa-solid" :class="showMobileNav ? 'fa-xmark' : 'fa-bars'"></i>
     </button>
 
-    <aside class="w-72 glass-panel flex-col shrink-0 z-30 transition-all duration-300 md:flex"
-               :class="{ 
-                'fixed inset-0 w-full h-full bg-black/90 backdrop-blur-md': showMobileNav, 
-                'hidden': !showMobileNav && !isDesktop, 
-                'flex': isDesktop, 
-                'w-72': isDesktop 
-               }">
+    <aside class="w-72 glass-panel flex-col shrink-0 z-40 transition-all duration-300 md:flex overflow-hidden relative"
+           :class="{ 
+            'fixed inset-0 w-full h-full bg-black/95 backdrop-blur-xl': showMobileNav, 
+            'hidden': !showMobileNav && !isDesktop, 
+            'flex': isDesktop, 
+            'w-72': isDesktop 
+           }">
         
-        <div :class="{'w-72 h-full mx-auto glass-panel flex flex-col': showMobileNav}">
+        <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#00f2ff] to-transparent opacity-50"></div>
 
-            <div class="p-8 flex flex-col items-center border-b border-white/5 shrink-0">
-                <img src="https://raw.githubusercontent.com/Kronborg1980/Gladiator-Collectables/main/logogla.webp" class="w-12 h-12 object-contain mb-3 drop-shadow-[0_0_10px_rgba(0,242,255,0.4)]">
-                <h1 class="text-xl font-brand font-bold text-white tracking-[0.2em]">GLADIATOR</h1>
-                <div class="text-[10px] text-gray-400 uppercase tracking-widest mt-1">Portfolio Tracker</div>
+        <div :class="{'w-full max-w-sm mx-auto h-full flex flex-col': showMobileNav, 'flex flex-col h-full': !showMobileNav}">
+
+            <div class="p-8 flex flex-col items-center border-b border-white/5 shrink-0 relative">
+                <div class="absolute inset-0 bg-gradient-to-b from-[#00f2ff]/5 to-transparent"></div>
+                <img src="https://raw.githubusercontent.com/Kronborg1980/Gladiator-Collectables/main/logogla.webp" class="w-16 h-16 object-contain mb-4 drop-shadow-[0_0_15px_rgba(0,242,255,0.6)] animate-pulse">
+                <h1 class="text-2xl font-brand font-bold text-white tracking-[0.2em] text-shadow-sm">GLADIATOR</h1>
+                <div class="text-[10px] text-[#00f2ff] uppercase tracking-[0.3em] mt-1 font-bold">Pro Ecosystem</div>
             </div>
 
-            <div class="flex-1 overflow-y-auto py-6 px-4 space-y-1">
-                <div class="px-4 pb-2 text-[10px] text-gray-500 font-bold uppercase tracking-widest">Main Menu</div>
+            <div class="flex-1 overflow-y-auto py-6 px-4 space-y-2">
+                <div class="px-4 pb-2 text-[10px] text-gray-500 font-bold uppercase tracking-widest">Main Modules</div>
                 
-                <button @click="currentView='collection'; currentBinder=null; showMobileNav=false" class="nav-btn w-full text-left px-4 py-3 text-sm text-gray-400 flex items-center gap-3" :class="{active: currentView==='collection'}">
+                <button @click="currentView='collection'; currentBinder=null; showMobileNav=false" class="nav-btn w-full text-left px-4 py-3 text-sm flex items-center gap-3" :class="{active: currentView==='collection'}">
                     <i class="fa-solid fa-layer-group w-5 text-center"></i> Collection
                 </button>
                 
-                <button @click="currentView='calculator'; currentBinder=null; showMobileNav=false" class="nav-btn w-full text-left px-4 py-3 text-sm text-gray-400 flex items-center gap-3" :class="{active: currentView==='calculator' && currentBinder===null}">
-                    <i class="fa-solid fa-calculator w-5 text-center"></i> ROI Calculator (All)
+                <button @click="currentView='calculator'; currentBinder=null; showMobileNav=false" class="nav-btn w-full text-left px-4 py-3 text-sm flex items-center gap-3" :class="{active: currentView==='calculator' && currentBinder===null}">
+                    <i class="fa-solid fa-calculator w-5 text-center"></i> ROI Calculator
                 </button>
                 
-                <button @click="currentView='binders'; currentBinder=null; showMobileNav=false" class="nav-btn w-full text-left px-4 py-3 text-sm text-gray-400 flex items-center gap-3" :class="{active: currentView==='binders'}">
-                    <i class="fa-solid fa-folder-open w-5 text-center"></i> My Binders
+                <button @click="currentView='binders'; currentBinder=null; showMobileNav=false" class="nav-btn w-full text-left px-4 py-3 text-sm flex items-center gap-3" :class="{active: currentView==='binders'}">
+                    <i class="fa-solid fa-folder-open w-5 text-center"></i> Binders
                 </button>
+
+                <div class="mt-6 px-4 pb-2 text-[10px] text-gray-500 font-bold uppercase tracking-widest flex justify-between items-center">
+                    <span>Quick Access</span>
+                    <i class="fa-solid fa-bolt text-[#ff0055]"></i>
+                </div>
 
                 <div v-for="binder in binders" :key="binder.id">
                     <button @click="selectBinder(binder); currentView='calculator'; showMobileNav=false" 
-                            class="nav-btn w-full text-left px-4 py-2 text-sm text-gray-400 flex items-center justify-between group" 
+                            class="nav-btn w-full text-left px-4 py-2 text-sm flex items-center justify-between group" 
                             :class="{active: currentView === 'calculator' && currentBinder?.id === binder.id}">
                         <span class="truncate flex items-center gap-3"><i class="fa-regular fa-folder w-4 text-center"></i> {{ binder.name }}</span>
-                        <i @click.stop="deleteBinder(binder.id)" class="fa-solid fa-trash text-[10px] opacity-0 group-hover:opacity-100 hover:text-red-500 transition px-2"></i>
+                        <i @click.stop="deleteBinder(binder.id)" class="fa-solid fa-trash text-[10px] opacity-0 group-hover:opacity-100 hover:text-[#ff0055] transition px-2"></i>
                     </button>
                 </div>
-                
             </div>
 
-            <div class="p-6 border-t border-white/5 bg-black/20 shrink-0">
-                <div v-if="user" class="bg-black/40 rounded-lg p-3 border border-white/10 flex items-center gap-3 mb-3">
+            <div class="p-6 border-t border-white/5 bg-black/30 shrink-0">
+                <div v-if="user" class="glass-input !p-3 !bg-black/40 flex items-center gap-3 mb-3 border-none ring-1 ring-white/10">
                     <img :src="user.photoURL" class="w-8 h-8 rounded-full border border-[#00f2ff] shadow-[0_0_10px_#00f2ff]">
                     <div class="overflow-hidden">
                         <div class="text-xs font-bold text-white truncate">{{ user.displayName }}</div>
-                        <div class="text-[8px] text-green-400 font-bold uppercase tracking-wider flex items-center gap-1 animate-pulse"><i class="fa-solid fa-circle text-[5px]"></i> Synced</div>
+                        <div class="text-[8px] text-green-400 font-bold uppercase tracking-wider flex items-center gap-1"><i class="fa-solid fa-circle text-[4px] animate-pulse"></i> Online</div>
                     </div>
                 </div>
-                <button v-if="!user" @click="loginWithGoogle" class="w-full bg-[#00f2ff] hover:bg-white text-black font-bold py-3 rounded-lg text-xs uppercase tracking-widest transition flex items-center justify-center gap-2 shadow-[0_0_15px_rgba(0,242,255,0.2)]">
-                    <i class="fa-brands fa-google"></i> Log In
+                <button v-if="!user" @click="loginWithGoogle" class="btn-neon w-full py-3 rounded-lg text-xs flex items-center justify-center gap-2">
+                    <i class="fa-brands fa-google"></i> Login
                 </button>
-                <button v-else @click="logout" class="w-full text-xs text-red-500 hover:text-white text-center py-2 transition opacity-60 hover:opacity-100">Sign Out</button>
+                <button v-else @click="logout" class="w-full text-xs text-[#ff0055] hover:text-white text-center py-2 transition opacity-60 hover:opacity-100 uppercase tracking-widest font-bold">Terminate Session</button>
             </div>
         </div>
     </aside>
 
-    <main class="flex-1 flex flex-col relative overflow-hidden rounded-2xl gap-4" :class="{'h-full': isDesktop, 'mt-14': !isDesktop}">
+    <main class="flex-1 flex flex-col relative overflow-hidden rounded-2xl gap-6" :class="{'h-full': isDesktop, 'mt-14': !isDesktop}">
         
-        <header class="glass-panel px-8 py-5 flex justify-between items-center z-10 relative overflow-hidden shrink-0">
-            <div class="absolute top-0 left-0 w-1 h-full bg-[#00f2ff] shadow-[0_0_20px_#00f2ff]"></div>
+        <header class="glass-panel px-6 py-4 md:px-8 md:py-6 flex justify-between items-center z-10 relative overflow-hidden shrink-0 neon-border-bottom">
             <div>
-                <h2 class="text-xl md:text-2xl font-brand font-bold text-white tracking-widest uppercase">{{ headerTitle }}</h2>
-                <div class="text-xs text-cyan-400 font-bold tracking-wider uppercase flex items-center gap-2 mt-1">
-                    <i class="fa-solid fa-coins"></i> Net Value: ${{ formatNumber(totalValue) }}
+                <h2 class="text-2xl md:text-3xl font-brand font-bold text-white tracking-widest uppercase flex items-center gap-3">
+                    <i v-if="currentBinder" class="fa-solid fa-folder-open text-[#00f2ff]"></i>
+                    {{ headerTitle }}
+                </h2>
+                <div class="text-xs text-[#00f2ff] font-bold tracking-widest uppercase flex items-center gap-2 mt-1 opacity-80">
+                    <i class="fa-solid fa-chart-line"></i> Total Net Value: <span class="text-white text-sm ml-1">${{ formatNumber(totalValue) }}</span>
                 </div>
             </div>
-            <button @click="openSearch" class="bg-[#00f2ff] hover:bg-white text-black text-xs font-bold px-4 py-2 md:px-6 md:py-3 rounded-lg shadow-[0_0_20px_rgba(0,242,255,0.3)] transition active:scale-95 flex items-center gap-2">
+            <button @click="openSearch" class="btn-neon px-5 py-2 md:px-8 md:py-3 rounded-lg flex items-center gap-2">
                 <i class="fa-solid fa-plus"></i> <span class="hidden sm:inline">Add Card</span>
             </button>
         </header>
 
-        <div v-if="currentView === 'collection'" class="flex-1 glass-panel overflow-y-auto p-4 md:p-8">
+        <div v-if="currentView === 'collection'" class="flex-1 glass-panel overflow-y-auto p-4 md:p-8 relative">
+            
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <div class="bg-[#0a0f18] p-6 rounded-xl border border-white/5 relative overflow-hidden group">
-                    <div class="text-[10px] text-gray-500 uppercase tracking-widest font-bold mb-2">Total Value</div>
-                    <div class="text-3xl md:text-4xl font-bold text-white mb-1">${{ formatNumber(totalValue) }}</div>
+                <div class="p-6 rounded-2xl bg-gradient-to-br from-[#0a1020] to-black border border-white/10 relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition group-hover:scale-110"><i class="fa-solid fa-sack-dollar text-6xl text-[#00f2ff]"></i></div>
+                    <div class="text-[10px] text-gray-400 uppercase tracking-widest font-bold mb-2">Total Value</div>
+                    <div class="text-4xl font-bold text-white neon-text">${{ formatNumber(totalValue) }}</div>
                 </div>
-                <div class="bg-[#0a0f18] p-6 rounded-xl border border-white/5 border-l-2 border-l-[#00f2ff]">
-                    <div class="text-[10px] text-gray-500 uppercase tracking-widest font-bold mb-2">Card Count (Total)</div>
-                    <div class="text-3xl font-bold text-white mb-1">{{ cards.length }}</div>
+                <div class="p-6 rounded-2xl bg-gradient-to-br from-[#0a1020] to-black border border-white/10 relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition group-hover:scale-110"><i class="fa-solid fa-layer-group text-6xl text-purple-500"></i></div>
+                    <div class="text-[10px] text-gray-400 uppercase tracking-widest font-bold mb-2">Total Cards</div>
+                    <div class="text-4xl font-bold text-white">{{ cards.length }}</div>
                 </div>
-                <div class="bg-[#0a0f18] p-6 rounded-xl border border-white/5 border-l-2 border-l-white">
-                    <div class="text-[10px] text-gray-500 uppercase tracking-widest font-bold mb-2">Unique Cards Collected</div>
-                    <div class="text-3xl font-bold text-white mb-1">{{ Object.keys(cardsBySet).reduce((sum, setName) => sum + cardsBySet[setName].uniqueCount, 0) }}</div>
+                <div class="p-6 rounded-2xl bg-gradient-to-br from-[#0a1020] to-black border border-white/10 relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition group-hover:scale-110"><i class="fa-solid fa-gem text-6xl text-pink-500"></i></div>
+                    <div class="text-[10px] text-gray-400 uppercase tracking-widest font-bold mb-2">Unique Collected</div>
+                    <div class="text-4xl font-bold text-white">{{ Object.keys(cardsBySet).reduce((sum, setName) => sum + cardsBySet[setName].uniqueCount, 0) }}</div>
                 </div>
             </div>
 
-            <div v-if="cards.length === 0" class="flex flex-col items-center justify-center py-20 opacity-30">
-                <i class="fa-solid fa-box-open text-6xl mb-4 text-[#00f2ff]"></i>
-                <p class="uppercase tracking-widest font-bold text-sm">No cards collected</p>
+            <div v-if="cards.length === 0" class="flex flex-col items-center justify-center py-24 opacity-40">
+                <i class="fa-solid fa-box-open text-7xl mb-6 text-[#00f2ff] drop-shadow-[0_0_15px_rgba(0,242,255,0.5)]"></i>
+                <p class="uppercase tracking-[0.2em] font-bold text-sm">Collection Empty</p>
             </div>
             
-            <div v-else class="space-y-10">
+            <div v-else class="space-y-12">
                 <div v-for="(setGroup, setName) in cardsBySet" :key="setName">
-                    <div class="flex items-center gap-4 mb-4 border-b border-white/10 pb-2">
-                        <h3 class="text-white font-bold text-lg font-brand uppercase tracking-widest truncate">{{ setName }}</h3>
-                        <span class="text-[10px] text-[#00f2ff] font-bold bg-[#00f2ff]/10 px-2 py-0.5 rounded border border-[#00f2ff]/30 shrink-0">
-                            {{ setGroup.uniqueCount }} / {{ getSetTotal(setName) }} Unique Collected
+                    <div class="flex items-end gap-4 mb-6 border-b border-white/5 pb-2">
+                        <h3 class="text-white font-bold text-xl font-brand uppercase tracking-widest truncate">{{ setName }}</h3>
+                        <span class="text-[10px] text-[#00f2ff] font-bold bg-[#00f2ff]/10 px-2 py-1 rounded border border-[#00f2ff]/30 shrink-0 mb-1">
+                            {{ setGroup.uniqueCount }} / {{ getSetTotal(setName) }}
                         </span>
-                        
                     </div>
-                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-4 md:gap-6">
-                        <div v-for="card in setGroup.cards" :key="card.uid" class="bg-[#0a0f18] p-3 rounded-xl hover:border-[#00f2ff] border border-white/5 group relative transition duration-200">
-                            <div class="aspect-[0.7] rounded-lg bg-[#050505] overflow-hidden mb-3 relative cursor-pointer" @click="openCardDetail(card)">
+                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-7 gap-4 md:gap-6">
+                        <div v-for="card in setGroup.cards" :key="card.uid" class="card-item p-3 rounded-xl group relative cursor-pointer" @click="openCardDetail(card)">
+                            <div class="aspect-[0.71] rounded-lg bg-[#050505] overflow-hidden mb-3 relative">
                                 <img :src="card.image" class="w-full h-full object-cover transition duration-500 group-hover:scale-110">
+                                <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition duration-300 flex items-end justify-center p-2">
+                                    <span class="text-[10px] font-bold text-[#00f2ff] uppercase tracking-wider">Inspect</span>
+                                </div>
                             </div>
-                            <div class="text-center text-xs font-bold text-white truncate cursor-pointer" @click="openCardDetail(card)">{{ card.name }}</div>
-                            <div class="text-[9px] text-center text-gray-500 font-bold mt-1">${{ formatNumber(card.market) }}</div>
-                            <div class="absolute top-2 right-2 flex flex-col items-center justify-center text-[8px] font-bold text-white bg-black/70 rounded-full w-5 h-5 border border-white/20">
-                                {{ setGroup.cardCounts[card.id] }}x
+                            <div class="text-center text-xs font-bold text-white truncate px-1">{{ card.name }}</div>
+                            <div class="text-[10px] text-center text-gray-400 font-bold mt-1">${{ formatNumber(card.market) }}</div>
+                            
+                            <div class="absolute top-1 right-1 flex flex-col items-center justify-center text-[9px] font-bold text-black bg-[#00f2ff] rounded-full w-5 h-5 shadow-[0_0_10px_#00f2ff]">
+                                {{ setGroup.cardCounts[card.id] }}
                             </div>
-                            <button @click="deleteCard(card.uid)" class="absolute bottom-2 left-2 text-gray-600 hover:text-red-500 transition opacity-0 group-hover:opacity-100">
-                                <i class="fa-solid fa-trash-can text-sm"></i>
-                            </button>
                         </div>
                     </div>
                 </div>
@@ -292,21 +360,26 @@
         </div>
         
         <div v-else-if="currentView === 'binders'" class="flex-1 glass-panel overflow-y-auto p-4 md:p-8">
-             <div class="flex justify-between items-center mb-6">
-                 <h2 class="text-xl font-brand font-bold text-white">My Collections</h2>
-                 <button @click="createBinder" class="bg-[#00f2ff] hover:bg-white text-black text-xs font-bold px-4 py-2 rounded shadow transition">New Binder</button>
+             <div class="flex justify-between items-center mb-8">
+                 <h2 class="text-xl font-brand font-bold text-white uppercase tracking-widest">Collections</h2>
+                 <button @click="createBinder" class="btn-neon text-[10px] px-4 py-2 rounded">New Binder</button>
              </div>
              
-             <div class="grid grid-cols-2 md:grid-cols-5 gap-6">
-                 <div @click="currentView='calculator'; currentBinder=null" class="bg-[#0a0f18] aspect-[3/4] rounded-xl p-5 flex flex-col justify-end cursor-pointer border border-white/5 hover:border-[#00f2ff] hover:shadow-[0_0_20px_rgba(0,242,255,0.1)] transition group relative overflow-hidden">
-                     <div class="absolute inset-0 bg-gradient-to-t from-[#00f2ff]/10 to-transparent"></div>
-                     <i class="fa-solid fa-layer-group text-4xl text-[#00f2ff] mb-auto mt-4 group-hover:scale-110 transition opacity-80"></i>
-                     <div class="relative z-10"><div class="font-bold text-white text-lg font-brand tracking-wide">All Cards</div><div class="text-[10px] text-gray-400 font-bold uppercase tracking-wider group-hover:text-white">Master List</div></div>
+             <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
+                 <div @click="currentView='calculator'; currentBinder=null" class="bg-gradient-to-b from-[#1a2030] to-[#050505] aspect-[3/4] rounded-xl p-6 flex flex-col justify-end cursor-pointer border border-white/10 hover:border-[#00f2ff] hover:shadow-[0_0_30px_rgba(0,242,255,0.15)] transition group relative overflow-hidden">
+                     <i class="fa-solid fa-layer-group text-5xl text-[#00f2ff] mb-auto mt-4 group-hover:scale-110 transition opacity-80 drop-shadow-[0_0_10px_rgba(0,242,255,0.5)]"></i>
+                     <div class="relative z-10">
+                         <div class="font-bold text-white text-lg font-brand tracking-wide">MASTER</div>
+                         <div class="text-[10px] text-gray-400 font-bold uppercase tracking-wider group-hover:text-[#00f2ff] transition">All Cards</div>
+                    </div>
                  </div>
 
-                 <div v-for="b in binders" :key="b.id" @click="selectBinder(b); currentView='calculator'" class="bg-[#0a0f18] aspect-[3/4] rounded-xl p-5 flex flex-col justify-end cursor-pointer border border-white/5 hover:bg-white/5 transition group">
-                     <i class="fa-regular fa-folder-open text-4xl text-gray-600 group-hover:text-white mb-auto mt-4 transition"></i>
-                     <div><div class="font-bold text-white text-lg truncate font-brand tracking-wide">{{ b.name }}</div><div class="text-[10px] text-gray-500 font-bold uppercase tracking-wider">{{ getBinderCount(b.id) }} Cards</div></div>
+                 <div v-for="b in binders" :key="b.id" @click="selectBinder(b); currentView='calculator'" class="bg-[#0a0f18] aspect-[3/4] rounded-xl p-6 flex flex-col justify-end cursor-pointer border border-white/5 hover:bg-white/5 hover:border-white/20 transition group">
+                     <i class="fa-regular fa-folder-open text-5xl text-gray-700 group-hover:text-white mb-auto mt-4 transition"></i>
+                     <div>
+                         <div class="font-bold text-white text-lg truncate font-brand tracking-wide">{{ b.name }}</div>
+                         <div class="text-[10px] text-gray-500 font-bold uppercase tracking-wider">{{ getBinderCount(b.id) }} Cards</div>
+                     </div>
                  </div>
              </div>
         </div>
@@ -315,17 +388,17 @@
             <div class="roi-grid roi-header shrink-0">
                 <div class="flex items-center justify-center"><input type="checkbox" :checked="isAllSelected" @click="toggleSelectAll" class="custom-checkbox"></div>
                 <div class="text-center">IMG</div>
-                <div class="sortable" :class="{'col-span-3': !isDesktop}" @click="setSort('name')" :class="{active: sortBy==='name'}">DETAILS <i class="fa-solid" :class="getSortIcon('name')"></i></div>
+                <div class="sortable hover:text-[#00f2ff] cursor-pointer transition" :class="{'col-span-3': !isDesktop}" @click="setSort('name')">DETAILS <i class="fa-solid ml-1" :class="getSortIcon('name')"></i></div>
                 <div class="desktop-only">Binder</div>
-                <div class="text-right sortable justify-end desktop-only" @click="setSort('rawCost')" :class="{active: sortBy==='rawCost'}">RAW $ <i class="fa-solid" :class="getSortIcon('rawCost')"></i></div>
+                <div class="text-right sortable justify-end desktop-only hover:text-[#00f2ff] cursor-pointer" @click="setSort('rawCost')">RAW $ <i class="fa-solid ml-1" :class="getSortIcon('rawCost')"></i></div>
                 <div class="text-right desktop-only">FEE $</div>
                 <div class="text-center desktop-only">TARGET</div>
-                <div class="text-right sortable justify-end desktop-only" @click="setSort('market')" :class="{active: sortBy==='market'}">VALUE <i class="fa-solid" :class="getSortIcon('market')"></i></div>
-                <div class="text-center desktop-only">DECISION</div>
-                <div class="text-right sortable justify-end desktop-only" @click="setSort('profit')" :class="{active: sortBy==='profit'}">PROFIT <i class="fa-solid" :class="getSortIcon('profit')"></i></div>
+                <div class="text-right sortable justify-end desktop-only hover:text-[#00f2ff] cursor-pointer" @click="setSort('market')">PSA 10 <i class="fa-solid ml-1" :class="getSortIcon('market')"></i></div>
+                <div class="text-center desktop-only">STATUS</div>
+                <div class="text-right sortable justify-end desktop-only hover:text-[#00f2ff] cursor-pointer" @click="setSort('profit')">NET <i class="fa-solid ml-1" :class="getSortIcon('profit')"></i></div>
                 <div class="text-right mobile-value">VALUE</div>
-                <div class="text-center mobile-action">PROFIT</div>
-                <div class="flex justify-end"><button v-if="selectedIds.length > 0" @click="deleteSelected" class="bg-red-500 text-white text-[9px] font-bold px-2 py-1 rounded">DEL {{ selectedIds.length }}</button></div>
+                <div class="text-center mobile-action">NET</div>
+                <div class="flex justify-end"><button v-if="selectedIds.length > 0" @click="deleteSelected" class="bg-[#ff0055] hover:bg-red-600 text-white text-[9px] font-bold px-3 py-1 rounded shadow-[0_0_10px_rgba(255,0,85,0.4)] transition">DEL {{ selectedIds.length }}</button></div>
             </div>
 
             <div class="flex-1 overflow-y-auto p-0">
@@ -333,125 +406,120 @@
                     <p class="uppercase tracking-widest font-bold text-sm">List Empty</p>
                 </div>
                 <div v-else>
-                    <div v-for="(c, i) in paginatedCards" :key="c.uid || i" class="roi-grid hover:bg-white/5 transition" :class="{'bg-white/5': selectedIds.includes(c.uid)}">
+                    <div v-for="(c, i) in paginatedCards" :key="c.uid || i" class="roi-grid" :class="{'bg-[#00f2ff]/5 border-l-2 border-l-[#00f2ff]': selectedIds.includes(c.uid)}">
                         <div class="flex justify-center"><input type="checkbox" :value="c.uid" v-model="selectedIds" class="custom-checkbox"></div>
-                        <div class="flex justify-center"><div class="w-10 h-14 bg-black rounded border border-white/10 overflow-hidden cursor-pointer hover:border-[#00f2ff]" @click="openCardDetail(c)"><img :src="c.image" class="w-full h-full object-cover"></div></div>
+                        <div class="flex justify-center"><div class="w-9 h-12 bg-black rounded border border-white/10 overflow-hidden cursor-pointer hover:border-[#00f2ff]" @click="openCardDetail(c)"><img :src="c.image" class="w-full h-full object-cover"></div></div>
                         <div class="min-w-0">
-                            <div class="font-bold text-white text-sm truncate cursor-pointer" @click="openCardDetail(c)">{{ c.name }}</div>
+                            <div class="font-bold text-white text-sm truncate cursor-pointer hover:text-[#00f2ff]" @click="openCardDetail(c)">{{ c.name }}</div>
                             <div class="text-[9px] text-gray-500 font-bold uppercase tracking-wider">{{ c.set }}</div>
                             <div class="md:hidden mt-1 text-[9px] text-gray-400">
-                                BINDER: {{ getBinderName(c.binderId) }} | COST: ${{ formatNumber(c.rawCost) }} | TARGET: PSA {{ c.targetGrade }}
+                                CST: ${{ formatNumber(c.rawCost) }} | GRD: {{ c.targetGrade }}
                             </div>
                         </div>
                         
-                        <div class="desktop-only"><select v-model="c.binderId" @change="updateCardBinder(c)" class="table-select"><option :value="null">Master Only</option><option v-for="b in binders" :value="b.id">{{ b.name }}</option></select></div>
+                        <div class="desktop-only"><select v-model="c.binderId" @change="updateCardBinder(c)" class="table-select"><option :value="null">Master</option><option v-for="b in binders" :value="b.id">{{ b.name }}</option></select></div>
                         <div class="text-right desktop-only"><input v-model.number="c.rawCost" @change="saveData()" type="number" class="table-input"></div>
                         <div class="text-right desktop-only"><input v-model.number="c.fee" @change="saveData()" type="number" class="table-input"></div>
-                        <div class="flex justify-center desktop-only"><select v-model="c.targetGrade" @change="saveData()" class="table-select text-center" style="width: 80px;"><option value="10">PSA 10</option><option value="9">PSA 9</option><option value="8">PSA 8</option></select></div>
-                        <div class="text-right font-mono text-white text-xs font-bold desktop-only">${{ formatNumber(getEstValue(c)) }}</div>
-                        <div class="text-center desktop-only"><span v-if="getProfit(c) > 0" class="text-[9px] font-bold text-green-400 bg-green-900/30 border border-green-500/30 px-3 py-1 rounded-full uppercase tracking-wider">Grade</span><span v-else class="text-[9px] font-bold text-red-400 bg-red-900/30 border border-red-500/30 px-3 py-1 rounded-full uppercase tracking-wider">Hold</span></div>
-                        <div class="text-right font-mono font-bold text-xs desktop-only" :class="getProfit(c) >= 0 ? 'text-green-400' : 'text-red-500'">{{ Math.round(getProfit(c)) }}</div>
+                        <div class="flex justify-center desktop-only"><select v-model="c.targetGrade" @change="saveData()" class="table-select text-center" style="width: 70px;"><option value="10">10</option><option value="9">9</option><option value="8">8</option></select></div>
+                        <div class="text-right font-mono text-[#00f2ff] text-sm font-bold desktop-only">${{ formatNumber(getEstValue(c)) }}</div>
+                        <div class="text-center desktop-only">
+                            <span v-if="getProfit(c) > 0" class="text-[9px] font-bold text-[#00ff88] bg-[#00ff88]/10 border border-[#00ff88]/30 px-2 py-0.5 rounded uppercase tracking-wider">Grade</span>
+                            <span v-else class="text-[9px] font-bold text-[#ff0055] bg-[#ff0055]/10 border border-[#ff0055]/30 px-2 py-0.5 rounded uppercase tracking-wider">Hold</span>
+                        </div>
+                        <div class="text-right font-mono font-bold text-sm desktop-only" :class="getProfit(c) >= 0 ? 'text-[#00ff88] drop-shadow-[0_0_5px_rgba(0,255,136,0.3)]' : 'text-[#ff0055]'">{{ Math.round(getProfit(c)) }}</div>
                         
-                        <div class="mobile-value font-mono text-white text-xs font-bold">${{ formatNumber(getEstValue(c)) }}</div>
-                        <div class="mobile-action font-mono font-bold text-xs" :class="getProfit(c) >= 0 ? 'text-green-400' : 'text-red-500'">{{ Math.round(getProfit(c)) }}</div>
+                        <div class="mobile-value font-mono text-[#00f2ff] text-xs font-bold">${{ formatNumber(getEstValue(c)) }}</div>
+                        <div class="mobile-action font-mono font-bold text-xs" :class="getProfit(c) >= 0 ? 'text-[#00ff88]' : 'text-[#ff0055]'">{{ Math.round(getProfit(c)) }}</div>
                         
-                        <div class="text-center"><button @click="deleteCard(c.uid)" class="text-gray-600 hover:text-red-500"><i class="fa-solid fa-trash-can text-sm"></i></button></div>
+                        <div class="flex justify-end"><button @click="deleteCard(c.uid)" class="text-gray-600 hover:text-[#ff0055] transition"><i class="fa-solid fa-trash-can"></i></button></div>
                     </div>
                 </div>
             </div>
 
-            <div class="px-4 md:px-6 py-3 border-t border-white/10 flex justify-between items-center bg-black/20 shrink-0">
-                <span class="text-[10px] text-gray-500 uppercase font-bold tracking-wider">Total: {{ sortedCards.length }}</span>
-                <div class="flex gap-2 items-center"><button @click="prevPage" :disabled="currentPage === 1" class="pagination-btn">< Prev</button><span class="text-[10px] font-bold text-[#00f2ff] px-2">Page {{ currentPage }} / {{ totalPages || 1 }}</span><button @click="nextPage" :disabled="currentPage === totalPages" class="pagination-btn">Next ></button></div>
+            <div class="px-6 py-3 border-t border-white/10 flex justify-between items-center bg-black/40 shrink-0 text-xs">
+                <span class="text-gray-400 font-bold uppercase tracking-wider">Total: <span class="text-white">{{ sortedCards.length }}</span></span>
+                <div class="flex gap-2 items-center">
+                    <button @click="prevPage" :disabled="currentPage === 1" class="text-gray-400 hover:text-[#00f2ff] disabled:opacity-30 px-2"><i class="fa-solid fa-chevron-left"></i></button>
+                    <span class="font-bold text-[#00f2ff] bg-[#00f2ff]/10 px-3 py-1 rounded border border-[#00f2ff]/30">{{ currentPage }} / {{ totalPages || 1 }}</span>
+                    <button @click="nextPage" :disabled="currentPage === totalPages" class="text-gray-400 hover:text-[#00f2ff] disabled:opacity-30 px-2"><i class="fa-solid fa-chevron-right"></i></button>
+                </div>
             </div>
         </div>
     </main>
 
     <Transition enter-active-class="transition duration-300 ease-out" enter-from-class="opacity-0 scale-95" enter-to-class="opacity-100 scale-100" leave-active-class="transition duration-200 ease-in" leave-from-class="opacity-100 scale-100" leave-to-class="opacity-0 scale-95">
-    <div v-if="showSearch" class="fixed inset-0 bg-black/90 backdrop-blur-md z-[100] flex items-center justify-center p-4 md:p-6">
-        <div class="bg-[#0a0f18] w-full max-w-xl md:max-w-5xl rounded-xl shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden flex flex-col h-[95vh] md:h-[85vh] border border-[#333]">
-            <div class="px-4 md:px-8 py-4 md:py-6 border-b border-white/10 flex justify-between items-center bg-[#050505] shrink-0">
-                <h2 class="text-lg md:text-xl font-brand font-bold text-white tracking-[0.2em] uppercase">Card Search</h2>
-                <button @click="showSearch=false" class="text-gray-500 hover:text-white transition"><i class="fa-solid fa-xmark text-xl"></i></button>
+    <div v-if="showSearch" class="fixed inset-0 bg-black/90 backdrop-blur-md z-[100] flex items-center justify-center p-4">
+        <div class="glass-panel w-full max-w-5xl rounded-xl shadow-[0_0_60px_rgba(0,0,0,0.8)] overflow-hidden flex flex-col h-[90vh] md:h-[80vh] border border-white/20">
+            <div class="px-6 py-5 border-b border-white/10 flex justify-between items-center bg-black/40 shrink-0">
+                <h2 class="text-xl font-brand font-bold text-white tracking-[0.2em] uppercase text-shadow-sm"><i class="fa-solid fa-satellite-dish text-[#00f2ff] mr-2"></i> Database Link</h2>
+                <button @click="showSearch=false" class="text-gray-500 hover:text-white transition"><i class="fa-solid fa-xmark text-2xl"></i></button>
             </div>
             
             <div v-if="setsLoading" class="flex-1 flex flex-col items-center justify-center p-12 text-[#00f2ff]">
-                <i class="fa-solid fa-circle-notch fa-spin text-4xl mb-4"></i>
-                <p class="text-xs font-bold uppercase tracking-widest animate-pulse">Syncing Database...</p>
+                <i class="fa-solid fa-circle-notch fa-spin text-5xl mb-6 drop-shadow-[0_0_15px_#00f2ff]"></i>
+                <p class="text-sm font-bold uppercase tracking-[0.3em] animate-pulse">Synchronizing Mainframe...</p>
             </div>
-            <div v-else-if="setsError" class="flex-1 flex flex-col items-center justify-center p-12 text-red-500">
-                <i class="fa-solid fa-cloud-bolt-xmark text-4xl mb-4"></i>
-                <p class="text-xs font-bold uppercase tracking-widest">CRITICAL ERROR: Failed to load Set Data.</p>
-                <p class="text-xs text-gray-400 mt-2">Please check your network connection and refresh the page.</p>
+            <div v-else-if="setsError" class="flex-1 flex flex-col items-center justify-center p-12 text-[#ff0055]">
+                <i class="fa-solid fa-triangle-exclamation text-5xl mb-4"></i>
+                <p class="text-sm font-bold uppercase tracking-widest mb-2">Connection Failure</p>
+                <p class="text-xs text-gray-400">{{ setsErrorMessage || 'API Unreachable. Running in offline mode.' }}</p>
             </div>
 
             <template v-else>
-                <div class="px-4 md:px-8 py-4 md:py-8 bg-[#080a10] grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 border-b border-white/5 shrink-0">
-                    <div><label class="text-[10px] text-gray-500 font-bold uppercase mb-2 block tracking-widest">1. Series</label><select v-model="selectedEra" class="glass-input"><option value="">Select Series</option><option v-for="era in eras" :value="era">{{ era }}</option></select></div>
-                    <div><label class="text-[10px] text-gray-500 font-bold uppercase mb-2 block tracking-widest">2. Set</label><select v-model="selectedSet" :disabled="!selectedEra" class="glass-input disabled:opacity-30"><option value="">Select Set</option><option v-for="s in filteredSets" :value="s.id">{{ s.name }}</option></select></div>
-                    <div class="col-span-2 md:col-span-1">
-                        <label class="text-[10px] text-gray-500 font-bold uppercase mb-2 block tracking-widest">3. Name</label>
-                        <input v-model="query" :disabled="!selectedSet" placeholder="e.g. Charizard" class="glass-input disabled:opacity-30 lowercase placeholder:uppercase">
+                <div class="px-6 py-6 bg-[#080a10] grid grid-cols-2 md:grid-cols-4 gap-4 border-b border-white/5 shrink-0">
+                    <div>
+                        <label class="text-[9px] text-gray-500 font-bold uppercase mb-2 block tracking-widest">1. Era</label>
+                        <select v-model="selectedEra" class="glass-input"><option value="">Select Series</option><option v-for="era in eras" :value="era">{{ era }}</option></select>
                     </div>
                     <div>
-                        <label class="text-[10px] text-[#00f2ff] font-bold uppercase mb-2 block tracking-widest">4. Sort</label>
-                        <select v-model="searchSort" class="glass-input border-[#00f2ff] text-[#00f2ff]">
-                            <option value="number">Number</option>
-                            <option value="price-desc">Price: High</option>
-                            <option value="price-asc">Price: Low</option>
-                            <option value="name">Name</option>
-                        </select>
+                        <label class="text-[9px] text-gray-500 font-bold uppercase mb-2 block tracking-widest">2. Set</label>
+                        <select v-model="selectedSet" :disabled="!selectedEra" class="glass-input disabled:opacity-30"><option value="">Select Set</option><option v-for="s in filteredSets" :value="s.id">{{ s.name }}</option></select>
+                    </div>
+                    <div class="col-span-2 md:col-span-1">
+                        <label class="text-[9px] text-gray-500 font-bold uppercase mb-2 block tracking-widest">3. Card Name</label>
+                        <input v-model="query" :disabled="!selectedSet" placeholder="e.g. Charizard" class="glass-input disabled:opacity-30 placeholder:text-gray-600">
+                    </div>
+                    <div>
+                        <label class="text-[9px] text-[#00f2ff] font-bold uppercase mb-2 block tracking-widest">Action</label>
+                        <button @click="fetchCards(1)" :disabled="isSearching || !selectedSet" class="btn-neon w-full py-3 rounded-lg text-xs flex justify-center items-center gap-2 shadow-lg disabled:opacity-50 disabled:shadow-none">
+                            <i v-if="isSearching" class="fa-solid fa-circle-notch fa-spin"></i> {{ isSearching ? 'Scanning' : 'Search' }}
+                        </button>
                     </div>
                 </div>
                 
-                <div class="px-4 md:px-8 py-4 bg-[#050505] flex justify-between items-center border-b border-white/5 shrink-0">
-                    <div class="text-[10px] text-gray-500 font-bold uppercase">Adding to: <span class="text-white">{{ targetBinder === 'master' ? 'Master Collection' : getBinderName(targetBinder) }}</span></div>
-                    <button @click="fetchCards(1)" :disabled="isSearching || !selectedSet" class="bg-[#00f2ff] hover:bg-white text-black text-xs font-bold px-4 py-2 md:px-10 md:py-3 rounded shadow-lg uppercase tracking-widest transition transform active:scale-95 disabled:opacity-50 disabled:scale-100 flex items-center gap-2">
-                        <i v-if="isSearching" class="fa-solid fa-circle-notch fa-spin"></i> {{ isSearching ? 'Scanning...' : 'Search' }}
-                    </button>
+                <div class="px-6 py-3 bg-black/60 flex justify-between items-center border-b border-white/5 shrink-0">
+                    <div class="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Target: <span class="text-[#00f2ff]">{{ targetBinder === 'master' ? 'Master Collection' : getBinderName(targetBinder) }}</span></div>
+                    <div v-if="paginatedSearchResults.length > 0" class="flex gap-2">
+                         <button @click="searchPage > 1 ? searchPage-- : null" :disabled="searchPage === 1" class="text-gray-400 hover:text-[#00f2ff] text-xs"><i class="fa-solid fa-chevron-left"></i></button>
+                         <span class="text-xs font-bold text-white">{{ searchPage }} / {{ totalSearchPages }}</span>
+                         <button @click="searchPage < totalSearchPages ? searchPage++ : null" :disabled="searchPage === totalSearchPages" class="text-gray-400 hover:text-[#00f2ff] text-xs"><i class="fa-solid fa-chevron-right"></i></button>
+                    </div>
                 </div>
                 
-                <div class="flex-1 overflow-y-auto p-4 md:p-8 bg-[#050508] relative">
-                    <div v-if="paginatedSearchResults.length > 0" class="flex justify-center gap-4 mb-4">
-                        <button @click="searchPage > 1 ? searchPage-- : null" :disabled="searchPage === 1" class="pagination-btn">< Prev</button>
-                        <span class="text-xs font-bold text-[#00f2ff] px-2">Page {{ searchPage }} of {{ totalSearchPages || 1 }}</span>
-                        <button @click="searchPage < totalSearchPages ? searchPage++ : null" :disabled="searchPage === totalSearchPages" class="pagination-btn">Next ></button>
-                    </div>
-
-                    <div v-if="isSearching" class="absolute inset-0 flex flex-col items-center justify-center bg-black/80 z-20 backdrop-blur-sm">
-                        <i class="fa-solid fa-satellite-dish text-6xl text-[#00f2ff] mb-4 animate-pulse"></i>
-                        <p class="uppercase font-bold tracking-[0.3em] text-xs text-[#00f2ff]">Acquiring Data...</p>
-                    </div>
-
+                <div class="flex-1 overflow-y-auto p-6 bg-[#050508] relative">
                     <div v-if="!isSearching && searchResults.length === 0 && !selectedSet" class="h-full flex flex-col items-center justify-center opacity-30">
                         <i class="fa-solid fa-magnifying-glass text-6xl mb-4 text-white"></i>
-                        <p class="uppercase font-bold tracking-widest text-xs">Select a Series and Set to Begin</p>
-                    </div>
-                    <div v-else-if="!isSearching && searchResults.length === 0 && selectedSet" class="h-full flex flex-col items-center justify-center opacity-30">
-                        <i class="fa-solid fa-magnifying-glass-minus text-6xl mb-4 text-red-500"></i>
-                        <p class="uppercase font-bold tracking-widest text-xs">No Results for "{{ query }}" in this set.</p>
+                        <p class="uppercase font-bold tracking-widest text-xs">Ready to Scan</p>
                     </div>
                     
-                    <div v-else>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 md:gap-4 mb-6">
-                            <div v-for="card in paginatedSearchResults" :key="card.id" @click="addCard(card)" 
-                                 class="bg-[#0a0f18] p-3 rounded-xl cursor-pointer hover:border-[#00f2ff] border border-white/5 relative transition duration-200 flex items-center justify-between">
-                                
-                                <div class="flex flex-col truncate pr-4">
-                                    <div class="text-sm font-bold text-white truncate">{{ card.name }}</div>
-                                    <div class="text-[9px] text-gray-500">{{ card.number }} / {{ getSetTotal(allSets.find(s=>s.id === selectedSet)?.name) }}</div>
-                                </div>
-                                
-                                <div class="text-right shrink-0">
-                                    <div class="text-[#00f2ff] text-xs font-bold">${{ formatNumber(getCardPrice(card)) }}</div>
-                                </div>
+                    <div v-else class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                        <div v-for="card in paginatedSearchResults" :key="card.id" @click="addCard(card)" 
+                             class="bg-[#0a0f18] p-3 rounded-lg cursor-pointer border border-white/5 hover:border-[#00f2ff] hover:bg-[#00f2ff]/5 relative transition duration-200 flex items-center justify-between group">
+                            
+                            <div class="flex flex-col truncate pr-4">
+                                <div class="text-sm font-bold text-white truncate group-hover:text-[#00f2ff] transition">{{ card.name }}</div>
+                                <div class="text-[10px] text-gray-500 font-mono">{{ card.number }} / {{ getSetTotal(allSets.find(s=>s.id === selectedSet)?.name) }}</div>
+                            </div>
+                            
+                            <div class="text-right shrink-0">
+                                <div class="text-[#00f2ff] text-xs font-bold font-mono text-shadow-sm">${{ formatNumber(getCardPrice(card)) }}</div>
+                            </div>
 
-                                <div v-if="addedIds.includes(card.id)" class="absolute inset-0 bg-green-500/90 flex items-center justify-center rounded-xl font-bold text-black uppercase tracking-widest text-xs animate-pulse">
-                                    ACQUIRED <i class="fa-solid fa-check ml-2"></i>
-                                </div>
+                            <div v-if="addedIds.includes(card.id)" class="absolute inset-0 bg-[#00ff88]/90 flex items-center justify-center rounded-lg font-bold text-black uppercase tracking-widest text-xs animate-pulse">
+                                ACQUIRED <i class="fa-solid fa-check ml-2"></i>
                             </div>
                         </div>
-                        </div>
+                    </div>
                 </div>
             </template>
         </div>
@@ -459,39 +527,45 @@
     </Transition>
 
     <Transition name="fade">
-        <div v-if="detailCard" class="fixed inset-0 bg-black/95 backdrop-blur-md z-[200] flex items-center justify-center p-4 md:p-6">
-            <div class="bg-[#0a0f18] w-full max-w-6xl h-[95vh] md:h-[85vh] rounded-2xl border border-white/10 shadow-2xl flex flex-col md:flex-row overflow-hidden">
-                <div class="w-full h-1/3 md:h-auto md:w-1/3 bg-[#050505] p-6 md:p-10 flex items-center justify-center border-b md:border-b-0 md:border-r border-white/5 relative shrink-0">
-                    <div class="absolute top-4 left-4 md:top-8 md:left-8 text-[#00f2ff] font-bold tracking-widest uppercase text-[10px] cursor-pointer hover:text-white transition z-10" @click="detailCard=null"><i class="fa-solid fa-arrow-left mr-2"></i> Back</div>
-                    <img :src="detailCard.image.replace('small','large')" class="max-w-[70%] md:max-w-sm rounded-lg shadow-2xl card-hover max-h-full object-contain">
+        <div v-if="detailCard" class="fixed inset-0 bg-black/95 backdrop-blur-md z-[200] flex items-center justify-center p-4">
+            <div class="glass-panel w-full max-w-6xl h-[90vh] md:h-[80vh] rounded-2xl flex flex-col md:flex-row overflow-hidden border-2 border-white/10 shadow-[0_0_100px_rgba(0,242,255,0.1)]">
+                <div class="w-full h-1/3 md:h-auto md:w-1/3 bg-[#020202] p-8 flex items-center justify-center border-b md:border-b-0 md:border-r border-white/10 relative shrink-0">
+                    <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20"></div>
+                    <div class="absolute top-6 left-6 text-[#00f2ff] font-bold tracking-widest uppercase text-[10px] cursor-pointer hover:text-white transition z-10 flex items-center gap-2" @click="detailCard=null"><i class="fa-solid fa-arrow-left"></i> Return</div>
+                    <img :src="detailCard.image.replace('small','large')" class="max-w-[80%] md:max-w-xs rounded-xl shadow-2xl relative z-10 transition duration-500 hover:scale-105 hover:shadow-[0_0_30px_rgba(0,242,255,0.3)]">
                 </div>
-                <div class="w-full md:w-2/3 flex flex-col bg-[#080a10] overflow-y-auto">
-                    <div class="p-6 md:p-10 border-b border-white/5 flex justify-between items-start bg-black/20 shrink-0">
+                
+                <div class="w-full md:w-2/3 flex flex-col bg-[#050508] overflow-y-auto relative">
+                    <div class="p-8 border-b border-white/5 flex justify-between items-start bg-black/40 shrink-0">
                         <div>
-                            <h2 class="text-2xl md:text-4xl font-brand font-bold text-white mb-2 tracking-wide">{{ detailCard.name }}</h2>
+                            <h2 class="text-3xl font-brand font-bold text-white mb-2 tracking-wide text-shadow-sm">{{ detailCard.name }}</h2>
                             <div class="flex items-center gap-4 text-xs text-gray-400 font-bold uppercase tracking-widest">
-                                <span class="bg-[#151515] px-3 py-1 rounded border border-[#333]">{{ detailCard.set }}</span>
+                                <span class="bg-[#151515] px-3 py-1 rounded border border-[#333] text-[#00f2ff]">{{ detailCard.set }}</span>
                                 <span>#{{ detailCard.number }}</span>
                             </div>
                         </div>
                         <div class="text-right">
                             <div class="text-[10px] text-gray-500 uppercase tracking-widest font-bold mb-1">Market Price</div>
-                            <div class="text-3xl md:text-5xl font-brand font-bold text-[#00f2ff]">${{ formatNumber(detailCard.market) }}</div>
+                            <div class="text-4xl font-mono font-bold text-[#00f2ff] text-shadow-md">${{ formatNumber(detailCard.market) }}</div>
                         </div>
                     </div>
-                    <div class="flex-1 p-6 md:p-10 relative overflow-y-auto">
-                        <h3 class="text-white font-brand font-bold text-lg mb-4">Historical Value (Mock)</h3>
-                        <div class="w-full h-48 md:h-64 border-l border-b border-[#333] relative opacity-50">
-                            <svg viewBox="0 0 100 50" class="w-full h-full overflow-visible">
-                                <path d="M0,40 Q20,10 40,30 T80,20 T100,5" fill="none" stroke="#00f2ff" stroke-width="0.5" class="chart-line" />
-                                <path d="M0,40 Q20,10 40,30 T80,20 T100,5 L100,50 L0,50 Z" fill="url(#grad)" opacity="0.2" />
+                    
+                    <div class="flex-1 p-8">
+                         <div class="w-full h-64 border border-white/5 rounded-xl bg-[#080a10] relative overflow-hidden flex items-center justify-center group">
+                             <div class="absolute inset-0 bg-gradient-to-t from-[#00f2ff]/5 to-transparent"></div>
+                             
+                             <svg viewBox="0 0 100 50" class="w-full h-full absolute bottom-0 left-0 p-4 opacity-50 group-hover:opacity-100 transition duration-500">
+                                <path d="M0,40 Q20,20 40,35 T80,20 T100,5" fill="none" stroke="#00f2ff" stroke-width="0.5" />
+                                <path d="M0,40 Q20,20 40,35 T80,20 T100,5 L100,50 L0,50 Z" fill="url(#grad)" opacity="0.2" />
                                 <defs><linearGradient id="grad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:#00f2ff;stop-opacity:1" /><stop offset="100%" style="stop-color:#00f2ff;stop-opacity:0" /></linearGradient></defs>
                             </svg>
-                        </div>
+                            <span class="relative z-10 text-xs font-bold uppercase tracking-[0.3em] text-gray-600">Price History (Coming Soon)</span>
+                         </div>
                     </div>
-                    <div class="p-6 md:p-10 bg-[#050505] border-t border-white/5 flex justify-between items-center shrink-0">
-                        <button @click="deleteCard(detailCard.uid); detailCard=null" class="text-red-500 hover:text-white text-[10px] font-bold uppercase tracking-widest flex items-center gap-3 transition">
-                            <i class="fa-solid fa-trash"></i> Remove Card
+                    
+                    <div class="p-6 bg-black/60 border-t border-white/5 flex justify-between items-center shrink-0">
+                        <button @click="deleteCard(detailCard.uid); detailCard=null" class="text-[#ff0055] hover:text-white hover:bg-[#ff0055] px-6 py-3 rounded-lg text-xs font-bold uppercase tracking-widest flex items-center gap-2 transition duration-300">
+                            <i class="fa-solid fa-trash"></i> Eliminate Asset
                         </button>
                     </div>
                 </div>
@@ -513,8 +587,8 @@
     };
 
     // --- POKÉMON TCG API KEY CONFIG ---
-    // PASTE YOUR KEY HERE:
-    const API_KEY = "7191ffb5-91d7-4fb7-bc30-94f1b854ee6e"; 
+    // Added .trim() to prevent copy-paste errors with hidden spaces
+    const API_KEY = "7191ffb5-91d7-4fb7-bc30-94f1b854ee6e".trim(); 
 
     let auth, db, provider;
     try {
@@ -534,6 +608,7 @@
                 showSearch: false, detailCard: null, 
                 setsLoading: false, 
                 setsError: false, 
+                setsErrorMessage: '', // Added for debugging
                 isSearching: false,
                 
                 allSets: [], eras: [], selectedEra: "", selectedSet: "", query: "", targetBinder: 'master', searchResults: [],
@@ -861,7 +936,8 @@
             },
             
             /**
-             * HIGH RELIABILITY SETS/ERAS FETCH with Retry and Caching
+             * UPDATED: SELF-HEALING SETS/ERAS FETCH
+             * This version attempts to recover from failures automatically.
              */
             async loadSetsAPI(attempt = 1) {
                 const MAX_ATTEMPTS = 3;
@@ -870,10 +946,7 @@
                 const cacheKeySets = this.cacheKey;
                 const cachedData = localStorage.getItem(cacheKeySets);
                 
-                // Headers object for all authenticated API requests
-                const headers = { 'X-Api-Key': API_KEY };
-
-                // 1. Try to load from cache
+                // 1. Try to load from cache first
                 if(cachedData) { 
                     try {
                         const data = JSON.parse(cachedData);
@@ -886,24 +959,26 @@
                             return; 
                         }
                     } catch (e) {
-                        console.warn("Error parsing cached sets. Attempting fresh fetch.", e);
+                        console.warn("Cache corrupt. Clearing and retrying.");
                         localStorage.removeItem(cacheKeySets); 
                     }
                 }
                 
-                // 2. Try fetching from API with retry logic
+                // 2. Fetch from API with Retry & Fallback
                 try {
-                    console.log(`Fetching set data from API. Attempt ${attempt}...`);
+                    // Headers: Try with key first, if fails we will retry without key in catch block
+                    let headers = { 'X-Api-Key': API_KEY };
+                    
+                    console.log(`Fetching set data (Attempt ${attempt})...`);
                     const res = await fetch('https://api.pokemontcg.io/v2/sets?select=id,name,series,releaseDate,printedTotal,total&orderBy=-releaseDate', { headers });
                     
                     if (!res.ok) {
                         if (attempt < MAX_ATTEMPTS) {
-                            const delay = 2000 * attempt;
-                            console.warn(`API error (${res.status}). Retrying in ${delay / 1000}s...`);
+                            const delay = 1000 * attempt;
                             await new Promise(resolve => setTimeout(resolve, delay));
                             return this.loadSetsAPI(attempt + 1);
                         }
-                        throw new Error(`API fetch failed with status: ${res.status}`);
+                        throw new Error(`API Status: ${res.status}`);
                     }
 
                     const data = await res.json();
@@ -917,27 +992,48 @@
                     this.eras = [...new Set(data.data.map(s => s.series))];
                     this.totalSetData = setSizeMap; 
                     
-                    // Cache the fresh, valid data
                     localStorage.setItem(cacheKeySets, JSON.stringify({
                         sets: this.allSets, 
                         eras: this.eras, 
                         totalSetData: this.totalSetData
                     }));
                     
-                    console.log("Sets successfully fetched and cached.");
+                    console.log("Sets successfully fetched.");
 
                 } catch(error) {
-                    console.error(`CRITICAL: Failed to synchronize set database after ${MAX_ATTEMPTS} attempts.`, error);
+                    console.error("Set fetch failed:", error);
+                    
+                    // FALLBACK: If we haven't tried without the key yet, try one last time with NO key.
+                    // This bypasses issues if the key is invalid or blocked.
+                    if (attempt === MAX_ATTEMPTS) {
+                         console.warn("Attempting Fallback: Fetching without API Key...");
+                         try {
+                            const fallbackRes = await fetch('https://api.pokemontcg.io/v2/sets?select=id,name,series,releaseDate,printedTotal,total&orderBy=-releaseDate');
+                            if(fallbackRes.ok) {
+                                const data = await fallbackRes.json();
+                                // ... process success ...
+                                const setSizeMap = {};
+                                data.data.forEach(s => { setSizeMap[s.name] = { total: s.total, printedTotal: s.printedTotal }; });
+                                this.allSets = data.data; 
+                                this.eras = [...new Set(data.data.map(s => s.series))];
+                                this.totalSetData = setSizeMap;
+                                this.setsLoading = false;
+                                return; // Success!
+                            }
+                         } catch(e) { console.error("Fallback failed"); }
+                    }
+
+                    // If we are here, everything failed.
                     this.setsError = true; 
+                    this.setsErrorMessage = error.message;
+                    // Nuke the cache just in case
+                    localStorage.removeItem(cacheKeySets);
                 } finally {
-                    this.setsLoading = false;
+                    if(!this.setsError) this.setsLoading = false;
                 }
             },
             
 
-            /**
-             * HIGH RELIABILITY CARD SEARCH FETCH (Strictly Manual)
-             */
             async fetchCards(page = 1) {
                 if(!this.selectedSet) {
                     alert("Please select a Series and a Set before searching.");
@@ -949,19 +1045,15 @@
                 this.isSearching = true; 
                 this.searchPage = page; 
 
-                // Headers object for all authenticated API requests
                 const headers = { 'X-Api-Key': API_KEY };
 
-                // 1. Construct API Query: Filter by set ID and name pattern
                 let q = `set.id:"${this.selectedSet}"`; 
                 
                 if(nameQuery) {
-                    // FIX: Use reliable name search syntax: name:*query*
                     const cleanedQuery = nameQuery.toLowerCase().replace(/"/g, '\\"');
                     q += ` name:*${cleanedQuery}*`; 
                 }
                 
-                // 2. Cache Key and Check (Session Storage - 30 min cache)
                 const cacheKey = `search_${encodeURIComponent(q).toLowerCase()}`; 
                 const now = Date.now();
                 
@@ -973,10 +1065,8 @@
                             this.searchResults = cache.results;
                             this.searchPage = page;
                             this.isSearching = false; 
-                            console.log("Card search results loaded from session cache.");
                             return;
                         } else {
-                            // Invalidate old cache aggressively
                             sessionStorage.removeItem(cacheKey); 
                         }
                     } catch (e) {
@@ -984,10 +1074,8 @@
                     }
                 }
 
-                // 3. API Fetch with proper URL Encoding
                 const orderByParam = 'number';
                 const encodedQuery = encodeURIComponent(q); 
-                // We fetch max 250 cards (API max) and then client-side paginate to 30.
                 const url = `https://api.pokemontcg.io/v2/cards?q=${encodedQuery}&pageSize=250&select=id,name,number,images,tcgplayer&orderBy=${orderByParam}`;
                 
                 try {
@@ -995,25 +1083,28 @@
                     const res = await fetch(url, { headers });
                     
                     if (!res.ok) {
-                        console.error(`Card search failed. Status: ${res.status}. Query: ${url}`); 
-                        alert(`Card search failed (Error: ${res.status}). Please try again.`);
-                        throw new Error(`API fetch failed with status: ${res.status}`);
+                        // Fallback: Try without key if key fails
+                        console.warn("Search failed with key, retrying without...");
+                        const fallbackRes = await fetch(url);
+                        if(!fallbackRes.ok) throw new Error(`Status: ${res.status}`);
+                        const data = await fallbackRes.json();
+                        this.searchResults = data.data || [];
+                    } else {
+                        const data = await res.json();
+                        this.searchResults = data.data || [];
                     }
-                    
-                    const data = await res.json();
-                    this.searchResults = data.data || [];
-                    this.searchPage = 1; // Always reset to page 1 on new search results
 
-                    // Cache results if successful
+                    this.searchPage = 1;
+
                     if (this.searchResults.length > 0) {
                         const cache = { timestamp: now, results: this.searchResults };
                         sessionStorage.setItem(cacheKey, JSON.stringify(cache));
-                        console.log("Card search results saved to session cache.");
                     }
 
                 } catch(e) { 
                     console.error("API Card Search Error:", e);
                     this.searchResults = []; 
+                    alert("Search failed. Please try again.");
                 } 
                 finally { 
                     this.isSearching = false; 
