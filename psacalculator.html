@@ -956,8 +956,7 @@
                 let q = `set.id:"${this.selectedSet}"`; 
                 
                 if(nameQuery) {
-                    // FINAL FIX: Use flexible name search syntax: name:*query*
-                    // This is the most reliable structure for name matching with the Pokemon TCG API.
+                    // FIX: Use the reliable name search syntax: name:*query*
                     const cleanedQuery = nameQuery.toLowerCase().replace(/"/g, '\\"');
                     q += ` name:*${cleanedQuery}*`; 
                 }
