@@ -512,8 +512,8 @@
         appId: "1:61051937804:web:535cbbcb5417c4bde67a29"
     };
 
-    // --- API KEY CONFIG ---
-    // PASTE YOUR KEY HERE:
+    // --- POKÉMON TCG API KEY CONFIG ---
+    // PASTE YOUR KEY HERE (7191ffb5-91d7-4fb7-bc30-94f1b854ee6e):
     const API_KEY = "7191ffb5-91d7-4fb7-bc30-94f1b854ee6e"; 
 
     let auth, db, provider;
@@ -537,7 +537,7 @@
                 isSearching: false,
                 
                 allSets: [], eras: [], selectedEra: "", selectedSet: "", query: "", targetBinder: 'master', searchResults: [],
-                cacheKey: 'gladiator_sets_v7_reliable', 
+                cacheKey: 'gladiator_sets_v9_final', // Updated cache key
                 
                 totalSetData: {}, 
                 
@@ -570,7 +570,6 @@
                 }
             },
             query(newQuery) {
-                // When the query is changed, clear previous search results instantly to give visual feedback
                 if (newQuery === '') {
                     this.searchResults = [];
                 }
@@ -957,8 +956,8 @@
                 let q = `set.id:"${this.selectedSet}"`; 
                 
                 if(nameQuery) {
-                    // FINAL FIX: Use the most robust and flexible syntax for name search: 
-                    // name:*query* is generally the best for partial matching (type-ahead style)
+                    // FINAL FIX: Use reliable name search syntax: name:QUERY*
+                    // The simplest structure that allows partial matching (type-ahead style)
                     const cleanedQuery = nameQuery.toLowerCase().replace(/"/g, '\\"');
                     q += ` name:*${cleanedQuery}*`; 
                 }
@@ -989,6 +988,7 @@
                 // 3. API Fetch with proper URL Encoding
                 const orderByParam = 'number';
                 const encodedQuery = encodeURIComponent(q); 
+                // We fetch max 250 cards (API max) and then client-side paginate to 30.
                 const url = `https://api.pokemontcg.io/v2/cards?q=${encodedQuery}&pageSize=250&select=id,name,number,images,tcgplayer&orderBy=${orderByParam}`;
                 
                 try {
