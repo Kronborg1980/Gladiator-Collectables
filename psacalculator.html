@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gladiator | Pro Ecosystem</title>
     <link rel="icon" type="image/webp" href="https://raw.githubusercontent.com/Kronborg1980/Gladiator-Collectables/main/logogla.webp">
     
@@ -31,7 +31,6 @@
                 radial-gradient(circle at 15% 50%, rgba(0, 242, 255, 0.05) 0%, transparent 25%),
                 radial-gradient(circle at 85% 30%, rgba(40, 100, 255, 0.08) 0%, transparent 25%);
             color: #fff; 
-            /* Ensure the body takes full viewport height and prevents main scrollbar */
             height: 100vh; 
             overflow: hidden; 
         }
@@ -132,30 +131,32 @@
             /* Main App Container */
             #app {
                 flex-direction: column;
-                height: 100%; /* Allow content to dictate size */
+                height: 100%; 
                 gap: 0;
             }
             
             /* Hide Desktop Sidebar and Footer on Mobile */
             .desktop-only { display: none !important; }
             
-            /* Fix the Top Header Position */
+            /* Main Content Scroll Area */
+            main {
+                /* Use padding to account for fixed header (5rem) and fixed bottom nav (4rem) */
+                padding-top: 5rem; 
+                padding-bottom: 4rem; 
+                height: 100%;
+                overflow-y: auto;
+            }
+            
+            /* Mobile Fixed Header */
             main header {
                 position: fixed;
                 top: 0;
                 left: 0;
                 right: 0;
                 border-radius: 0;
-                z-index: 40; /* Above main content */
-                background: rgba(10, 15, 25, 0.95); /* Ensure visibility */
-            }
-            
-            /* Make main content scrollable and position it below the fixed header */
-            main {
-                overflow-y: auto;
-                padding-top: 5rem; /* Space for the fixed header */
-                padding-bottom: 4rem; /* Space for the fixed bottom nav */
-                height: 100%;
+                border: none;
+                z-index: 40; 
+                background: rgba(10, 15, 25, 0.95);
             }
         }
     </style>
@@ -165,7 +166,7 @@
 <div id="app" v-cloak class="flex h-full w-full max-w-[1920px] mx-auto relative gap-2 md:gap-4">
 
     <aside class="fixed bottom-0 left-0 right-0 h-16 w-full glass-panel flex flex-row justify-around items-center z-50 
-                  desktop-only md:relative md:h-auto md:w-72 md:flex-col md:shrink-0 md:z-20 md:rounded-2xl md:p-0">
+                  md:relative md:h-auto md:w-72 md:flex-col md:shrink-0 md:z-20 md:rounded-2xl md:p-0">
         
         <div class="hidden md:flex p-8 flex-col items-center border-b border-white/5 w-full">
             <img src="https://raw.githubusercontent.com/Kronborg1980/Gladiator-Collectables/main/logogla.webp" class="w-12 h-12 object-contain mb-3 drop-shadow-[0_0_10px_rgba(0,242,255,0.4)]">
@@ -253,7 +254,7 @@
             </button>
         </header>
 
-        <div class="flex-1 flex flex-col overflow-y-auto pt-16 md:pt-0"> 
+        <div class="flex-1 flex flex-col overflow-y-auto pt-0"> 
         
             <div v-if="currentView === 'collection'" class="glass-panel p-4 md:p-8">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mb-8">
@@ -551,14 +552,13 @@
             displayCards() { 
                 let list = this.cards; 
                 
-                // FIX 1: Filter cards based on currentBinder ID for single_binder view
+                // Filter cards based on current view/binder
                 if (this.currentView === 'single_binder' && this.currentBinder) {
                     list = this.cards.filter(c => c.binderId === this.currentBinder.id);
                 } else if (this.currentView === 'calculator' && this.currentBinder) {
-                    // Filter for ROI calculator if a specific binder was selected before
                     list = this.cards.filter(c => c.binderId === this.currentBinder.id);
                 } else if (this.currentView === 'collection' && this.currentBinder) {
-                    // If we navigated back to collection, but currentBinder is set, clear it.
+                    // Reset currentBinder if navigating back to full collection
                     this.currentBinder = null;
                 }
                 
@@ -877,6 +877,7 @@
                         if (now - cache.timestamp < 1000 * 60 * 30) { // 30 minutes TTL
                             this.searchResults = cache.results;
                             this.searchPage = page;
+                            this.isSearching = false; // FIX: Reset searching state on cache hit
                             return;
                         } else {
                             sessionStorage.removeItem(cacheKey);
