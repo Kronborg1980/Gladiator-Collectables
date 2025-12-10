@@ -528,7 +528,7 @@
                 
                 // SEARCH PAGINATION
                 searchPage: 1, searchPerPage: 30, addedIds: [], selectedIds: [], searchSort: 'number',
-                totalCount: 0, // NEW: Stores the total count from the API metadata
+                totalCount: 0, // Stores the total count from the API metadata
                 
                 // Caching: 30 minutes TTL for search results
                 cacheTTL: 1000 * 60 * 30 
@@ -602,10 +602,9 @@
                 return grouped;
             },
             
-            // NEW: Calculates total pages from API metadata
+            // Calculates total pages from API metadata
             totalSearchPagesFromAPI() {
                 if (this.totalCount === 0) return 1;
-                // Total pages is Math.ceil(totalCount / pageSize)
                 return Math.ceil(this.totalCount / this.searchPerPage);
             },
 
@@ -615,7 +614,6 @@
                 if(this.query) { list = list.filter(c => c.name.toLowerCase().includes(this.query.toLowerCase())); }
                 
                 list.sort((a, b) => {
-                    // Use the robust price check function
                     const priceA = this.getCardPrice(a);
                     const priceB = this.getCardPrice(b);
 
@@ -752,6 +750,7 @@
             getBinderCount(id) { return this.cards.filter(c => c.binderId === id).length; },
             openSearch() { 
                 this.showSearch = true; this.searchResults = []; this.searchPage = 1; this.query = '';
+                this.totalCount = 0; // Reset total count when opening search
                 // Smart select: if inside a binder, default add to that binder
                 if(this.currentView === 'single_binder' && this.currentBinder) this.targetBinder = this.currentBinder.id;
                 else this.targetBinder = 'master';
@@ -760,21 +759,18 @@
             formatNumber(n) { return (n||0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}); },
             
             getCardPrice(c) { 
-                // Checks for multiple common price fields and returns the highest one found, or 0
                 const prices = c.tcgplayer?.prices;
                 if (!prices) return 0;
                 
-                // Get all market prices from various potential rarity/foil fields
                 const marketPrices = [
                     prices.holofoil?.market,
                     prices.reverseHolofoil?.market,
                     prices.normal?.market,
                     prices['1stEditionHolofoil']?.market,
                     prices['unlimitedHolofoil']?.market,
-                    prices.market // General market price if available
+                    prices.market 
                 ].filter(p => p > 0); 
 
-                // Return the highest price found, or 0 if none are available
                 return marketPrices.length > 0 ? Math.max(...marketPrices) : 0;
             },
             
@@ -819,8 +815,12 @@
 
                 // 1. Prepare Query and Cache Key
                 let nameQuery = this.query ? this.query.trim().toLowerCase() : '';
+                
+                // FIX: Construct q based on whether the name query is provided.
                 let q = `set.id:${this.selectedSet}`; 
-                if(nameQuery) q += ` name:"${nameQuery}*"`;
+                if(nameQuery) {
+                    q += ` name:"${nameQuery}*"`;
+                }
                 
                 const cacheKey = `search_${this.selectedSet}_${nameQuery}_${page}`;
                 const now = Date.now();
@@ -830,26 +830,24 @@
                 if (cachedData) {
                     try {
                         const cache = JSON.parse(cachedData);
-                        // Check if the cache is still valid (less than 30 minutes old)
                         if (now - cache.timestamp < this.cacheTTL) {
                             console.log(`[Cache] Hit for ${cacheKey}. Using cached data.`);
                             this.searchResults = cache.results;
-                            this.totalCount = cache.totalCount; // Load total count from cache
+                            this.totalCount = cache.totalCount; 
                             this.isSearching = false;
                             return;
                         } else {
                             console.log(`[Cache] Expired for ${cacheKey}. Re-fetching.`);
-                            sessionStorage.removeItem(cacheKey); // Clear expired cache
+                            sessionStorage.removeItem(cacheKey);
                         }
                     } catch (e) {
                         console.error("Error parsing cached data:", e);
-                        sessionStorage.removeItem(cacheKey); // Clear corrupted cache
+                        sessionStorage.removeItem(cacheKey);
                     }
                 }
 
                 // 3. Fetch from API
                 try {
-                    // API request includes page and pageSize
                     const res = await fetch(`https://api.pokemontcg.io/v2/cards?q=${q}&pageSize=${this.searchPerPage}&page=${page}&select=id,name,number,images,tcgplayer`);
                     
                     if (!res.ok) {
@@ -859,14 +857,14 @@
                     const data = await res.json();
                     this.searchResults = data.data || [];
                     
-                    // NEW: Update totalCount from API metadata
+                    // Update totalCount from API metadata
                     this.totalCount = data.totalCount || 0; 
                     
                     // 4. Cache Result
                     const cache = {
                         timestamp: now,
                         results: this.searchResults,
-                        totalCount: this.totalCount // Store total count in cache
+                        totalCount: this.totalCount
                     };
                     sessionStorage.setItem(cacheKey, JSON.stringify(cache));
                     console.log(`[Cache] Stored new results for ${cacheKey}.`);
@@ -874,7 +872,7 @@
                 } catch(e) { 
                     console.error("API Fetch Error:", e);
                     this.searchResults = []; 
-                    this.totalCount = 0; // Reset count on failure
+                    this.totalCount = 0;
                 } 
                 finally { 
                     this.isSearching = false; 
