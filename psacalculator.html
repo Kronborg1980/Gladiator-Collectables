@@ -492,6 +492,9 @@
     } catch(e) { console.log("Guest Mode Active"); }
 
     const { createApp } = Vue;
+    
+    // ABORT CONTROLLER for canceling old requests
+    let searchController = null;
 
     createApp({
         data() {
@@ -508,8 +511,12 @@
                 sortBy: 'profit', sortDesc: true, currentPage: 1, itemsPerPage: 30, 
                 
                 // SEARCH PAGINATION
-                searchPage: 1, searchPerPage: 30, addedIds: [], selectedIds: [], searchSort: 'number',
+                searchPage: 1, searchPerPage: 18, // REDUCED TO 18
+                addedIds: [], selectedIds: [], searchSort: 'number',
                 totalSearchPagesCount: 1, // Track total pages from API
+
+                // SMART CACHING
+                searchCache: {}, // Stores results: 'query_sort_page' -> { data, total }
 
                 // MOBILE NAV
                 showMobileNav: false,
@@ -526,6 +533,7 @@
                     this.searchResults = [];
                     this.searchPage = 1;
                     this.query = "";
+                    this.searchCache = {}; // Clear cache on era change
                 }
             },
             selectedSet(newSet, oldSet) {
@@ -533,7 +541,12 @@
                     this.searchResults = []; 
                     this.searchPage = 1;
                     this.query = "";
+                    this.searchCache = {}; // Clear cache on set change
                 }
+            },
+            // AUTO-SORT: Trigger search when sort changes
+            searchSort() {
+                this.fetchCards(1); 
             }
         },
         mounted() {
@@ -829,17 +842,35 @@
                 }
             },
             
-            // --- SEARCH API: SERVER-SIDE PAGINATION ---
+            // --- SEARCH API: SERVER-SIDE PAGINATION + ABORT + CACHING ---
             async fetchCards(page = 1) {
                 if(!this.selectedSet) return;
-                if(this.isSearching) return; // Prevent double taps
                 
+                let nameQuery = this.query ? this.query.trim().toLowerCase() : '';
+
+                // CACHE CHECK: Do we already have this exact query+page in memory?
+                // Unique key includes: Set ID, Query Name, Sort Order, Page Number
+                const cacheKey = `search_${this.selectedSet}_${nameQuery}_${this.searchSort}_${page}`;
+                
+                if (this.searchCache[cacheKey]) {
+                    console.log("Serving from Cache:", cacheKey);
+                    this.searchResults = this.searchCache[cacheKey].data;
+                    this.totalSearchPagesCount = this.searchCache[cacheKey].total;
+                    this.searchPage = page;
+                    this.isSearching = false;
+                    return; // EXIT EARLY - NO NETWORK REQUEST
+                }
+
+                // ABORT PREVIOUS REQUEST
+                if (searchController) searchController.abort();
+                searchController = new AbortController();
+                const signal = searchController.signal;
+
                 this.isSearching = true; 
                 this.searchPage = page; 
 
                 const apiKey = '6aa37587-f78b-4bc9-a3ce-3b9eeb6bf149'; 
                 
-                let nameQuery = this.query ? this.query.trim().toLowerCase() : '';
                 let q = `set.id:${this.selectedSet}`; 
                 if(nameQuery) q += ` name:"${nameQuery}*"`; 
                 
@@ -850,30 +881,41 @@
                 if (this.searchSort === 'price-asc') orderBy = 'tcgplayer.prices.holofoil.market';
 
                 try {
-                    // SERVER-SIDE PAGINATION: Only fetch 30 items
-                    const url = `https://api.pokemontcg.io/v2/cards?q=${q}&page=${page}&pageSize=30&select=id,name,number,images,tcgplayer&orderBy=${orderBy}`;
+                    console.log(`Fetching Page ${page} (18 items)...`);
+                    // SERVER-SIDE PAGINATION: Only fetch 18 items (3 rows of 6 or 6 rows of 3)
+                    const url = `https://api.pokemontcg.io/v2/cards?q=${q}&page=${page}&pageSize=18&select=id,name,number,images,tcgplayer&orderBy=${orderBy}`;
                     
                     const res = await fetch(url, {
-                        headers: { 'X-Api-Key': apiKey }
+                        headers: { 'X-Api-Key': apiKey },
+                        signal: signal
                     });
                     
                     if (!res.ok) throw new Error(`Search Error: ${res.status}`);
                     
                     const data = await res.json();
                     
-                    // We only get 30 cards, so we just set them directly
-                    this.searchResults = data.data || [];
+                    // CACHE SAVE: Store the result for next time
+                    this.searchCache[cacheKey] = {
+                        data: data.data || [],
+                        total: Math.ceil((data.totalCount || 0) / 18)
+                    };
+
+                    this.searchResults = this.searchCache[cacheKey].data;
+                    this.totalSearchPagesCount = this.searchCache[cacheKey].total;
                     
-                    // The API tells us how many total cards there are, we calculate total pages
-                    const totalCount = data.totalCount || 0;
-                    this.totalSearchPagesCount = Math.ceil(totalCount / 30);
+                    console.log(`Success: Loaded ${this.searchResults.length} items.`);
 
                 } catch(e) { 
+                    if (e.name === 'AbortError') {
+                        console.log("Search aborted for new query.");
+                        return; // Silent return
+                    }
                     console.error("Search Failed:", e);
                     this.searchResults = []; 
-                    alert("Search failed. Try again.");
+                    alert("Connection unstable. Please try again.");
                 } finally { 
-                    this.isSearching = false; 
+                    // Only turn off loading if this wasn't an aborted request
+                    if (!signal.aborted) this.isSearching = false; 
                 }
             }
         }
