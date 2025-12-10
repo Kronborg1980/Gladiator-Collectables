@@ -127,7 +127,7 @@
     <div class="fixed inset-0 z-40 bg-black/80 backdrop-blur-sm transition-opacity duration-300 md:hidden" v-if="mobileMenuOpen" @click="mobileMenuOpen = false"></div>
     
     <aside class="fixed inset-y-0 left-0 w-72 glass-panel flex flex-col z-50 transform transition-transform duration-300 md:translate-x-0 md:relative md:flex shrink-0 rounded-r-2xl md:rounded-2xl border-r md:border border-white/10 bg-[#050508]" 
-            :class="mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'">
+           :class="mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'">
         
         <div class="p-8 flex flex-col items-center border-b border-white/5 relative">
             <button @click="mobileMenuOpen = false" class="md:hidden absolute top-4 right-4 text-gray-500"><i class="fa-solid fa-xmark text-xl"></i></button>
@@ -210,7 +210,7 @@
                         <h3 class="text-white font-bold text-lg font-brand uppercase tracking-widest truncate">{{ setName }}</h3>
                         <div class="flex items-center gap-4 w-full md:w-auto">
                             <span class="text-[10px] text-[#00f2ff] font-bold bg-[#00f2ff]/10 px-2 py-0.5 rounded border border-[#00f2ff]/30 shrink-0">
-                                {{ setCards.length }} / {{ getSetTotal(setName) }} Collected
+                                {{ setCards.length }} / {{ getSetTotal(setName) }}
                             </span>
                             <div class="h-1 bg-white/10 rounded w-full md:w-32 relative overflow-hidden">
                                 <div class="absolute top-0 left-0 h-full bg-[#00f2ff]" :style="{width: (setCards.length / getSetTotal(setName) * 100) + '%'}"></div>
@@ -330,8 +330,8 @@
 
         <div v-else-if="currentView === 'binders'" class="flex-1 glass-panel overflow-y-auto p-4 md:p-8 md:rounded-2xl">
              <div class="flex justify-between items-center mb-6">
-                <h2 class="text-lg md:text-xl font-brand font-bold text-white">My Collections</h2>
-                <button @click="createBinder" class="bg-[#00f2ff] hover:bg-white text-black text-xs font-bold px-4 py-2 rounded shadow transition">New Binder</button>
+                 <h2 class="text-lg md:text-xl font-brand font-bold text-white">My Collections</h2>
+                 <button @click="createBinder" class="bg-[#00f2ff] hover:bg-white text-black text-xs font-bold px-4 py-2 rounded shadow transition">New Binder</button>
              </div>
              
              <div class="grid grid-cols-2 md:grid-cols-5 gap-4 md:gap-6">
@@ -345,7 +345,7 @@
                     <i class="fa-regular fa-folder-open text-4xl text-gray-600 group-hover:text-white mb-auto mt-4 transition"></i>
                     <div><div class="font-bold text-white text-sm md:text-lg truncate font-brand tracking-wide">{{ b.name }}</div><div class="text-[9px] md:text-[10px] text-gray-500 font-bold uppercase tracking-wider">{{ getBinderCount(b.id) }} Cards</div></div>
                 </div>
-             </div>
+            </div>
         </div>
     </main>
 
@@ -478,7 +478,7 @@
                 localBinders: [], localCards: [], cloudBinders: [], cloudCards: [],
                 showSearch: false, detailCard: null, setsLoading: false, isSearching: false,
                 allSets: [], eras: [], selectedEra: "", selectedSet: "", query: "", targetBinder: 'master', searchResults: [],
-                cacheKey: 'gladiator_sets_v7', // <<< CHANGED KEY TO FORCE REFRESH AFTER API UPDATE
+                cacheKey: 'gladiator_sets_v6',
                 collectionFilter: '',
                 
                 // MAIN PAGINATION
@@ -593,13 +593,10 @@
                 const b = this.binders.find(x => x.id === id);
                 return b ? b.name : 'Unknown';
             },
-            // --- UPDATED METHOD ---
             getSetTotal(setName) {
                 const s = this.allSets.find(x => x.name === setName);
-                // Prioritize 'total' (Master Set size), otherwise use 'printedTotal', otherwise '?'
-                return s ? (s.total || s.printedTotal) : '?';
+                return s ? s.printedTotal : '?';
             },
-            // ------------------------
 
             toggleSelectAll() {
                 if (this.isAllSelected) this.selectedIds = [];
@@ -700,7 +697,6 @@
             formatNumber(n) { return (n||0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}); },
             getCardPrice(c) { return c.tcgplayer?.prices?.holofoil?.market || c.tcgplayer?.prices?.normal?.market || 0; },
             
-            // --- UPDATED METHOD ---
             async loadSetsAPI() {
                 this.setsLoading = true;
                 const c = localStorage.getItem(this.cacheKey);
@@ -709,17 +705,12 @@
                     this.setsLoading = false;
                     return; 
                 }
-                
-                // Fetching the 'total' field as well to get the Master Set size
-                const res = await fetch('https://api.pokemontcg.io/v2/sets?select=id,name,series,releaseDate,printedTotal,total&orderBy=-releaseDate');
+                const res = await fetch('https://api.pokemontcg.io/v2/sets?select=id,name,series,releaseDate,printedTotal&orderBy=-releaseDate');
                 const data = await res.json();
-                this.allSets = data.data; 
-                this.eras = [...new Set(data.data.map(s => s.series))];
-                
+                this.allSets = data.data; this.eras = [...new Set(data.data.map(s => s.series))];
                 localStorage.setItem(this.cacheKey, JSON.stringify({sets: this.allSets, eras: this.eras}));
                 this.setsLoading = false;
             },
-            // ------------------------
             
             async fetchCards(page = 1) {
                 if(!this.selectedSet) return;
