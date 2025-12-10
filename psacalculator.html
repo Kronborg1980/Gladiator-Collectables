@@ -514,7 +514,7 @@
 
     const { createApp } = Vue;
     
-    // --- DEBOUNCE UTILITY FUNCTION (NO LONGER USED, KEPT FOR REFERENCE) ---
+    // --- DEBOUNCE UTILITY FUNCTION (NO LONGER USED) ---
     function debounce(fn, delay = 500) {
         let timeout;
         return function(...args) {
@@ -551,8 +551,6 @@
 
                 showMobileNav: false,
                 isDesktop: true,
-                
-                // REMOVED: debouncedSearch: debounce(this.autoFetchCards, 500)
             }
         },
         watch: {
@@ -564,18 +562,15 @@
                     this.query = "";
                 }
             },
-            // REMOVED: Auto-search from selectedSet watcher
             selectedSet(newSet, oldSet) {
                 if (newSet !== oldSet) {
                     this.searchResults = []; 
                     this.searchPage = 1;
-                    // Reset query display but DO NOT start search
                     this.query = "";
                 }
             },
-            // REMOVED: Auto-search from query watcher
             query(newQuery) {
-                // If the user clears the search box, clear results immediately for better UX
+                // When the query is changed, clear previous search results instantly to give visual feedback
                 if (newQuery === '') {
                     this.searchResults = [];
                 }
@@ -937,7 +932,6 @@
                 }
             },
             
-            // REMOVED: autoFetchCards()
 
             /**
              * HIGH RELIABILITY CARD SEARCH FETCH with URL Encoding and Session Caching
@@ -957,9 +951,10 @@
                 let q = `set.id:"${this.selectedSet}"`; 
                 
                 if(nameQuery) {
-                    // FIX: Simplified query for reliable wildcard match. Encodes quotes within the query.
-                    const cleanedQuery = nameQuery.replace(/"/g, '\\"');
-                    q += ` name:"${cleanedQuery}*"`; 
+                    // FINAL FIX: Simplified query structure to use "text search" (omitting the field name)
+                    // and relying on the basic wild card. This is often the most reliable for name matching.
+                    // The API documentation suggests you can pass a simple string for name matching.
+                    q += ` ${nameQuery}*`; 
                 }
                 
                 // 2. Cache Key and Check (Session Storage - 30 min cache)
@@ -986,7 +981,6 @@
 
                 // 3. API Fetch with proper URL Encoding
                 const orderByParam = 'number';
-                // NOTE: We fetch max 250 cards (API max) and then client-side paginate to 30.
                 const encodedQuery = encodeURIComponent(q); 
                 const url = `https://api.pokemontcg.io/v2/cards?q=${encodedQuery}&pageSize=250&select=id,name,number,images,tcgplayer&orderBy=${orderByParam}`;
                 
