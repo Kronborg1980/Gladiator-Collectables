@@ -490,6 +490,9 @@
             const itemsPerPage = 30;
             const searchPage = ref(1);
             const searchPerPage = 30;
+            // FIX: Added ref() for sorting variables
+            const sortBy = ref('profit');
+            const sortDesc = ref(true);
 
 
             // --- COMPUTED PROPERTIES ---
@@ -521,7 +524,7 @@
                 let list = [...displayCards.value];
                 return list.sort((a, b) => {
                     let valA, valB;
-                    // Simplified sorting logic...
+                    // Note: sortBy and sortDesc are accessed from the ref()s defined in setup()
                     if(sortBy.value === 'name') { valA = a.name.toLowerCase(); valB = b.name.toLowerCase(); } 
                     else if(sortBy.value === 'rawCost') { valA = a.rawCost || 0; valB = b.rawCost || 0; } 
                     else if(sortBy.value === 'market') { valA = getEstValue(a); valB = getEstValue(b); } 
@@ -826,7 +829,7 @@
 
             const updateCardBinder = (card) => {
                 const binderUpdate = { binderId: card.binderId === undefined ? null : card.binderId };
-                if(user.value) db.collection('users').doc(user.value.uid).collection('cards').doc(card.uid).update(binderUpdate);
+                if(user.value) db.collection('users').doc(user.value.uid).collection('cards').doc(uid).update(binderUpdate);
                 else saveData();
             };
             
@@ -863,7 +866,9 @@
                 // UI & Computed
                 isDesktop, showMobileNav, currentPage, itemsPerPage, searchPage, searchPerPage,
                 headerTitle, totalValue, displayCards, totalPages, paginatedCards, cardsBySet, 
-                isAllSelected, totalSearchPages, paginatedSearchResults, sortBy, sortDesc,
+                isAllSelected, totalSearchPages, paginatedSearchResults, 
+                // FIX: Exposed ref() variables so they can be accessed in the template
+                sortBy, sortDesc, 
                 
                 // Methods
                 formatNumber, checkIsDesktop, loginWithGoogle, logout,
