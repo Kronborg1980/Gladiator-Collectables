@@ -513,7 +513,7 @@
     };
 
     // --- POKÉMON TCG API KEY CONFIG ---
-    // PASTE YOUR KEY HERE (7191ffb5-91d7-4fb7-bc30-94f1b854ee6e):
+    // PASTE YOUR KEY HERE:
     const API_KEY = "7191ffb5-91d7-4fb7-bc30-94f1b854ee6e"; 
 
     let auth, db, provider;
@@ -537,7 +537,7 @@
                 isSearching: false,
                 
                 allSets: [], eras: [], selectedEra: "", selectedSet: "", query: "", targetBinder: 'master', searchResults: [],
-                cacheKey: 'gladiator_sets_v9_final', // Updated cache key
+                cacheKey: 'gladiator_sets_v9_final', 
                 
                 totalSetData: {}, 
                 
@@ -956,14 +956,15 @@
                 let q = `set.id:"${this.selectedSet}"`; 
                 
                 if(nameQuery) {
-                    // FINAL FIX: Use reliable name search syntax: name:QUERY*
-                    // The simplest structure that allows partial matching (type-ahead style)
+                    // FINAL FIX: Use flexible name search syntax: name:*query*
+                    // This is the most reliable structure for name matching with the Pokemon TCG API.
                     const cleanedQuery = nameQuery.toLowerCase().replace(/"/g, '\\"');
                     q += ` name:*${cleanedQuery}*`; 
                 }
                 
                 // 2. Cache Key and Check (Session Storage - 30 min cache)
-                const cacheKey = `search_${this.selectedSet}_${nameQuery.toLowerCase()}`; 
+                // Use the full query string (q) for a unique cache key
+                const cacheKey = `search_${encodeURIComponent(q).toLowerCase()}`; 
                 const now = Date.now();
                 
                 const cachedData = sessionStorage.getItem(cacheKey);
