@@ -425,7 +425,7 @@
 
                     <div v-if="!isSearching && searchResults.length === 0 && !query" class="h-full flex flex-col items-center justify-center opacity-30">
                         <i class="fa-solid fa-magnifying-glass text-6xl mb-4 text-white"></i>
-                        <p class="uppercase font-bold tracking-widest text-xs">Ready to Search</p>
+                        <p class="uppercase font-bold tracking-widest text-xs">Select a Set to Begin</p>
                     </div>
                     <div v-else-if="!isSearching && searchResults.length === 0 && query" class="h-full flex flex-col items-center justify-center opacity-30">
                         <i class="fa-solid fa-magnifying-glass-minus text-6xl mb-4 text-red-500"></i>
@@ -514,7 +514,7 @@
 
     const { createApp } = Vue;
     
-    // --- DEBOUNCE UTILITY FUNCTION (Implemented globally for use in setup) ---
+    // --- DEBOUNCE UTILITY FUNCTION ---
     function debounce(fn, delay = 500) {
         let timeout;
         return function(...args) {
@@ -568,12 +568,16 @@
                     this.searchResults = []; 
                     this.searchPage = 1;
                     this.query = "";
+                    // NEW: Auto-load full set when a set is selected
+                    if (newSet) { // Only search if a set is actually selected (not setting to empty)
+                       this.fetchCards(1, true);
+                    }
                 }
             },
-            // Trigger an auto-search immediately when a set is selected or search query is cleared.
             query(newQuery) {
                 if (newQuery === '' && this.selectedSet) {
-                    this.fetchCards(1, true); // Run a full search immediately when clearing query
+                    // NEW: Run a full set search immediately when query is cleared
+                    this.fetchCards(1, true);
                 }
             }
         },
@@ -678,9 +682,6 @@
             // --- SEARCH SORT & PAGINATION (CLIENT-SIDE) ---
             filteredSearchList() {
                 let list = [...this.searchResults];
-                
-                // Name filtering is mostly done by the API fetch, but we keep this for local filtering if needed.
-                // if(this.query) { list = list.filter(c => c.name.toLowerCase().includes(this.query.toLowerCase())); }
                 
                 list.sort((a, b) => {
                     const priceA = this.getCardPrice(a);
@@ -936,10 +937,12 @@
                 }
             },
             
-            // NEW: Method called by debounce
+            // MODIFIED: Method called by debounce
             autoFetchCards() {
-                // Only run automatic search if query has 3 or more characters
-                if (this.query.length >= 3) {
+                // Run automatic search if:
+                // 1. The query is empty (load full set)
+                // 2. The query has 3 or more characters (type-ahead)
+                if (this.query.length === 0 || this.query.length >= 3) {
                     this.fetchCards(1, true);
                 }
             },
@@ -952,20 +955,18 @@
                 
                 let nameQuery = this.query ? this.query.trim() : '';
                 
-                // Only allow search if the query is long enough or if the 'Search' button was pressed (forceSearch)
+                // Block search if not explicitly forced, and the query is too short
                 if (!forceSearch && nameQuery.length > 0 && nameQuery.length < 3) return;
 
                 this.isSearching = true; 
                 this.searchPage = page; 
 
                 // 1. Construct API Query: Filter by set ID and name pattern
-                let q = `set.id:"${this.selectedSet}"`; // Use quotes around set ID for safety
+                let q = `set.id:"${this.selectedSet}"`; 
                 
                 if(nameQuery) {
-                    // CRITICAL FIX: Use 'name:charizard*' pattern for wildcard text search
-                    // The API doesn't always handle quoted strings within the query parameter well for wildcards.
-                    // By not quoting the whole query string and using the specific Lucene syntax, it improves reliability.
-                    q += ` name:"${nameQuery}*"`; 
+                    // FIX: Use the specific Lucene syntax for wildcard search, ensuring proper quotes and handling of name
+                    q += ` name:"${nameQuery.replace(/"/g, '\\"')}"*`; 
                 }
                 
                 // 2. Cache Key and Check (Session Storage - 30 min cache)
@@ -992,6 +993,7 @@
 
                 // 3. API Fetch with proper URL Encoding
                 const orderByParam = 'number';
+                // NOTE: The full query string 'q' including quotes needs to be encoded.
                 const encodedQuery = encodeURIComponent(q); 
                 const url = `https://api.pokemontcg.io/v2/cards?q=${encodedQuery}&pageSize=250&select=id,name,number,images,tcgplayer&orderBy=${orderByParam}`;
                 
@@ -1000,7 +1002,9 @@
                     
                     if (!res.ok) {
                         console.error(`Card search failed. Status: ${res.status}. Query: ${url}`); 
-                        // Alert is removed to keep auto-search quiet, manual search button now triggers full alert
+                        if (forceSearch && nameQuery.length > 0) {
+                             alert(`Card search failed (Error: ${res.status}). Please try again.`);
+                        }
                         throw new Error(`API fetch failed with status: ${res.status}`);
                     }
                     
