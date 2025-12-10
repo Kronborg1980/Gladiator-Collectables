@@ -193,7 +193,6 @@
                         <i @click.stop="deleteBinder(binder.id)" class="fa-solid fa-trash text-[10px] opacity-0 group-hover:opacity-100 hover:text-red-500 transition px-2"></i>
                     </button>
                 </div>
-                
             </div>
 
             <div class="p-6 border-t border-white/5 bg-black/20 shrink-0">
@@ -255,7 +254,6 @@
                         <span class="text-[10px] text-[#00f2ff] font-bold bg-[#00f2ff]/10 px-2 py-0.5 rounded border border-[#00f2ff]/30 shrink-0">
                              {{ setGroup.uniqueCount }} / {{ getSetTotal(setName) }} Unique Collected
                         </span>
-                        
                     </div>
                     <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-6 gap-4 md:gap-6">
                         <div v-for="card in setGroup.cards" :key="card.uid" class="bg-[#0a0f18] p-3 rounded-xl hover:border-[#00f2ff] border border-white/5 group relative transition duration-200">
@@ -360,7 +358,7 @@
                 
                 <div v-if="!setsLoading && allSets.length === 0" class="ml-4 flex items-center gap-2">
                     <span class="text-xs text-red-500 font-bold uppercase">OFFLINE</span>
-                    <button @click="loadSetsAPI(true)" class="text-[10px] bg-white/10 hover:bg-white/20 px-2 py-1 rounded text-white">Retry</button>
+                    <button @click="loadSetsAPI(true)" class="text-[10px] bg-white/10 hover:bg-white/20 px-2 py-1 rounded text-white border border-white/10">Retry Connection</button>
                 </div>
                 
                 <button @click="showSearch=false" class="text-gray-500 hover:text-white transition"><i class="fa-solid fa-xmark text-xl"></i></button>
@@ -620,7 +618,7 @@
             },
             filteredSearchList() {
                 let list = [...this.searchResults];
-                // Local filter removal since API handles search, but good backup
+                // Note: Query filtering is now mostly handled by API, but this keeps local snappy
                 if(this.query) { list = list.filter(c => c.name.toLowerCase().includes(this.query.toLowerCase())); }
                 
                 list.sort((a, b) => {
