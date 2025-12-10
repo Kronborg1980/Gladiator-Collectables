@@ -73,7 +73,7 @@
             gap: 16px;
         }
         
-        .sortable { cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 4px; }
+        .sortable { cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 4px; }
         .sortable:hover { color: var(--accent); }
         .sortable.active { color: var(--accent); text-shadow: 0 0 10px rgba(0, 242, 255, 0.3); }
 
@@ -81,7 +81,7 @@
         .table-input {
             background: transparent; border-bottom: 1px solid rgba(255,255,255,0.15);
             color: #fff; text-align: right; width: 100%; outline: none; font-family: 'Inter', sans-serif; font-size: 12px;
-            transition: 0.2s; padding-bottom: 2px;
+            transition: all 0.2s; padding-bottom: 2px;
         }
         .table-input:focus { border-bottom-color: var(--accent); color: var(--accent); }
 
@@ -89,7 +89,7 @@
         .table-select {
             background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1);
             color: #aaa; border-radius: 6px; padding: 4px 8px; font-size: 10px; width: 100%;
-            outline: none; cursor: pointer; transition: 0.2s; text-transform: uppercase; font-weight: bold;
+            outline: none; cursor: pointer; transition: all 0.2s; text-transform: uppercase; font-weight: bold;
         }
         .table-select:focus { border-color: var(--accent); color: var(--accent); }
 
@@ -106,7 +106,7 @@
         .nav-btn:hover { background: rgba(255,255,255,0.05); color: white; }
         .nav-btn.active { background: linear-gradient(90deg, var(--accent-dim) 0%, transparent 100%); border-left-color: var(--accent); color: var(--accent); }
 
-        .glass-input { background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 12px; width: 100%; border-radius: 8px; font-size: 12px; transition: 0.2s; }
+        .glass-input { background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); color: white; padding: 12px; width: 100%; border-radius: 8px; font-size: 12px; transition: all 0.2s; }
         .glass-input:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 10px rgba(0, 242, 255, 0.2); }
         .glass-input:disabled { opacity: 0.5; cursor: not-allowed; }
         
@@ -125,7 +125,7 @@
 
         /* --- MOBILE LAYOUT ADJUSTMENTS --- */
         @media (max-width: 767px) {
-            body { padding: 0; } /* Remove body padding */
+            body { padding: 0; }
             .glass-panel { border-radius: 0; }
             
             /* Main App Container */
@@ -140,12 +140,11 @@
             
             /* Main Content Scroll Area */
             main {
-                /* Use padding to account for fixed header (5rem) and fixed bottom nav (4rem) */
                 padding-top: 5rem; 
                 padding-bottom: 4rem; 
                 height: 100%;
                 overflow-y: auto;
-                width: 100%; /* Ensure full width on mobile */
+                width: 100%; 
             }
             
             /* Mobile Fixed Header */
@@ -161,14 +160,14 @@
             }
         }
         
-        /* DESKTOP SIDEBAR FIX */
+        /* DESKTOP SIDEBAR RESTORATION */
         @media (min-width: 768px) {
             /* 1. Ensure ASIDE has fixed width and sticks to the left */
             aside {
                 position: fixed;
-                top: 8px; /* Offset for desktop padding */
-                bottom: 8px; /* Offset for desktop padding */
-                left: 8px; /* Offset for desktop padding */
+                top: 8px; 
+                bottom: 8px; 
+                left: 8px; 
                 width: 18rem; /* w-72 */
                 flex-direction: column;
                 display: flex;
@@ -179,7 +178,14 @@
             }
             /* 3. Ensure MAIN content wrapper uses relative height/overflow */
             main .flex-1 {
-                overflow-y: hidden; /* Main vertical scrolling is handled by the wrapper divs */
+                overflow-y: hidden; 
+            }
+            /* Restore desktop specific header margins */
+            main header {
+                padding-left: 2rem; /* px-8 */
+                padding-right: 2rem; /* px-8 */
+                padding-top: 1.25rem; /* py-5 */
+                padding-bottom: 1.25rem; /* py-5 */
             }
         }
     </style>
