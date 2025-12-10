@@ -145,6 +145,7 @@
                 padding-bottom: 4rem; 
                 height: 100%;
                 overflow-y: auto;
+                width: 100%; /* Ensure full width on mobile */
             }
             
             /* Mobile Fixed Header */
@@ -162,8 +163,24 @@
         
         /* DESKTOP SIDEBAR FIX */
         @media (min-width: 768px) {
-            /* This ensures the sidebar container exists on desktop */
-            .md\:w-72 { width: 18rem; } 
+            /* 1. Ensure ASIDE has fixed width and sticks to the left */
+            aside {
+                position: fixed;
+                top: 8px; /* Offset for desktop padding */
+                bottom: 8px; /* Offset for desktop padding */
+                left: 8px; /* Offset for desktop padding */
+                width: 18rem; /* w-72 */
+                flex-direction: column;
+                display: flex;
+            }
+            /* 2. Ensure MAIN content starts after the sidebar width */
+            main {
+                margin-left: 18rem; /* ml-72 */
+            }
+            /* 3. Ensure MAIN content wrapper uses relative height/overflow */
+            main .flex-1 {
+                overflow-y: hidden; /* Main vertical scrolling is handled by the wrapper divs */
+            }
         }
     </style>
 </head>
