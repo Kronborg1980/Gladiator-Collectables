@@ -32,7 +32,7 @@
                 radial-gradient(circle at 85% 30%, rgba(40, 100, 255, 0.08) 0%, transparent 25%);
             color: #fff; 
             height: 100vh; 
-            overflow: hidden; 
+            overflow: hidden; /* Keep main layout contained */
         }
         .font-brand { font-family: 'Cinzel', serif; }
         [v-cloak] { display: none; }
@@ -118,6 +118,7 @@
         .pagination-btn:hover:not(:disabled) { border-color: var(--accent); color: white; background: var(--accent-dim); }
         .pagination-btn:disabled { opacity: 0.3; cursor: not-allowed; }
 
+        /* Scrollbar styles (optional, but good for aesthetics) */
         ::-webkit-scrollbar { width: 5px; height: 5px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
@@ -248,17 +249,12 @@
                     <div class="flex items-center gap-4 mb-4 border-b border-white/10 pb-2">
                         <h3 class="text-white font-bold text-base md:text-lg font-brand uppercase tracking-widest truncate">{{ setName }}</h3>
                         <span class="text-[9px] text-[#00f2ff] font-bold bg-[#00f2ff]/10 px-2 py-0.5 rounded border border-[#00f2ff]/30 shrink-0">
-                             {{ setCards.uniqueCount }} / {{ getSetTotal(setName) }} Collected
+                             {{ setCards.length }} / {{ getSetTotal(setName) }} Collected
                         </span>
                         
                     </div>
                     <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 md:gap-6">
-                        <div v-for="card in setCards.cards" :key="card.uid" @click="openCardDetail(card)" class="bg-[#0a0f18] p-2 md:p-3 rounded-xl cursor-pointer hover:border-[#00f2ff] border border-white/5 group relative transition duration-200">
-                            
-                            <button @click.stop="deleteCard(card.uid)" class="absolute top-1 left-1 bg-black/70 hover:bg-red-600 text-red-500 hover:text-white p-1 rounded-full text-[8px] z-10 transition">
-                                <i class="fa-solid fa-trash-can"></i>
-                            </button>
-
+                        <div v-for="card in setCards" :key="card.uid" @click="openCardDetail(card)" class="bg-[#0a0f18] p-2 md:p-3 rounded-xl cursor-pointer hover:border-[#00f2ff] border border-white/5 group relative transition duration-200">
                             <div class="aspect-[0.7] rounded-lg bg-[#050505] overflow-hidden mb-2 relative">
                                 <img :src="card.image" class="w-full h-full object-cover transition duration-500 group-hover:scale-110">
                             </div>
@@ -296,7 +292,7 @@
                     <div class="flex justify-end"><button v-if="selectedIds.length > 0" @click="deleteSelected" class="bg-red-500 text-white text-[9px] font-bold px-2 py-1 rounded">DEL {{ selectedIds.length }}</button></div>
                 </div>
 
-                <div class="h-[calc(100vh-14rem)] md:h-[calc(100vh-16rem)] overflow-y-auto p-0">
+                <div class="h-[calc(100vh-20rem)] md:h-[calc(100vh-16rem)] overflow-y-auto p-0">
                     <div v-if="paginatedCards.length === 0" class="flex flex-col items-center justify-center h-full opacity-30">
                         <p class="uppercase tracking-widest font-bold text-sm">List Empty</p>
                     </div>
@@ -524,9 +520,6 @@
                 } else if (this.currentView === 'calculator' && this.currentBinder) {
                     // Filter for ROI calculator if a specific binder was selected before
                     list = this.cards.filter(c => c.binderId === this.currentBinder.id);
-                } else if (this.currentView === 'collection' && this.currentBinder) {
-                    // If we navigated back to collection, but currentBinder is set, clear it.
-                    this.currentBinder = null;
                 }
                 
                 return list;
@@ -563,21 +556,10 @@
             // --- GROUP BY SET (COLLECTION VIEW) ---
             cardsBySet() {
                 const grouped = {};
+                // Display ALL cards for the main 'collection' view
                 this.cards.forEach(c => {
-                    const uniqueId = c.set + c.id; // Group by set + TCGplayer ID
-                    if(!grouped[c.set]) {
-                         grouped[c.set] = {
-                            cards: [],
-                            uniqueIds: new Set(),
-                            uniqueCount: 0
-                        };
-                    }
-                    // FIX 1: Don't count duplicates towards set completion
-                    if (!grouped[c.set].uniqueIds.has(c.id)) {
-                        grouped[c.set].uniqueIds.add(c.id);
-                        grouped[c.set].uniqueCount = grouped[c.set].uniqueIds.size;
-                    }
-                    grouped[c.set].cards.push(c);
+                    if(!grouped[c.set]) grouped[c.set] = [];
+                    grouped[c.set].push(c);
                 });
                 return grouped;
             },
@@ -648,13 +630,6 @@
                 });
                 this.selectedIds = [];
                 this.saveData();
-            },
-
-            // --- CARD DELETE (Called from Collection View) ---
-            deleteCard(uid) {
-                if(!confirm("Are you sure you want to remove this card?")) return;
-                if(this.user) db.collection('users').doc(this.user.uid).collection('cards').doc(uid).delete();
-                else { this.localCards = this.localCards.filter(c => c.uid !== uid); this.saveData(); }
             },
 
             // --- SORT & PAGE METHODS (LOCAL) ---
@@ -728,6 +703,11 @@
                 this.addedIds.push(c.id);
                 setTimeout(() => { this.addedIds = this.addedIds.filter(id => id !== c.id); }, 1500);
             },
+            deleteCard(uid) {
+                if(!confirm("Remove this card permanently?")) return;
+                if(this.user) db.collection('users').doc(this.user.uid).collection('cards').doc(uid).delete();
+                else { this.localCards = this.localCards.filter(c => c.uid !== uid); this.saveData(); }
+            },
             updateCardBinder(card) {
                 if(this.user) db.collection('users').doc(this.user.uid).collection('cards').doc(card.uid).update({ binderId: card.binderId });
                 else this.saveData();
@@ -742,11 +722,7 @@
             getProfit(c) { return this.getEstValue(c) - ((c.rawCost || 0) + (c.fee || 0)); },
 
             // FIX 1: Set view to single_binder and keep currentBinder set
-            selectBinder(b) { 
-                this.currentView = 'single_binder'; 
-                this.currentBinder = b; 
-                this.currentPage = 1; 
-            },
+            selectBinder(b) { this.currentView = 'single_binder'; this.currentBinder = b; this.currentPage = 1; },
             getBinderCount(id) { return this.cards.filter(c => c.binderId === id).length; },
             openSearch() { 
                 this.showSearch = true; this.searchResults = []; this.searchPage = 1; this.query = '';
@@ -782,7 +758,7 @@
                         const data = JSON.parse(c);
                         this.allSets = data.sets; 
                         this.eras = data.eras;
-                        this.totalSetData = data.totalSetData; 
+                        this.totalSetData = data.totalSetData; // Load cached size data
                         this.setsLoading = false;
                         return;
                     } catch (e) {
@@ -807,7 +783,7 @@
 
                     this.allSets = data.data; 
                     this.eras = [...new Set(data.data.map(s => s.series))];
-                    this.totalSetData = setSizeMap; 
+                    this.totalSetData = setSizeMap; // Store the set size map
                     
                     localStorage.setItem(cacheKeySets, JSON.stringify({
                         sets: this.allSets, 
