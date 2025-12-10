@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Gladiator | Pro Ecosystem</title>
     <link rel="icon" type="image/webp" href="https://raw.githubusercontent.com/Kronborg1980/Gladiator-Collectables/main/logogla.webp">
     
@@ -159,6 +159,12 @@
                 background: rgba(10, 15, 25, 0.95);
             }
         }
+        
+        /* DESKTOP SIDEBAR FIX */
+        @media (min-width: 768px) {
+            /* This ensures the sidebar container exists on desktop */
+            .md\:w-72 { width: 18rem; } 
+        }
     </style>
 </head>
 <body class="flex flex-col h-screen p-2 md:p-4">
@@ -166,7 +172,7 @@
 <div id="app" v-cloak class="flex h-full w-full max-w-[1920px] mx-auto relative gap-2 md:gap-4">
 
     <aside class="fixed bottom-0 left-0 right-0 h-16 w-full glass-panel flex flex-row justify-around items-center z-50 
-                  md:relative md:h-auto md:w-72 md:flex-col md:shrink-0 md:z-20 md:rounded-2xl md:p-0">
+                  md:relative md:w-72 md:h-auto md:flex-col md:shrink-0 md:z-20 md:rounded-2xl md:p-0">
         
         <div class="hidden md:flex p-8 flex-col items-center border-b border-white/5 w-full">
             <img src="https://raw.githubusercontent.com/Kronborg1980/Gladiator-Collectables/main/logogla.webp" class="w-12 h-12 object-contain mb-3 drop-shadow-[0_0_10px_rgba(0,242,255,0.4)]">
@@ -685,6 +691,9 @@
 
             // FIX 2: Card Delete function (Called from Collection View)
             deleteCard(uid) {
+                // Prevent event from bubbling up to openCardDetail when clicking trash icon
+                if (window.event) window.event.stopPropagation();
+                
                 if(!confirm("Are you sure you want to remove this card?")) return;
                 if(this.user) db.collection('users').doc(this.user.uid).collection('cards').doc(uid).delete();
                 else { this.localCards = this.localCards.filter(c => c.uid !== uid); this.saveData(); }
