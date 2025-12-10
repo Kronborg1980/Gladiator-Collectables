@@ -932,9 +932,8 @@
                 }
             },
             
-
             /**
-             * HIGH RELIABILITY CARD SEARCH FETCH with URL Encoding and Session Caching
+             * HIGH RELIABILITY CARD SEARCH FETCH (Strictly Manual)
              */
             async fetchCards(page = 1) {
                 if(!this.selectedSet) {
@@ -951,10 +950,8 @@
                 let q = `set.id:"${this.selectedSet}"`; 
                 
                 if(nameQuery) {
-                    // FINAL FIX: Simplified query structure to use "text search" (omitting the field name)
-                    // and relying on the basic wild card. This is often the most reliable for name matching.
-                    // The API documentation suggests you can pass a simple string for name matching.
-                    q += ` ${nameQuery}*`; 
+                    // FINAL FIX: Use generic, flexible wildcard search with case insensitivity
+                    q += ` name:*${nameQuery}*`; 
                 }
                 
                 // 2. Cache Key and Check (Session Storage - 30 min cache)
