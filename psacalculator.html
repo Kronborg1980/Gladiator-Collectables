@@ -447,7 +447,7 @@
                                 </div>
 
                                 <div v-if="addedIds.includes(card.id)" class="absolute inset-0 bg-green-500/90 flex items-center justify-center rounded-xl font-bold text-black uppercase tracking-widest text-xs animate-pulse">
-                                    ADDED <i class="fa-solid fa-check ml-2"></i>
+                                    ACQUIRED <i class="fa-solid fa-check ml-2"></i>
                                 </div>
                             </div>
                         </div>
@@ -957,8 +957,8 @@
                 let q = `set.id:"${this.selectedSet}"`; 
                 
                 if(nameQuery) {
-                    // FINAL FIX: Use flexible wildcard search against the name field.
-                    // This is the most reliable structure for name matching with the Pokemon TCG API.
+                    // FINAL FIX: Use the most robust and flexible syntax for name search: 
+                    // name:*query* is generally the best for partial matching (type-ahead style)
                     const cleanedQuery = nameQuery.toLowerCase().replace(/"/g, '\\"');
                     q += ` name:*${cleanedQuery}*`; 
                 }
